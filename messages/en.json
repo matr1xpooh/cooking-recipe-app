@@ -1,4 +1,16 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from en!"
+	"hello_world": "Hello, {name} from en!",
+	"recipes_title": "Recipes",
+	"recipes_add": "Add recipe",
+	"recipes_empty": "No recipes yet. Add your first one.",
+	"recipe_new_title": "New recipe",
+	"recipe_field_title": "Title",
+	"recipe_field_source_url": "Video or webpage URL (optional)",
+	"recipe_field_ingredients": "Ingredients (one per line)",
+	"recipe_field_steps": "Steps (one per line)",
+	"recipe_save": "Save recipe",
+	"recipe_cancel": "Cancel",
+	"error_title_required": "Please enter a title.",
+	"error_source_url_invalid": "Enter a valid http:// or https:// address."
 }

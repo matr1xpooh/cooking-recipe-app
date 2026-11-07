@@ -1,4 +1,16 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from ca!"
+	"hello_world": "Hello, {name} from ca!",
+	"recipes_title": "Receptes",
+	"recipes_add": "Afegeix recepta",
+	"recipes_empty": "Encara no hi ha receptes. Afegeix-ne la primera.",
+	"recipe_new_title": "Nova recepta",
+	"recipe_field_title": "Títol",
+	"recipe_field_source_url": "URL de vídeo o pàgina web (opcional)",
+	"recipe_field_ingredients": "Ingredients (un per línia)",
+	"recipe_field_steps": "Passos (un per línia)",
+	"recipe_save": "Desa la recepta",
+	"recipe_cancel": "Cancel·la",
+	"error_title_required": "Escriu un títol.",
+	"error_source_url_invalid": "Introdueix una adreça http:// o https:// vàlida."
 }

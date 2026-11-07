@@ -1,4 +1,16 @@
 {
 	"$schema": "https://inlang.com/schema/inlang-message-format",
-	"hello_world": "Hello, {name} from ru!"
+	"hello_world": "Hello, {name} from ru!",
+	"recipes_title": "Рецепты",
+	"recipes_add": "Добавить рецепт",
+	"recipes_empty": "Рецептов пока нет. Добавьте первый.",
+	"recipe_new_title": "Новый рецепт",
+	"recipe_field_title": "Название",
+	"recipe_field_source_url": "Ссылка на видео или страницу (необязательно)",
+	"recipe_field_ingredients": "Ингредиенты (по одному в строке)",
+	"recipe_field_steps": "Шаги (по одному в строке)",
+	"recipe_save": "Сохранить рецепт",
+	"recipe_cancel": "Отмена",
+	"error_title_required": "Введите название.",
+	"error_source_url_invalid": "Введите корректный адрес, начинающийся с http:// или https://."
 }
