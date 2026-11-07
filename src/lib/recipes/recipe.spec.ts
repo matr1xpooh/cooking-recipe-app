@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRecipe, hasErrors, isHttpUrl, parseLines, validateRecipeInput } from './recipe';
 
-const valid = { title: 'Pancakes', sourceUrl: '', ingredients: '', steps: '', notes: '' };
+const valid = { title: 'Pancakes', sourceUrl: '', ingredients: '', steps: '' };
 
 describe('parseLines', () => {
 	it('trims lines and drops empty ones', () => {
@@ -50,14 +50,11 @@ describe('createRecipe', () => {
 				title: '  Pancakes ',
 				sourceUrl: ' https://example.com/p ',
 				ingredients: 'flour\n milk ',
-				steps: 'Mix\n\nCook',
-				notes: '  **Use** [red]less[/red] salt  '
+				steps: 'Mix\n\nCook'
 			},
 			{
 				id: 'abc',
-				createdAt: new Date('2026-11-07T10:00:00Z'),
-				language: 'en',
-				notesTranslated: null
+				createdAt: new Date('2026-11-07T10:00:00Z')
 			}
 		);
 		expect(recipe).toEqual({
@@ -66,9 +63,7 @@ describe('createRecipe', () => {
 			sourceUrl: 'https://example.com/p',
 			ingredients: ['flour', 'milk'],
 			steps: ['Mix', 'Cook'],
-			notes: '**Use** [red]less[/red] salt',
-			language: 'en',
-			notesTranslated: null,
+			notes: '',
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});
@@ -77,9 +72,7 @@ describe('createRecipe', () => {
 	it('stores a null source URL when none is given', () => {
 		const recipe = createRecipe(valid, {
 			id: 'abc',
-			createdAt: new Date(),
-			language: null,
-			notesTranslated: null
+			createdAt: new Date()
 		});
 		expect(recipe.sourceUrl).toBeNull();
 	});

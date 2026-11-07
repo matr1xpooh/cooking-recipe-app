@@ -1,9 +1,6 @@
 <script lang="ts">
-	import type { Path } from '$app/types';
-	import { resolve } from '$app/paths';
-	import { page } from '$app/state';
-	import { locales, localizeHref } from '#lib/paraglide/runtime.js';
 	import favicon from '#lib/assets/favicon.svg';
+	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
 	import type { LayoutProps } from './$types';
 	import '../app.css';
 
@@ -14,10 +11,8 @@
 	<link rel="icon" href={favicon} />
 </svelte:head>
 
-{@render children()}
+<header class="site-header">
+	<LanguageSwitcher />
+</header>
 
-<div style="display:none">
-	{#each locales as locale (locale)}
-		<a href={resolve(localizeHref(page.url.pathname, { locale }) as Path)}>{locale}</a>
-	{/each}
-</div>
+{@render children()}

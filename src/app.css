@@ -376,7 +376,7 @@ article ol li {
 }
 
 /* Notes editor in the add-recipe form */
-form > .notes-field {
+form > .styled-field {
 	display: grid;
 	gap: 0.4rem;
 }
@@ -408,24 +408,6 @@ form > .notes-field {
 	font-weight: 700;
 }
 
-/* Language picker in the add-recipe form */
-form > .language-field {
-	display: grid;
-	gap: 0.35rem;
-}
-
-form > .language-field select {
-	width: 100%;
-	min-height: 44px;
-	padding: 0.6rem 0.75rem;
-	font: inherit;
-	font-weight: 400;
-	color: var(--text);
-	background: var(--bg);
-	border: 1px solid var(--border);
-	border-radius: 8px;
-}
-
 .meta {
 	color: var(--muted);
 	font-size: 0.9rem;
@@ -443,4 +425,44 @@ summary {
 	min-height: 44px;
 	display: flex;
 	align-items: center;
+}
+
+/* Site header: holds the site-wide language switch */
+.site-header {
+	max-width: 40rem;
+	margin: 0 auto;
+	padding: 0.75rem 1rem 0;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.language-switch {
+	min-height: 40px;
+	padding: 0 0.6rem;
+	font: inherit;
+	color: var(--text);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+}
+
+/* Translation status row on the detail page */
+.translation-bar {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0 0 1rem;
+}
+
+.translation-bar button {
+	min-height: 40px;
+	padding: 0 0.9rem;
+	font: inherit;
+	font-weight: 600;
+	color: var(--accent);
+	background: transparent;
+	border: 1px solid var(--accent);
+	border-radius: 999px;
+	cursor: pointer;
 }

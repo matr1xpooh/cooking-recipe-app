@@ -1,5 +1,4 @@
 import type { Recipe } from './recipe';
-import { isLanguage } from './languages';
 
 export const RECIPES_STORAGE_KEY = 'recipes.v1';
 
@@ -22,11 +21,7 @@ function isRecipe(value: unknown): value is Recipe {
 		r.steps.every((s) => typeof s === 'string') &&
 		typeof r.createdAt === 'string' &&
 		typeof r.archived === 'boolean' &&
-		(r.notes === undefined || typeof r.notes === 'string') &&
-		(r.language === undefined || r.language === null || isLanguage(r.language)) &&
-		(r.notesTranslated === undefined ||
-			r.notesTranslated === null ||
-			typeof r.notesTranslated === 'string')
+		(r.notes === undefined || typeof r.notes === 'string')
 	);
 }
 
@@ -37,12 +32,17 @@ export function readRecipes(storage: KeyValueStorage): Recipe[] {
 	try {
 		const parsed: unknown = JSON.parse(raw);
 		if (!Array.isArray(parsed)) return [];
-		// Recipes saved before notes existed get empty notes instead of being dropped.
+		// Copy only known fields: drops stale keys from older versions. Recipes saved
+		// before notes existed get empty notes instead of being dropped.
 		return parsed.filter(isRecipe).map((r) => ({
-			...r,
+			id: r.id,
+			title: r.title,
+			sourceUrl: r.sourceUrl,
+			ingredients: r.ingredients,
+			steps: r.steps,
 			notes: r.notes ?? '',
-			language: r.language ?? null,
-			notesTranslated: r.notesTranslated ?? null
+			createdAt: r.createdAt,
+			archived: r.archived
 		}));
 	} catch {
 		return [];

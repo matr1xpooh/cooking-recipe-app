@@ -1,18 +1,16 @@
-import type { Language } from './languages';
-
 export interface Recipe {
 	id: string;
 	title: string;
 	/** External video or webpage URL, or null when none was given. */
 	sourceUrl: string | null;
 	ingredients: string[];
+	/** One step per item. Steps may contain the styling markup (see notes.ts). */
 	steps: string[];
-	/** Free-form notes in the app's markup (see notes.ts). Written in English. */
+	/**
+	 * Notes from before the notes field was removed. Shown read-only on the detail
+	 * page; new recipes always store an empty string.
+	 */
 	notes: string;
-	/** Language the recipe is written in. Null for recipes saved before detection existed. */
-	language: Language | null;
-	/** Notes translated into `language`, same markup. Null when not translated. */
-	notesTranslated: string | null;
 	createdAt: string;
 	archived: boolean;
 }
@@ -23,7 +21,6 @@ export interface RecipeInput {
 	sourceUrl: string;
 	ingredients: string;
 	steps: string;
-	notes: string;
 }
 
 export type RecipeField = 'title' | 'sourceUrl';
@@ -66,15 +63,7 @@ export function hasErrors(errors: RecipeErrors): boolean {
 }
 
 /** Builds a Recipe from valid input. Callers should run validateRecipeInput first. */
-export function createRecipe(
-	input: RecipeInput,
-	options: {
-		id: string;
-		createdAt: Date;
-		language: Language | null;
-		notesTranslated: string | null;
-	}
-): Recipe {
+export function createRecipe(input: RecipeInput, options: { id: string; createdAt: Date }): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
 		id: options.id,
@@ -82,9 +71,7 @@ export function createRecipe(
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps),
-		notes: input.notes.trim(),
-		language: options.language,
-		notesTranslated: options.notesTranslated,
+		notes: '',
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};
