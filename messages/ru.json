@@ -34,5 +34,15 @@
 	"recipe_ingredients_heading": "Ингредиенты",
 	"recipe_steps_heading": "Приготовление",
 	"recipe_notes_heading": "Заметки",
-	"recipe_not_found": "Рецепт не найден."
+	"recipe_not_found": "Рецепт не найден.",
+	"language_label": "Язык рецепта",
+	"language_choose": "Выберите язык",
+	"language_detecting": "Определяем язык…",
+	"language_manual": "Язык выбран вручную.",
+	"language_auto": "Определён автоматически. Можно изменить.",
+	"error_language_required": "Не удалось определить язык рецепта. Выберите его.",
+	"error_notes_too_long": "Заметки слишком длинные для перевода.",
+	"error_translate_failed": "Не удалось перевести заметки. Попробуйте снова или сократите их.",
+	"notes_translating": "Перевод заметок…",
+	"notes_show_original": "Показать оригинал на английском"
 }

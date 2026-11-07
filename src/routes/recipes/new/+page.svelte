@@ -13,6 +13,7 @@
 		type RecipeInput
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
+	import { LANGUAGES, LANGUAGE_NAMES, isLanguage, type Language } from '#lib/recipes/languages.js';
 
 	let input = $state<RecipeInput>({
 		title: '',
@@ -25,6 +26,16 @@
 	let importing = $state(false);
 	let importError = $state<ImportErrorKey | null>(null);
 	let notesField: HTMLTextAreaElement | undefined = $state();
+
+	// Language: auto-detected from the recipe text until the user picks one.
+	let language = $state<Language | ''>('');
+	let languageManual = $state(false);
+	let detecting = $state(false);
+	let languageError = $state(false);
+
+	// Saving: translation of the notes happens here, so it can fail.
+	let saving = $state(false);
+	let translateError = $state<string | null>(null);
 
 	// Load saved recipes first: saving writes the whole list back to storage.
 	onMount(() => recipeStore.load());
@@ -51,6 +62,12 @@
 		description_not_parsed: () => m.import_error_description_not_parsed()
 	};
 
+	const translateErrorMessages: Record<string, () => string> = {
+		text_too_long: () => m.error_notes_too_long(),
+		language_unsupported: () => m.error_language_required(),
+		translate_failed: () => m.error_translate_failed()
+	};
+
 	/** Fills empty fields from the source page's recipe data. Typed values are kept. */
 	async function importFromUrl() {
 		importError = null;
@@ -71,11 +88,51 @@
 			if (input.title.trim().length === 0) input.title = body.title;
 			if (input.ingredients.trim().length === 0) input.ingredients = body.ingredients.join('\n');
 			if (input.steps.trim().length === 0) input.steps = body.steps.join('\n');
+			await detectLanguage();
 		} catch {
 			importError = 'page_unreachable';
 		} finally {
 			importing = false;
 		}
+	}
+
+	/**
+	 * Detects the recipe language from its title, ingredients and steps. Does nothing
+	 * once the user has picked a language. Returns the detected language, if any.
+	 */
+	async function detectLanguage(): Promise<Language | null> {
+		if (languageManual) return language || null;
+		const text = [input.title, input.ingredients, input.steps].join('\n').trim();
+		if (text.length === 0) return null;
+
+		detecting = true;
+		try {
+			const res = await fetch('/api/recipes/detect-language', {
+				method: 'POST',
+				headers: { 'content-type': 'application/json' },
+				body: JSON.stringify({ text })
+			});
+			const body = await res.json();
+			if (res.ok && isLanguage(body.language)) {
+				language = body.language;
+				languageError = false;
+				return body.language;
+			}
+			language = '';
+			return null;
+		} catch {
+			language = '';
+			return null;
+		} finally {
+			detecting = false;
+		}
+	}
+
+	function pickLanguage(event: Event) {
+		const value = (event.currentTarget as HTMLSelectElement).value;
+		languageManual = true;
+		languageError = false;
+		language = isLanguage(value) ? value : '';
 	}
 
 	/** Wraps the selected notes text in markup markers, keeping the selection. */
@@ -90,18 +147,50 @@
 		el.setSelectionRange(start + open.length, start + open.length + selected.length);
 	}
 
-	function submit(event: SubmitEvent) {
+	/** Translates the English notes into `target`. Returns null on failure, with translateError set. */
+	async function translateNotesFor(target: Language): Promise<string | null> {
+		if (input.notes.trim().length === 0 || target === 'en') return null;
+		const res = await fetch('/api/recipes/translate-notes', {
+			method: 'POST',
+			headers: { 'content-type': 'application/json' },
+			body: JSON.stringify({ notes: input.notes, target })
+		});
+		const body = await res.json().catch(() => null);
+		if (!res.ok || typeof body?.notes !== 'string') {
+			translateError = body?.error ?? 'translate_failed';
+			return null;
+		}
+		return body.notes;
+	}
+
+	async function submit(event: SubmitEvent) {
 		event.preventDefault();
 		errors = validateRecipeInput(input);
 		if (hasErrors(errors)) return;
 
-		recipeStore.add(
-			createRecipe(input, {
-				id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
-				createdAt: new Date()
-			})
-		);
-		goto(resolve('/recipes'));
+		saving = true;
+		translateError = null;
+		try {
+			const chosen = language || (await detectLanguage());
+			if (!chosen) {
+				languageError = true;
+				return;
+			}
+			const notesTranslated = await translateNotesFor(chosen);
+			if (translateError) return;
+
+			recipeStore.add(
+				createRecipe(input, {
+					id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`,
+					createdAt: new Date(),
+					language: chosen,
+					notesTranslated
+				})
+			);
+			goto(resolve('/recipes'));
+		} finally {
+			saving = false;
+		}
 	}
 </script>
 
@@ -118,6 +207,7 @@
 			<input
 				type="text"
 				bind:value={input.title}
+				onblur={detectLanguage}
 				aria-invalid={errors.title ? 'true' : undefined}
 			/>
 		</label>
@@ -149,13 +239,37 @@
 
 		<label>
 			{m.recipe_field_ingredients()}
-			<textarea rows="6" bind:value={input.ingredients}></textarea>
+			<textarea rows="6" bind:value={input.ingredients} onblur={detectLanguage}></textarea>
 		</label>
 
 		<label>
 			{m.recipe_field_steps()}
-			<textarea rows="8" bind:value={input.steps}></textarea>
+			<textarea rows="8" bind:value={input.steps} onblur={detectLanguage}></textarea>
 		</label>
+
+		<div class="language-field">
+			<label>
+				{m.language_label()}
+				<select value={language} onchange={pickLanguage} aria-describedby="language-status">
+					<option value="" disabled>{m.language_choose()}</option>
+					{#each LANGUAGES as code (code)}
+						<option value={code}>{LANGUAGE_NAMES[code]}</option>
+					{/each}
+				</select>
+			</label>
+			<small id="language-status">
+				{#if detecting}
+					{m.language_detecting()}
+				{:else if languageManual}
+					{m.language_manual()}
+				{:else if language}
+					{m.language_auto()}
+				{/if}
+			</small>
+		</div>
+		{#if languageError}
+			<p role="alert">{m.error_language_required()}</p>
+		{/if}
 
 		<div class="notes-field">
 			<span class="field-label">{m.notes_label()}</span>
@@ -184,9 +298,16 @@
 				bind:value={input.notes}></textarea>
 			<small>{m.notes_hint()}</small>
 		</div>
+		{#if translateError}
+			<p role="alert">
+				{(translateErrorMessages[translateError] ?? translateErrorMessages.translate_failed)()}
+			</p>
+		{/if}
 
 		<div>
-			<button type="submit">{m.recipe_save()}</button>
+			<button type="submit" disabled={saving}>
+				{saving ? m.notes_translating() : m.recipe_save()}
+			</button>
 			<a href={resolve('/recipes')}>{m.recipe_cancel()}</a>
 		</div>
 	</form>

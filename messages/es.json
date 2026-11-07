@@ -34,5 +34,15 @@
 	"recipe_ingredients_heading": "Ingredientes",
 	"recipe_steps_heading": "Pasos",
 	"recipe_notes_heading": "Notas",
-	"recipe_not_found": "Receta no encontrada."
+	"recipe_not_found": "Receta no encontrada.",
+	"language_label": "Idioma de la receta",
+	"language_choose": "Elige un idioma",
+	"language_detecting": "Detectando idioma…",
+	"language_manual": "Elegiste este idioma.",
+	"language_auto": "Detectado automáticamente. Puedes cambiarlo.",
+	"error_language_required": "No se pudo detectar el idioma de la receta. Elige uno.",
+	"error_notes_too_long": "Las notas son demasiado largas para traducirlas.",
+	"error_translate_failed": "No se pudieron traducir las notas. Inténtalo de nuevo o acórtalas.",
+	"notes_translating": "Traduciendo notas…",
+	"notes_show_original": "Mostrar original en inglés"
 }

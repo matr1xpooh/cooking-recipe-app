@@ -5,6 +5,7 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RichNotes from '#lib/recipes/RichNotes.svelte';
+	import { LANGUAGE_NAMES } from '#lib/recipes/languages.js';
 
 	let loaded = $state(false);
 
@@ -61,7 +62,16 @@
 			{#if recipe.notes}
 				<section>
 					<h2>{m.recipe_notes_heading()}</h2>
-					<RichNotes source={recipe.notes} />
+					{#if recipe.language && recipe.notesTranslated !== null}
+						<p class="meta">{LANGUAGE_NAMES[recipe.language]}</p>
+						<RichNotes source={recipe.notesTranslated} />
+						<details>
+							<summary>{m.notes_show_original()}</summary>
+							<RichNotes source={recipe.notes} />
+						</details>
+					{:else}
+						<RichNotes source={recipe.notes} />
+					{/if}
 				</section>
 			{/if}
 		</article>

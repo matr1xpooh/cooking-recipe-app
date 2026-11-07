@@ -34,5 +34,15 @@
 	"recipe_ingredients_heading": "Ingredients",
 	"recipe_steps_heading": "Passos",
 	"recipe_notes_heading": "Notes",
-	"recipe_not_found": "No s'ha trobat la recepta."
+	"recipe_not_found": "No s'ha trobat la recepta.",
+	"language_label": "Idioma de la recepta",
+	"language_choose": "Tria un idioma",
+	"language_detecting": "Detectant l'idioma…",
+	"language_manual": "Has triat aquest idioma.",
+	"language_auto": "Detectat automàticament. Pots canviar-lo.",
+	"error_language_required": "No s'ha pogut detectar l'idioma de la recepta. Tria'n un.",
+	"error_notes_too_long": "Les notes són massa llargues per traduir-les.",
+	"error_translate_failed": "No s'han pogut traduir les notes. Torna-ho a provar o acurta-les.",
+	"notes_translating": "Traduint notes…",
+	"notes_show_original": "Mostra l'original en anglès"
 }

@@ -53,7 +53,12 @@ describe('createRecipe', () => {
 				steps: 'Mix\n\nCook',
 				notes: '  **Use** [red]less[/red] salt  '
 			},
-			{ id: 'abc', createdAt: new Date('2026-11-07T10:00:00Z') }
+			{
+				id: 'abc',
+				createdAt: new Date('2026-11-07T10:00:00Z'),
+				language: 'en',
+				notesTranslated: null
+			}
 		);
 		expect(recipe).toEqual({
 			id: 'abc',
@@ -62,13 +67,20 @@ describe('createRecipe', () => {
 			ingredients: ['flour', 'milk'],
 			steps: ['Mix', 'Cook'],
 			notes: '**Use** [red]less[/red] salt',
+			language: 'en',
+			notesTranslated: null,
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});
 	});
 
 	it('stores a null source URL when none is given', () => {
-		const recipe = createRecipe(valid, { id: 'abc', createdAt: new Date() });
+		const recipe = createRecipe(valid, {
+			id: 'abc',
+			createdAt: new Date(),
+			language: null,
+			notesTranslated: null
+		});
 		expect(recipe.sourceUrl).toBeNull();
 	});
 });

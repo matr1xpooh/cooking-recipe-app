@@ -407,3 +407,40 @@ form > .notes-field {
 .toolbar .swatch {
 	font-weight: 700;
 }
+
+/* Language picker in the add-recipe form */
+form > .language-field {
+	display: grid;
+	gap: 0.35rem;
+}
+
+form > .language-field select {
+	width: 100%;
+	min-height: 44px;
+	padding: 0.6rem 0.75rem;
+	font: inherit;
+	font-weight: 400;
+	color: var(--text);
+	background: var(--bg);
+	border: 1px solid var(--border);
+	border-radius: 8px;
+}
+
+.meta {
+	color: var(--muted);
+	font-size: 0.9rem;
+	margin: 0 0 0.5rem;
+}
+
+details {
+	margin-top: 0.75rem;
+}
+
+summary {
+	cursor: pointer;
+	color: var(--accent);
+	font-weight: 600;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+}

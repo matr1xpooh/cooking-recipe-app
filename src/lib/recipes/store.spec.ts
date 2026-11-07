@@ -25,6 +25,8 @@ const recipe: Recipe = {
 	ingredients: ['water'],
 	steps: ['Boil'],
 	notes: '',
+	language: 'en',
+	notesTranslated: null,
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };

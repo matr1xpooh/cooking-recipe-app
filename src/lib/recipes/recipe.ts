@@ -1,3 +1,5 @@
+import type { Language } from './languages';
+
 export interface Recipe {
 	id: string;
 	title: string;
@@ -7,6 +9,10 @@ export interface Recipe {
 	steps: string[];
 	/** Free-form notes in the app's markup (see notes.ts). Written in English. */
 	notes: string;
+	/** Language the recipe is written in. Null for recipes saved before detection existed. */
+	language: Language | null;
+	/** Notes translated into `language`, same markup. Null when not translated. */
+	notesTranslated: string | null;
 	createdAt: string;
 	archived: boolean;
 }
@@ -60,7 +66,15 @@ export function hasErrors(errors: RecipeErrors): boolean {
 }
 
 /** Builds a Recipe from valid input. Callers should run validateRecipeInput first. */
-export function createRecipe(input: RecipeInput, options: { id: string; createdAt: Date }): Recipe {
+export function createRecipe(
+	input: RecipeInput,
+	options: {
+		id: string;
+		createdAt: Date;
+		language: Language | null;
+		notesTranslated: string | null;
+	}
+): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
 		id: options.id,
@@ -69,6 +83,8 @@ export function createRecipe(input: RecipeInput, options: { id: string; createdA
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps),
 		notes: input.notes.trim(),
+		language: options.language,
+		notesTranslated: options.notesTranslated,
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};
