@@ -10,6 +10,7 @@
 	import { translateFields } from '#lib/recipes/translate-client.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
+	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
@@ -60,6 +61,12 @@
 		};
 	});
 
+	const sourceLabels: Record<IngredientSource, () => string> = {
+		typed: () => m.source_typed(),
+		web: () => m.source_web(),
+		image: () => m.source_image()
+	};
+
 	const shown = $derived<RecipeFields | null>(
 		recipe ? (translated && !showOriginal ? translated.fields : fieldsOf(recipe)) : null
 	);
@@ -78,12 +85,6 @@
 			<p class="edit-link">
 				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
 			</p>
-			{#if screenshotUrl}
-				<section class="screenshot">
-					<h2>{m.recipe_screenshot_heading()}</h2>
-					<img src={screenshotUrl} alt={m.recipe_screenshot_alt()} />
-				</section>
-			{/if}
 
 			{#if recipe.sourceUrl}
 				<!-- External user-supplied URL: resolve() only applies to app routes. -->
@@ -108,16 +109,32 @@
 				</p>
 			{/if}
 
-			{#if shown.ingredients.length > 0}
-				<section>
-					<h2>{m.recipe_ingredients_heading()}</h2>
+			<section>
+				<h2>{m.recipe_ingredients_heading()}</h2>
+				<p class="meta">
+					{m.ingredients_source()}: {sourceLabels[recipe.source]()}
+					{#if recipe.source === 'web' && recipe.sourceUrl}
+						·
+						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+						<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
+							>{m.recipe_open_source()}</a
+						>
+					{/if}
+				</p>
+				{#if shown.ingredients.length > 0}
 					<ul class="plain">
 						{#each shown.ingredients as item, i (i)}
 							<li>{item}</li>
 						{/each}
 					</ul>
-				</section>
-			{/if}
+				{/if}
+				{#if screenshotUrl}
+					<details class="screenshot" open>
+						<summary>{m.recipe_screenshot_heading()}</summary>
+						<img src={screenshotUrl} alt={m.recipe_screenshot_alt()} />
+					</details>
+				{/if}
+			</section>
 
 			{#if shown.steps.length > 0}
 				<section>

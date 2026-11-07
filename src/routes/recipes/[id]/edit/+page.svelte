@@ -7,7 +7,7 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RecipeForm from '#lib/recipes/RecipeForm.svelte';
 	import { saveImage } from '#lib/recipes/image-store.js';
-	import { applyEdit, type RecipeInput } from '#lib/recipes/recipe.js';
+	import { applyEdit, type IngredientSource, type RecipeInput } from '#lib/recipes/recipe.js';
 
 	let loaded = $state(false);
 	let saveError = $state<string | null>(null);
@@ -19,7 +19,7 @@
 
 	const recipe = $derived(recipeStore.recipes.find((r) => r.id === page.params.id));
 
-	async function save(input: RecipeInput, image: File | null) {
+	async function save(input: RecipeInput, source: IngredientSource, image: File | null) {
 		if (!recipe) return;
 		try {
 			// A new screenshot replaces the saved one; otherwise the saved one is kept.
@@ -29,7 +29,7 @@
 			return;
 		}
 		recipeStore.update({
-			...applyEdit(recipe, input),
+			...applyEdit(recipe, input, source),
 			hasImage: recipe.hasImage || image !== null
 		});
 		goto(resolve('/recipes/[id]', { id: recipe.id }));
@@ -55,6 +55,7 @@
 					ingredients: recipe.ingredients.join('\n'),
 					steps: recipe.steps.join('\n')
 				}}
+				initialSource={recipe.source}
 				submitLabel={m.recipe_save()}
 				cancelHref={resolve('/recipes/[id]', { id: recipe.id })}
 				hasSavedImage={recipe.hasImage}

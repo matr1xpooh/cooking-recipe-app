@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	applyEdit,
+	mergeIngredientLines,
 	createRecipe,
 	hasErrors,
 	isHttpUrl,
@@ -72,6 +73,7 @@ describe('createRecipe', () => {
 			steps: ['Mix', 'Cook'],
 			notes: '',
 			hasImage: false,
+			source: 'typed',
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});
@@ -95,7 +97,8 @@ describe('applyEdit', () => {
 	it('replaces editable fields and keeps identity, date, notes and archive state', () => {
 		const edited = applyEdit(
 			{ ...original, notes: 'legacy', archived: true },
-			{ title: '  Stew ', sourceUrl: '', ingredients: 'beef\n\nonion', steps: '**Brown** it' }
+			{ title: '  Stew ', sourceUrl: '', ingredients: 'beef\n\nonion', steps: '**Brown** it' },
+			'web'
 		);
 		expect(edited).toEqual({
 			id: 'keep-me',
@@ -105,8 +108,23 @@ describe('applyEdit', () => {
 			steps: ['**Brown** it'],
 			notes: 'legacy',
 			hasImage: false,
+			source: 'web',
 			createdAt: '2026-01-01T00:00:00.000Z',
 			archived: true
 		});
+	});
+});
+
+describe('mergeIngredientLines', () => {
+	it('adds only lines not already present, ignoring case and spaces', () => {
+		expect(mergeIngredientLines(['Flour', 'egg'], [' flour ', 'Milk', 'EGG', ''])).toEqual([
+			'Flour',
+			'egg',
+			'Milk'
+		]);
+	});
+
+	it('keeps current lines even when they are blank-padded', () => {
+		expect(mergeIngredientLines(['  salt  '], ['pepper'])).toEqual(['salt', 'pepper']);
 	});
 });

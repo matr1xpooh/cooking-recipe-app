@@ -1,3 +1,12 @@
+/** Where a recipe's ingredient list came from. The list stays editable whatever the source. */
+export type IngredientSource = 'typed' | 'web' | 'image';
+
+export const INGREDIENT_SOURCES: readonly IngredientSource[] = ['typed', 'web', 'image'];
+
+export function isIngredientSource(value: unknown): value is IngredientSource {
+	return typeof value === 'string' && (INGREDIENT_SOURCES as readonly string[]).includes(value);
+}
+
 export interface Recipe {
 	id: string;
 	title: string;
@@ -13,6 +22,8 @@ export interface Recipe {
 	notes: string;
 	/** True when an original screenshot is stored for this recipe (see image-store.ts). */
 	hasImage: boolean;
+	/** Where the ingredient list came from. */
+	source: IngredientSource;
 	createdAt: string;
 	archived: boolean;
 }
@@ -69,10 +80,11 @@ export function hasErrors(errors: RecipeErrors): boolean {
  * creation date, legacy notes and archive state are kept. Callers should run
  * validateRecipeInput first.
  */
-export function applyEdit(recipe: Recipe, input: RecipeInput): Recipe {
+export function applyEdit(recipe: Recipe, input: RecipeInput, source: IngredientSource): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
 		...recipe,
+		source,
 		title: input.title.trim(),
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
 		ingredients: parseLines(input.ingredients),
@@ -83,7 +95,7 @@ export function applyEdit(recipe: Recipe, input: RecipeInput): Recipe {
 /** Builds a Recipe from valid input. Callers should run validateRecipeInput first. */
 export function createRecipe(
 	input: RecipeInput,
-	options: { id: string; createdAt: Date; hasImage?: boolean }
+	options: { id: string; createdAt: Date; hasImage?: boolean; source?: IngredientSource }
 ): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
@@ -94,7 +106,24 @@ export function createRecipe(
 		steps: parseLines(input.steps),
 		notes: '',
 		hasImage: options.hasImage ?? false,
+		source: options.source ?? 'typed',
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};
+}
+
+/**
+ * Adds incoming ingredient lines to the current ones, skipping any already present
+ * (ignoring case and surrounding spaces). Current lines keep their order.
+ */
+export function mergeIngredientLines(current: string[], incoming: string[]): string[] {
+	const seen = new Set(current.map((l) => l.trim().toLowerCase()));
+	const result = current.map((l) => l.trim()).filter((l) => l.length > 0);
+	for (const line of incoming) {
+		const key = line.trim().toLowerCase();
+		if (key.length === 0 || seen.has(key)) continue;
+		seen.add(key);
+		result.push(line.trim());
+	}
+	return result;
 }

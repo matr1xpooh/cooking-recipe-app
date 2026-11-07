@@ -7,7 +7,7 @@
 	"recipe_new_title": "New recipe",
 	"recipe_field_title": "Title",
 	"recipe_field_source_url": "Video or webpage URL (optional)",
-	"recipe_field_ingredients": "Ingredients (one per line)",
+	"recipe_field_ingredients": "Ingredients",
 	"recipe_field_steps": "Steps (one per line)",
 	"recipe_save": "Save recipe",
 	"recipe_cancel": "Cancel",
@@ -53,5 +53,16 @@
 	"image_saved_note": "A screenshot is saved with this recipe. Attach a new one to replace it.",
 	"recipe_screenshot_heading": "Screenshot",
 	"recipe_screenshot_alt": "Recipe screenshot",
-	"error_image_save_failed": "Couldn't save the screenshot, so the recipe was not saved."
+	"error_image_save_failed": "Couldn't save the screenshot, so the recipe was not saved.",
+	"ingredients_source": "Source",
+	"source_typed": "Typed by hand",
+	"source_web": "From a web page",
+	"source_image": "From an image",
+	"ingredient_add": "Add ingredient",
+	"ingredient_remove": "Remove",
+	"ingredient_label": "Ingredient {n}",
+	"ingredients_conflict": "This recipe already has ingredients. Add the new lines to them, or replace the list?",
+	"ingredients_merge": "Add to list",
+	"ingredients_replace": "Replace list",
+	"image_read_option": "Read ingredients from this image"
 }

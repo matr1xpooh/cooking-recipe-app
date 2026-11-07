@@ -7,7 +7,7 @@
 	"recipe_new_title": "Новый рецепт",
 	"recipe_field_title": "Название",
 	"recipe_field_source_url": "Ссылка на видео или страницу (необязательно)",
-	"recipe_field_ingredients": "Ингредиенты (по одному в строке)",
+	"recipe_field_ingredients": "Ингредиенты",
 	"recipe_field_steps": "Шаги (по одному в строке)",
 	"recipe_save": "Сохранить рецепт",
 	"recipe_cancel": "Отмена",
@@ -53,5 +53,16 @@
 	"image_saved_note": "К этому рецепту сохранён скриншот. Прикрепите новый, чтобы заменить его.",
 	"recipe_screenshot_heading": "Скриншот",
 	"recipe_screenshot_alt": "Скриншот рецепта",
-	"error_image_save_failed": "Не удалось сохранить скриншот, поэтому рецепт не сохранён."
+	"error_image_save_failed": "Не удалось сохранить скриншот, поэтому рецепт не сохранён.",
+	"ingredients_source": "Источник",
+	"source_typed": "Введено вручную",
+	"source_web": "Со страницы в интернете",
+	"source_image": "Из изображения",
+	"ingredient_add": "Добавить ингредиент",
+	"ingredient_remove": "Удалить",
+	"ingredient_label": "Ингредиент {n}",
+	"ingredients_conflict": "В рецепте уже есть ингредиенты. Добавить новые строки к ним или заменить список?",
+	"ingredients_merge": "Добавить в список",
+	"ingredients_replace": "Заменить список",
+	"image_read_option": "Считать ингредиенты с этого изображения"
 }

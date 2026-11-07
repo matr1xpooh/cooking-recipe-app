@@ -26,6 +26,7 @@ const recipe: Recipe = {
 	steps: ['Boil'],
 	notes: '',
 	hasImage: false,
+	source: 'typed',
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };
@@ -87,5 +88,18 @@ describe('readRecipes image flag', () => {
 		delete legacy.hasImage;
 		const back = readRecipes(memoryStorage({ [RECIPES_STORAGE_KEY]: JSON.stringify([legacy]) }));
 		expect(back[0].hasImage).toBe(false);
+	});
+});
+
+describe('readRecipes source', () => {
+	it('infers the source for recipes saved before sources existed', () => {
+		const legacy: Partial<Recipe> = { ...recipe };
+		delete legacy.source;
+		delete legacy.hasImage;
+		const withImage = { ...legacy, hasImage: true };
+		const back = readRecipes(
+			memoryStorage({ [RECIPES_STORAGE_KEY]: JSON.stringify([legacy, { ...withImage, id: '2' }]) })
+		);
+		expect(back.map((r) => r.source)).toEqual(['typed', 'image']);
 	});
 });

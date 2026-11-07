@@ -537,3 +537,107 @@ summary {
 	cursor: pointer;
 	text-decoration: underline;
 }
+
+/* Ingredients: one editable row per item, with the source shown above */
+fieldset.ingredients {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+fieldset.ingredients legend {
+	padding: 0;
+	margin-bottom: 0.35rem;
+	font-weight: 600;
+}
+
+fieldset.ingredients .meta {
+	margin: 0;
+}
+
+.ingredient-row {
+	display: flex;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.ingredient-row input {
+	flex: 1;
+}
+
+.add-row {
+	justify-self: start;
+	min-height: 40px;
+	padding: 0 0.9rem;
+	font: inherit;
+	font-weight: 600;
+	background: transparent;
+	color: var(--accent);
+	border: 1px dashed var(--accent);
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+.merge-panel {
+	display: grid;
+	gap: 0.5rem;
+	padding: 0.9rem;
+	border: 1px solid var(--accent);
+	border-radius: var(--radius);
+	background: var(--bg);
+}
+
+.merge-panel p {
+	margin: 0;
+	font-weight: 600;
+}
+
+.merge-actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.merge-actions button[type='button']:not(.link-button) {
+	min-height: 40px;
+	padding: 0 0.9rem;
+	font: inherit;
+	font-weight: 600;
+	color: var(--accent-text);
+	background: var(--accent);
+	border: 1px solid var(--accent);
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+.checkbox {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 400;
+}
+
+details.screenshot {
+	margin-top: 1rem;
+}
+
+details.screenshot summary {
+	cursor: pointer;
+	color: var(--accent);
+	font-weight: 600;
+	min-height: 44px;
+	display: flex;
+	align-items: center;
+}
+
+details.screenshot img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	margin-top: 0.5rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}

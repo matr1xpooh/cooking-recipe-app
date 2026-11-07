@@ -25,6 +25,7 @@ const recipe: Recipe = {
 	steps: ['**Boil** it'],
 	notes: 'legacy *note*',
 	hasImage: false,
+	source: 'typed',
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };

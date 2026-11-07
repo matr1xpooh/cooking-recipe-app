@@ -7,7 +7,7 @@
 	"recipe_new_title": "Nova recepta",
 	"recipe_field_title": "Títol",
 	"recipe_field_source_url": "URL de vídeo o pàgina web (opcional)",
-	"recipe_field_ingredients": "Ingredients (un per línia)",
+	"recipe_field_ingredients": "Ingredients",
 	"recipe_field_steps": "Passos (un per línia)",
 	"recipe_save": "Desa la recepta",
 	"recipe_cancel": "Cancel·la",
@@ -53,5 +53,16 @@
 	"image_saved_note": "Aquesta recepta té una captura desada. Adjunta'n una altra per substituir-la.",
 	"recipe_screenshot_heading": "Captura",
 	"recipe_screenshot_alt": "Captura de la recepta",
-	"error_image_save_failed": "No s'ha pogut desar la captura, així que la recepta no s'ha desat."
+	"error_image_save_failed": "No s'ha pogut desar la captura, així que la recepta no s'ha desat.",
+	"ingredients_source": "Origen",
+	"source_typed": "Escrits a mà",
+	"source_web": "D'una pàgina web",
+	"source_image": "D'una imatge",
+	"ingredient_add": "Afegeix ingredient",
+	"ingredient_remove": "Treu",
+	"ingredient_label": "Ingredient {n}",
+	"ingredients_conflict": "Aquesta recepta ja té ingredients. Vols afegir les línies noves o substituir la llista?",
+	"ingredients_merge": "Afegeix a la llista",
+	"ingredients_replace": "Substitueix la llista",
+	"image_read_option": "Llegeix els ingredients d'aquesta imatge"
 }

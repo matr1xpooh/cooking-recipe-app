@@ -3,7 +3,10 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import {
 		hasErrors,
+		mergeIngredientLines,
+		parseLines,
 		validateRecipeInput,
+		type IngredientSource,
 		type RecipeErrorKey,
 		type RecipeErrors,
 		type RecipeInput
@@ -12,6 +15,7 @@
 
 	let {
 		initial,
+		initialSource = 'typed',
 		submitLabel,
 		cancelHref,
 		hasSavedImage = false,
@@ -19,18 +23,28 @@
 	}: {
 		/** Starting values. Read once when the form mounts. */
 		initial: RecipeInput;
+		initialSource?: IngredientSource;
 		submitLabel: string;
 		/** Where Cancel goes. Already resolved by the caller. */
 		cancelHref: string;
 		/** True when the recipe already has a screenshot saved with it. */
 		hasSavedImage?: boolean;
-		/** Called with valid input, and the screenshot to attach (null when none was chosen). */
-		onsave: (input: RecipeInput, image: File | null) => void;
+		/** Called with valid input, the ingredient source, and a new screenshot (or null). */
+		onsave: (input: RecipeInput, source: IngredientSource, image: File | null) => void;
 	} = $props();
 
-	// Copied once on mount: the form edits its own copy, not the prop.
+	// The form edits its own copies of the starting values, read once on mount.
 	// svelte-ignore state_referenced_locally
 	let input = $state<RecipeInput>({ ...initial });
+	// svelte-ignore state_referenced_locally
+	let rows = $state<string[]>(
+		parseLines(initial.ingredients).length ? parseLines(initial.ingredients) : ['']
+	);
+	// svelte-ignore state_referenced_locally
+	let source = $state<IngredientSource>(initialSource);
+	let readImage = $state(true);
+	let pending = $state<{ lines: string[]; source: IngredientSource } | null>(null);
+
 	let errors = $state<RecipeErrors>({});
 	let importing = $state(false);
 	let importError = $state<ImportErrorKey | null>(null);
@@ -68,6 +82,49 @@
 		ocr_failed: () => m.error_ocr_failed()
 	};
 
+	const sourceLabels: Record<IngredientSource, () => string> = {
+		typed: () => m.source_typed(),
+		web: () => m.source_web(),
+		image: () => m.source_image()
+	};
+
+	/** The non-empty ingredient lines, as they will be saved. */
+	function currentLines(): string[] {
+		return rows.map((r) => r.trim()).filter((r) => r.length > 0);
+	}
+
+	/**
+	 * Puts new ingredient lines into the list. An empty list takes them straight away;
+	 * a non-empty one asks whether to add to it or replace it.
+	 */
+	function offerLines(lines: string[], next: IngredientSource) {
+		if (lines.length === 0) return;
+		if (currentLines().length === 0) {
+			rows = [...lines];
+			source = next;
+			return;
+		}
+		pending = { lines, source: next };
+	}
+
+	function resolvePending(mode: 'merge' | 'replace') {
+		if (!pending) return;
+		const next =
+			mode === 'replace' ? pending.lines : mergeIngredientLines(currentLines(), pending.lines);
+		rows = next.length > 0 ? next : [''];
+		source = pending.source;
+		pending = null;
+	}
+
+	function addRow() {
+		rows = [...rows, ''];
+	}
+
+	function removeRow(index: number) {
+		rows = rows.filter((_, i) => i !== index);
+		if (rows.length === 0) rows = [''];
+	}
+
 	/** Fills empty fields from the source page's recipe data. Typed values are kept. */
 	async function importFromUrl() {
 		importError = null;
@@ -86,8 +143,8 @@
 				return;
 			}
 			if (input.title.trim().length === 0) input.title = body.title;
-			if (input.ingredients.trim().length === 0) input.ingredients = body.ingredients.join('\n');
 			if (input.steps.trim().length === 0) input.steps = body.steps.join('\n');
+			offerLines(body.ingredients, 'web');
 		} catch {
 			importError = 'page_unreachable';
 		} finally {
@@ -115,15 +172,20 @@
 	}
 
 	/**
-	 * Keeps the screenshot as the original file, to be saved with the recipe. It is
-	 * also read for ingredient lines, which are added below the typed ones.
+	 * Attaches the image as the original file and makes it the ingredient source.
+	 * With reading switched on, its text lines are offered for the list as well.
 	 */
 	function attach(file: File) {
 		image = file;
-		scanScreenshot(file);
+		source = 'image';
+		if (readImage) scanScreenshot(file);
 	}
 
-	/** Reads ingredient lines from a screenshot and adds them below the typed ones. */
+	function removeImage() {
+		image = null;
+		if (source === 'image') source = 'typed';
+	}
+
 	async function scanScreenshot(file: File) {
 		scanError = null;
 		scanning = true;
@@ -137,12 +199,7 @@
 				return;
 			}
 			const lines: string[] = Array.isArray(data?.ingredients) ? data.ingredients : [];
-			// Skip lines already in the box, so reading the same screenshot twice adds nothing.
-			const existing = new Set(input.ingredients.split('\n').map((l) => l.trim().toLowerCase()));
-			const added = lines.filter((l) => !existing.has(l.trim().toLowerCase()));
-			input.ingredients = [input.ingredients.trimEnd(), ...added]
-				.filter((l) => l.length > 0)
-				.join('\n');
+			offerLines(lines, 'image');
 		} catch {
 			scanError = 'ocr_failed';
 		} finally {
@@ -166,7 +223,7 @@
 		event.preventDefault();
 		errors = validateRecipeInput(input);
 		if (hasErrors(errors)) return;
-		onsave({ ...input }, image);
+		onsave({ ...input, ingredients: currentLines().join('\n') }, source, image);
 	}
 </script>
 
@@ -201,10 +258,37 @@
 		<p role="alert">{importErrorMessages[importError]()}</p>
 	{/if}
 
-	<label>
-		{m.recipe_field_ingredients()}
-		<textarea rows="6" bind:value={input.ingredients}></textarea>
-	</label>
+	<fieldset class="ingredients">
+		<legend>{m.recipe_field_ingredients()}</legend>
+		<p class="meta">{m.ingredients_source()}: {sourceLabels[source]()}</p>
+
+		{#each rows, i (i)}
+			<div class="ingredient-row">
+				<input type="text" bind:value={rows[i]} aria-label={m.ingredient_label({ n: i + 1 })} />
+				<button type="button" class="link-button" onclick={() => removeRow(i)}>
+					{m.ingredient_remove()}
+				</button>
+			</div>
+		{/each}
+		<button type="button" class="add-row" onclick={addRow}>{m.ingredient_add()}</button>
+
+		{#if pending}
+			<div class="merge-panel" role="group" aria-label={m.ingredients_conflict()}>
+				<p>{m.ingredients_conflict()}</p>
+				<div class="merge-actions">
+					<button type="button" onclick={() => resolvePending('merge')}
+						>{m.ingredients_merge()}</button
+					>
+					<button type="button" onclick={() => resolvePending('replace')}>
+						{m.ingredients_replace()}
+					</button>
+					<button type="button" class="link-button" onclick={() => (pending = null)}>
+						{m.recipe_cancel()}
+					</button>
+				</div>
+			</div>
+		{/if}
+	</fieldset>
 
 	<div class="screenshot-field">
 		<label class="file-button" class:busy={scanning}>
@@ -216,13 +300,15 @@
 				onchange={onFilePicked}
 			/>
 		</label>
+		<label class="checkbox">
+			<input type="checkbox" bind:checked={readImage} />
+			{m.image_read_option()}
+		</label>
 		<small>{m.ocr_hint()}</small>
 		{#if image}
 			<p class="attached">
 				<span>{m.image_attached()}: {image.name}</span>
-				<button type="button" class="link-button" onclick={() => (image = null)}>
-					{m.image_remove()}
-				</button>
+				<button type="button" class="link-button" onclick={removeImage}>{m.image_remove()}</button>
 			</p>
 		{:else if hasSavedImage}
 			<p class="meta">{m.image_saved_note()}</p>

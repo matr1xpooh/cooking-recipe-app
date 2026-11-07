@@ -6,14 +6,14 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RecipeForm from '#lib/recipes/RecipeForm.svelte';
 	import { saveImage } from '#lib/recipes/image-store.js';
-	import { createRecipe, type RecipeInput } from '#lib/recipes/recipe.js';
+	import { createRecipe, type IngredientSource, type RecipeInput } from '#lib/recipes/recipe.js';
 
 	let saveError = $state<string | null>(null);
 
 	// Load saved recipes first: saving writes the whole list back to storage.
 	onMount(() => recipeStore.load());
 
-	async function save(input: RecipeInput, image: File | null) {
+	async function save(input: RecipeInput, source: IngredientSource, image: File | null) {
 		const id = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
 		try {
 			// Store the screenshot first, so a saved recipe never points at a missing image.
@@ -22,7 +22,9 @@
 			saveError = m.error_image_save_failed();
 			return;
 		}
-		recipeStore.add(createRecipe(input, { id, createdAt: new Date(), hasImage: image !== null }));
+		recipeStore.add(
+			createRecipe(input, { id, createdAt: new Date(), hasImage: image !== null, source })
+		);
 		goto(resolve('/recipes'));
 	}
 </script>

@@ -7,7 +7,7 @@
 	"recipe_new_title": "Nueva receta",
 	"recipe_field_title": "Título",
 	"recipe_field_source_url": "URL de vídeo o página web (opcional)",
-	"recipe_field_ingredients": "Ingredientes (uno por línea)",
+	"recipe_field_ingredients": "Ingredientes",
 	"recipe_field_steps": "Pasos (uno por línea)",
 	"recipe_save": "Guardar receta",
 	"recipe_cancel": "Cancelar",
@@ -53,5 +53,16 @@
 	"image_saved_note": "Esta receta tiene una captura guardada. Adjunta otra para reemplazarla.",
 	"recipe_screenshot_heading": "Captura",
 	"recipe_screenshot_alt": "Captura de la receta",
-	"error_image_save_failed": "No se pudo guardar la captura, así que la receta no se guardó."
+	"error_image_save_failed": "No se pudo guardar la captura, así que la receta no se guardó.",
+	"ingredients_source": "Origen",
+	"source_typed": "Escritos a mano",
+	"source_web": "De una página web",
+	"source_image": "De una imagen",
+	"ingredient_add": "Añadir ingrediente",
+	"ingredient_remove": "Quitar",
+	"ingredient_label": "Ingrediente {n}",
+	"ingredients_conflict": "Esta receta ya tiene ingredientes. ¿Añadir las nuevas líneas o reemplazar la lista?",
+	"ingredients_merge": "Añadir a la lista",
+	"ingredients_replace": "Reemplazar la lista",
+	"image_read_option": "Leer los ingredientes de esta imagen"
 }

@@ -1,4 +1,4 @@
-import type { Recipe } from './recipe';
+import { isIngredientSource, type Recipe } from './recipe';
 
 export const RECIPES_STORAGE_KEY = 'recipes.v1';
 
@@ -22,7 +22,8 @@ function isRecipe(value: unknown): value is Recipe {
 		typeof r.createdAt === 'string' &&
 		typeof r.archived === 'boolean' &&
 		(r.notes === undefined || typeof r.notes === 'string') &&
-		(r.hasImage === undefined || typeof r.hasImage === 'boolean')
+		(r.hasImage === undefined || typeof r.hasImage === 'boolean') &&
+		(r.source === undefined || isIngredientSource(r.source))
 	);
 }
 
@@ -43,6 +44,8 @@ export function readRecipes(storage: KeyValueStorage): Recipe[] {
 			steps: r.steps,
 			notes: r.notes ?? '',
 			hasImage: r.hasImage === true,
+			// Recipes saved before sources existed: a screenshot means the list came from it.
+			source: isIngredientSource(r.source) ? r.source : r.hasImage === true ? 'image' : 'typed',
 			createdAt: r.createdAt,
 			archived: r.archived
 		}));
