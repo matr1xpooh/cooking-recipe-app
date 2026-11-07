@@ -36,7 +36,7 @@
 	"steps_hint": "Use **bold**, *italic*, or [red]colour[/red].",
 	"site_language_label": "Language",
 	"translating": "Translating…",
-	"translation_failed": "Couldn't translate right now. Showing the original text.",
+	"translation_failed": "Couldn't translate right now.",
 	"show_original": "Show original",
 	"show_translation": "Show translation",
 	"recipe_edit": "Edit",

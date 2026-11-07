@@ -83,19 +83,17 @@
 	{#if recipe && shown}
 		<article>
 			<h1>{shown.title}</h1>
-			<p class="edit-link">
+			<p class="recipe-actions">
 				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
-			</p>
-
-			{#if recipe.sourceUrl}
-				<!-- External user-supplied URL: resolve() only applies to app routes. -->
-				<p>
+				{#if recipe.sourceUrl}
+					<span aria-hidden="true">·</span>
+					<!-- External user-supplied URL: resolve() only applies to app routes. -->
 					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 					<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
 						>{m.recipe_open_source()}</a
 					>
-				</p>
-			{/if}
+				{/if}
+			</p>
 
 			{#if translating}
 				<p class="meta">{m.translating()}</p>
@@ -103,10 +101,11 @@
 				<p class="translation-bar">
 					{#if translated.failed}
 						<span role="status">{m.translation_failed()}</span>
+					{:else}
+						<button type="button" onclick={() => (showOriginal = !showOriginal)}>
+							{showOriginal ? m.show_translation() : m.show_original()}
+						</button>
 					{/if}
-					<button type="button" onclick={() => (showOriginal = !showOriginal)}>
-						{showOriginal ? m.show_translation() : m.show_original()}
-					</button>
 				</p>
 			{/if}
 

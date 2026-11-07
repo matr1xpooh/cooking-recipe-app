@@ -43,13 +43,6 @@
 					<a class="card-link" href={resolve('/recipes/[id]', { id: recipe.id })}>
 						<strong>{titles[recipe.id] ?? recipe.title}</strong>
 					</a>
-					{#if recipe.sourceUrl}
-						<!-- External user-supplied URL: resolve() only applies to app routes. -->
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-						<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
-							>{recipe.sourceUrl}</a
-						>
-					{/if}
 				</li>
 			{/each}
 		</ul>
