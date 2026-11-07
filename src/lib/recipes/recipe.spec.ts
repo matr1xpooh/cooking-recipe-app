@@ -1,5 +1,12 @@
 import { describe, it, expect } from 'vitest';
-import { createRecipe, hasErrors, isHttpUrl, parseLines, validateRecipeInput } from './recipe';
+import {
+	applyEdit,
+	createRecipe,
+	hasErrors,
+	isHttpUrl,
+	parseLines,
+	validateRecipeInput
+} from './recipe';
 
 const valid = { title: 'Pancakes', sourceUrl: '', ingredients: '', steps: '' };
 
@@ -75,5 +82,29 @@ describe('createRecipe', () => {
 			createdAt: new Date()
 		});
 		expect(recipe.sourceUrl).toBeNull();
+	});
+});
+
+describe('applyEdit', () => {
+	const original = createRecipe(
+		{ title: 'Soup', sourceUrl: 'https://example.com/soup', ingredients: 'water', steps: 'Boil' },
+		{ id: 'keep-me', createdAt: new Date('2026-01-01T00:00:00Z') }
+	);
+
+	it('replaces editable fields and keeps identity, date, notes and archive state', () => {
+		const edited = applyEdit(
+			{ ...original, notes: 'legacy', archived: true },
+			{ title: '  Stew ', sourceUrl: '', ingredients: 'beef\n\nonion', steps: '**Brown** it' }
+		);
+		expect(edited).toEqual({
+			id: 'keep-me',
+			title: 'Stew',
+			sourceUrl: null,
+			ingredients: ['beef', 'onion'],
+			steps: ['**Brown** it'],
+			notes: 'legacy',
+			createdAt: '2026-01-01T00:00:00.000Z',
+			archived: true
+		});
 	});
 });

@@ -54,6 +54,9 @@
 	{#if recipe && shown}
 		<article>
 			<h1>{shown.title}</h1>
+			<p class="edit-link">
+				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
+			</p>
 			{#if recipe.sourceUrl}
 				<!-- External user-supplied URL: resolve() only applies to app routes. -->
 				<p>

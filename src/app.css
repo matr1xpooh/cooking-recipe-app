@@ -466,3 +466,7 @@ summary {
 	border-radius: 999px;
 	cursor: pointer;
 }
+
+.edit-link {
+	margin: -0.5rem 0 1rem;
+}

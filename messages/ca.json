@@ -38,5 +38,7 @@
 	"translating": "Traduint…",
 	"translation_failed": "No s'ha pogut traduir ara. Es mostra el text original.",
 	"show_original": "Mostra l'original",
-	"show_translation": "Mostra la traducció"
+	"show_translation": "Mostra la traducció",
+	"recipe_edit": "Edita",
+	"recipe_edit_title": "Edita la recepta"
 }

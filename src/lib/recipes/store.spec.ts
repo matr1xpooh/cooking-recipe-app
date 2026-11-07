@@ -60,3 +60,22 @@ describe('RecipeStore', () => {
 		expect(store.recipes).toEqual([recipe]);
 	});
 });
+
+describe('RecipeStore.update', () => {
+	it('replaces the matching recipe and persists', () => {
+		const storage = memoryStorage();
+		const store = new RecipeStore(storage);
+		store.add(recipe);
+		store.update({ ...recipe, title: 'Better soup' });
+		expect(store.recipes.map((r) => r.title)).toEqual(['Better soup']);
+		expect(readRecipes(storage)[0].title).toBe('Better soup');
+	});
+
+	it('ignores an unknown id', () => {
+		const store = new RecipeStore(memoryStorage());
+		store.add(recipe);
+		store.update({ ...recipe, id: 'missing', title: 'x' });
+		expect(store.recipes).toHaveLength(1);
+		expect(store.recipes[0].title).toBe('Soup');
+	});
+});

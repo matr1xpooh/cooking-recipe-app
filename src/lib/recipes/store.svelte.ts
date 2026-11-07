@@ -69,6 +69,13 @@ export class RecipeStore {
 		this.persist();
 	}
 
+	/** Replaces the recipe with the same id and persists the list. Unknown ids are ignored. */
+	update(recipe: Recipe): void {
+		if (!this.recipes.some((r) => r.id === recipe.id)) return;
+		this.recipes = this.recipes.map((r) => (r.id === recipe.id ? recipe : r));
+		this.persist();
+	}
+
 	private persist(): void {
 		this.storage?.setItem(RECIPES_STORAGE_KEY, JSON.stringify(this.recipes));
 	}

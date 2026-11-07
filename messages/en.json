@@ -38,5 +38,7 @@
 	"translating": "Translating…",
 	"translation_failed": "Couldn't translate right now. Showing the original text.",
 	"show_original": "Show original",
-	"show_translation": "Show translation"
+	"show_translation": "Show translation",
+	"recipe_edit": "Edit",
+	"recipe_edit_title": "Edit recipe"
 }
