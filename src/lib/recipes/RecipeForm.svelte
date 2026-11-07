@@ -4,7 +4,6 @@
 	import {
 		hasErrors,
 		mergeIngredientLines,
-		parseLines,
 		validateRecipeInput,
 		type IngredientSource,
 		type RecipeErrorKey,
@@ -12,13 +11,14 @@
 		type RecipeInput
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
+	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let {
 		initial,
 		initialSource = 'typed',
 		submitLabel,
 		cancelHref,
-		hasSavedImage = false,
+		savedImageId = null,
 		onsave
 	}: {
 		/** Starting values. Read once when the form mounts. */
@@ -27,8 +27,8 @@
 		submitLabel: string;
 		/** Where Cancel goes. Already resolved by the caller. */
 		cancelHref: string;
-		/** True when the recipe already has a screenshot saved with it. */
-		hasSavedImage?: boolean;
+		/** The recipe id when it already has a saved screenshot; null otherwise. */
+		savedImageId?: string | null;
 		/** Called with valid input, the ingredient source, and a new screenshot (or null). */
 		onsave: (input: RecipeInput, source: IngredientSource, image: File | null) => void;
 	} = $props();
@@ -37,12 +37,10 @@
 	// svelte-ignore state_referenced_locally
 	let input = $state<RecipeInput>({ ...initial });
 	// svelte-ignore state_referenced_locally
-	let rows = $state<string[]>(
-		parseLines(initial.ingredients).length ? parseLines(initial.ingredients) : ['']
-	);
+	let text = $state(initial.ingredients);
 	// svelte-ignore state_referenced_locally
 	let source = $state<IngredientSource>(initialSource);
-	let readImage = $state(true);
+	let tab = $state<'text' | 'image'>('text');
 	let pending = $state<{ lines: string[]; source: IngredientSource } | null>(null);
 
 	let errors = $state<RecipeErrors>({});
@@ -51,7 +49,11 @@
 	let stepsField: HTMLTextAreaElement | undefined = $state();
 	let scanning = $state(false);
 	let scanError = $state<string | null>(null);
+	/** A screenshot chosen or pasted in this session. Replaces any saved one on save. */
 	let image = $state<File | null>(null);
+	/** The screenshot saved with the recipe, loaded for display. */
+	let savedBlob = $state<Blob | null>(null);
+	let previewUrl = $state<string | null>(null);
 
 	const styleColors = [
 		{ key: 'red', label: () => m.color_red() },
@@ -91,19 +93,47 @@
 		image: () => m.source_image()
 	};
 
+	// Saved screenshot: load it for display, unless a new one has been chosen.
+	$effect(() => {
+		if (!savedImageId || image) return;
+		let cancelled = false;
+		loadImage(savedImageId).then((blob) => {
+			if (!cancelled) savedBlob = blob;
+		});
+		return () => {
+			cancelled = true;
+		};
+	});
+
+	// Preview of whichever screenshot applies: the new one, else the saved one.
+	$effect(() => {
+		const blob = image ?? savedBlob;
+		if (!blob) {
+			previewUrl = null;
+			return;
+		}
+		const url = URL.createObjectURL(blob);
+		previewUrl = url;
+		return () => URL.revokeObjectURL(url);
+	});
+
 	/** The non-empty ingredient lines, as they will be saved. */
 	function currentLines(): string[] {
-		return rows.map((r) => r.trim()).filter((r) => r.length > 0);
+		return text
+			.split('\n')
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0);
 	}
 
 	/**
-	 * Puts new ingredient lines into the list. An empty list takes them straight away;
+	 * Puts new ingredient lines into the text. An empty list takes them straight away;
 	 * a non-empty one asks whether to add to it or replace it.
 	 */
 	function offerLines(lines: string[], next: IngredientSource) {
 		if (lines.length === 0) return;
+		tab = 'text';
 		if (currentLines().length === 0) {
-			rows = [...lines];
+			text = lines.join('\n');
 			source = next;
 			return;
 		}
@@ -114,18 +144,9 @@
 		if (!pending) return;
 		const next =
 			mode === 'replace' ? pending.lines : mergeIngredientLines(currentLines(), pending.lines);
-		rows = next.length > 0 ? next : [''];
+		text = next.join('\n');
 		source = pending.source;
 		pending = null;
-	}
-
-	function addRow() {
-		rows = [...rows, ''];
-	}
-
-	function removeRow(index: number) {
-		rows = rows.filter((_, i) => i !== index);
-		if (rows.length === 0) rows = [''];
 	}
 
 	/** Fills empty fields from the source page's recipe data. Typed values are kept. */
@@ -174,14 +195,12 @@
 		attach(file);
 	}
 
-	/**
-	 * Attaches the image as the original file and makes it the ingredient source.
-	 * With reading switched on, its text lines are offered for the list as well.
-	 */
+	/** Makes the image the ingredient source and shows it. Its text is read only on request. */
 	function attach(file: File) {
 		image = file;
 		source = 'image';
-		if (readImage) scanScreenshot(file);
+		tab = 'image';
+		scanError = null;
 	}
 
 	function removeImage() {
@@ -214,12 +233,15 @@
 		}
 	}
 
-	async function scanScreenshot(file: File) {
+	/** Reads the text lines from the shown screenshot and offers them for the text box. */
+	async function readText() {
+		const blob = image ?? savedBlob;
+		if (!blob) return;
 		scanError = null;
 		scanning = true;
 		try {
 			const body = new FormData();
-			body.append('image', file);
+			body.append('image', blob, 'screenshot.png');
 			const res = await fetch('/api/recipes/ocr', { method: 'POST', body });
 			const data = await res.json().catch(() => null);
 			if (!res.ok) {
@@ -286,68 +308,98 @@
 		<p role="alert">{importErrorMessages[importError]()}</p>
 	{/if}
 
-	<fieldset class="ingredients">
-		<legend>{m.recipe_field_ingredients()}</legend>
-		<p class="meta">{m.ingredients_source()}: {sourceLabels[source]()}</p>
+	<div class="ingredients-block">
+		<span class="field-label">{m.recipe_field_ingredients()}</span>
+		<div class="tabs" role="tablist" aria-label={m.recipe_field_ingredients()}>
+			<button
+				type="button"
+				role="tab"
+				id="tab-text"
+				class="tab"
+				class:active={tab === 'text'}
+				aria-selected={tab === 'text'}
+				aria-controls="panel-text"
+				onclick={() => (tab = 'text')}>{m.tab_text()}</button
+			>
+			<button
+				type="button"
+				role="tab"
+				id="tab-image"
+				class="tab"
+				class:active={tab === 'image'}
+				aria-selected={tab === 'image'}
+				aria-controls="panel-image"
+				onclick={() => (tab = 'image')}>{m.tab_image()}</button
+			>
+		</div>
 
-		{#each rows, i (i)}
-			<div class="ingredient-row">
-				<input type="text" bind:value={rows[i]} aria-label={m.ingredient_label({ n: i + 1 })} />
-				<button type="button" class="link-button" onclick={() => removeRow(i)}>
-					{m.ingredient_remove()}
-				</button>
+		{#if tab === 'text'}
+			<div role="tabpanel" id="panel-text" aria-labelledby="tab-text" class="tabpanel">
+				<textarea rows="8" aria-label={m.recipe_field_ingredients()} bind:value={text}></textarea>
+				<small>{m.ingredients_hint()}</small>
+				<p class="meta">{m.ingredients_source()}: {sourceLabels[source]()}</p>
+
+				{#if pending}
+					<div class="merge-panel" role="group" aria-label={m.ingredients_conflict()}>
+						<p>{m.ingredients_conflict()}</p>
+						<div class="merge-actions">
+							<button type="button" onclick={() => resolvePending('merge')}
+								>{m.ingredients_merge()}</button
+							>
+							<button type="button" onclick={() => resolvePending('replace')}>
+								{m.ingredients_replace()}
+							</button>
+							<button type="button" class="link-button" onclick={() => (pending = null)}>
+								{m.recipe_cancel()}
+							</button>
+						</div>
+					</div>
+				{/if}
 			</div>
-		{/each}
-		<button type="button" class="add-row" onclick={addRow}>{m.ingredient_add()}</button>
+		{:else}
+			<div role="tabpanel" id="panel-image" aria-labelledby="tab-image" class="tabpanel">
+				{#if previewUrl}
+					<img class="preview" src={previewUrl} alt={m.recipe_screenshot_alt()} />
+					<div class="image-actions">
+						<button type="button" class="file-button" onclick={readText} disabled={scanning}>
+							{scanning ? m.ocr_scanning() : m.image_read_text()}
+						</button>
+						{#if image}
+							<button type="button" class="link-button" onclick={removeImage}>
+								{m.image_remove()}
+							</button>
+						{/if}
+					</div>
+				{:else}
+					<p class="meta">{m.image_empty()}</p>
+				{/if}
 
-		{#if pending}
-			<div class="merge-panel" role="group" aria-label={m.ingredients_conflict()}>
-				<p>{m.ingredients_conflict()}</p>
-				<div class="merge-actions">
-					<button type="button" onclick={() => resolvePending('merge')}
-						>{m.ingredients_merge()}</button
+				<div class="image-actions">
+					<label class="file-button" class:busy={scanning}>
+						{m.ocr_label()}
+						<input
+							type="file"
+							accept="image/png,image/jpeg"
+							disabled={scanning}
+							onchange={onFilePicked}
+						/>
+					</label>
+					<button
+						type="button"
+						class="file-button"
+						onclick={pasteFromClipboard}
+						disabled={scanning}
 					>
-					<button type="button" onclick={() => resolvePending('replace')}>
-						{m.ingredients_replace()}
-					</button>
-					<button type="button" class="link-button" onclick={() => (pending = null)}>
-						{m.recipe_cancel()}
+						{m.clipboard_button()}
 					</button>
 				</div>
 			</div>
 		{/if}
-	</fieldset>
 
-	<div class="screenshot-field">
-		<label class="file-button" class:busy={scanning}>
-			{scanning ? m.ocr_scanning() : m.ocr_label()}
-			<input
-				type="file"
-				accept="image/png,image/jpeg"
-				disabled={scanning}
-				onchange={onFilePicked}
-			/>
-		</label>
-		<button type="button" class="file-button" onclick={pasteFromClipboard} disabled={scanning}>
-			{m.clipboard_button()}
-		</button>
-		<label class="checkbox">
-			<input type="checkbox" bind:checked={readImage} />
-			{m.image_read_option()}
-		</label>
-		<small>{m.ocr_hint()}</small>
-		{#if image}
-			<p class="attached">
-				<span>{m.image_attached()}: {image.name}</span>
-				<button type="button" class="link-button" onclick={removeImage}>{m.image_remove()}</button>
-			</p>
-		{:else if hasSavedImage}
-			<p class="meta">{m.image_saved_note()}</p>
+		{#if scanError}
+			<p role="alert">{scanErrorMessages[scanError]?.() ?? m.error_ocr_failed()}</p>
 		{/if}
 	</div>
-	{#if scanError}
-		<p role="alert">{scanErrorMessages[scanError]?.() ?? m.error_ocr_failed()}</p>
-	{/if}
 
 	<div class="styled-field">
 		<span class="field-label">{m.recipe_field_steps()}</span>

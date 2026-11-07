@@ -17,6 +17,7 @@
 	let translated = $state<{ fields: RecipeFields; failed: boolean } | null>(null);
 	let translating = $state(false);
 	let showOriginal = $state(false);
+	let ingredientsTab = $state<'text' | 'image'>('image');
 	let latestRequest = 0;
 
 	onMount(() => {
@@ -111,28 +112,46 @@
 
 			<section>
 				<h2>{m.recipe_ingredients_heading()}</h2>
-				<p class="meta">
-					{m.ingredients_source()}: {sourceLabels[recipe.source]()}
-					{#if recipe.source === 'web' && recipe.sourceUrl}
-						·
-						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-						<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
-							>{m.recipe_open_source()}</a
-						>
-					{/if}
-				</p>
-				{#if shown.ingredients.length > 0}
-					<ul class="plain">
-						{#each shown.ingredients as item, i (i)}
-							<li>{item}</li>
-						{/each}
-					</ul>
-				{/if}
 				{#if screenshotUrl}
-					<details class="screenshot" open>
-						<summary>{m.recipe_screenshot_heading()}</summary>
-						<img src={screenshotUrl} alt={m.recipe_screenshot_alt()} />
-					</details>
+					<div class="tabs" role="tablist" aria-label={m.recipe_ingredients_heading()}>
+						<button
+							type="button"
+							role="tab"
+							class="tab"
+							class:active={ingredientsTab === 'text'}
+							aria-selected={ingredientsTab === 'text'}
+							onclick={() => (ingredientsTab = 'text')}>{m.tab_text()}</button
+						>
+						<button
+							type="button"
+							role="tab"
+							class="tab"
+							class:active={ingredientsTab === 'image'}
+							aria-selected={ingredientsTab === 'image'}
+							onclick={() => (ingredientsTab = 'image')}>{m.tab_image()}</button
+						>
+					</div>
+				{/if}
+				{#if !screenshotUrl || ingredientsTab === 'text'}
+					<p class="meta">
+						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
+						{#if recipe.source === 'web' && recipe.sourceUrl}
+							·
+							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
+							<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
+								>{m.recipe_open_source()}</a
+							>
+						{/if}
+					</p>
+					{#if shown.ingredients.length > 0}
+						<ul class="plain">
+							{#each shown.ingredients as item, i (i)}
+								<li>{item}</li>
+							{/each}
+						</ul>
+					{/if}
+				{:else if screenshotUrl}
+					<img class="preview" src={screenshotUrl} alt={m.recipe_screenshot_alt()} />
 				{/if}
 			</section>
 
