@@ -5,6 +5,8 @@ export interface Recipe {
 	sourceUrl: string | null;
 	ingredients: string[];
 	steps: string[];
+	/** Free-form notes in the app's markup (see notes.ts). Written in English. */
+	notes: string;
 	createdAt: string;
 	archived: boolean;
 }
@@ -15,6 +17,7 @@ export interface RecipeInput {
 	sourceUrl: string;
 	ingredients: string;
 	steps: string;
+	notes: string;
 }
 
 export type RecipeField = 'title' | 'sourceUrl';
@@ -65,6 +68,7 @@ export function createRecipe(input: RecipeInput, options: { id: string; createdA
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps),
+		notes: input.notes.trim(),
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};

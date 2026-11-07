@@ -20,5 +20,19 @@
 	"import_error_page_unreachable": "Не удалось загрузить страницу. Проверьте адрес и попробуйте снова.",
 	"import_error_page_too_large": "Страница слишком большая для импорта.",
 	"import_error_no_recipe_found": "На этой странице не найден рецепт. Заполните поля вручную.",
-	"import_error_description_not_parsed": "В описании видео нет понятных разделов «Ингредиенты» и «Приготовление». Заполните поля вручную."
+	"import_error_description_not_parsed": "В описании видео нет понятных разделов «Ингредиенты» и «Приготовление». Заполните поля вручную.",
+	"notes_label": "Заметки",
+	"notes_hint": "Пишите по-английски. Используйте **жирный**, *курсив* или [red]цвет[/red].",
+	"notes_bold": "Жирный",
+	"notes_italic": "Курсив",
+	"color_red": "Красный",
+	"color_orange": "Оранжевый",
+	"color_green": "Зелёный",
+	"color_blue": "Синий",
+	"color_purple": "Фиолетовый",
+	"recipe_open_source": "Открыть источник",
+	"recipe_ingredients_heading": "Ингредиенты",
+	"recipe_steps_heading": "Приготовление",
+	"recipe_notes_heading": "Заметки",
+	"recipe_not_found": "Рецепт не найден."
 }

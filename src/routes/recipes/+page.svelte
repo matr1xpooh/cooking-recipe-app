@@ -23,7 +23,9 @@
 		<ul>
 			{#each recipeStore.recipes as recipe (recipe.id)}
 				<li>
-					<strong>{recipe.title}</strong>
+					<a class="card-link" href={resolve('/recipes/[id]', { id: recipe.id })}>
+						<strong>{recipe.title}</strong>
+					</a>
 					{#if recipe.sourceUrl}
 						<!-- External user-supplied URL: resolve() only applies to app routes. -->
 						<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->

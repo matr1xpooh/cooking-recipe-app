@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
@@ -13,10 +14,28 @@
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 
-	let input = $state<RecipeInput>({ title: '', sourceUrl: '', ingredients: '', steps: '' });
+	let input = $state<RecipeInput>({
+		title: '',
+		sourceUrl: '',
+		ingredients: '',
+		steps: '',
+		notes: ''
+	});
 	let errors = $state<RecipeErrors>({});
 	let importing = $state(false);
 	let importError = $state<ImportErrorKey | null>(null);
+	let notesField: HTMLTextAreaElement | undefined = $state();
+
+	// Load saved recipes first: saving writes the whole list back to storage.
+	onMount(() => recipeStore.load());
+
+	const noteColors = [
+		{ key: 'red', label: () => m.color_red() },
+		{ key: 'orange', label: () => m.color_orange() },
+		{ key: 'green', label: () => m.color_green() },
+		{ key: 'blue', label: () => m.color_blue() },
+		{ key: 'purple', label: () => m.color_purple() }
+	] as const;
 
 	const errorMessages: Record<RecipeErrorKey, () => string> = {
 		title_required: () => m.error_title_required(),
@@ -57,6 +76,18 @@
 		} finally {
 			importing = false;
 		}
+	}
+
+	/** Wraps the selected notes text in markup markers, keeping the selection. */
+	async function wrapNotes(open: string, close: string) {
+		const el = notesField;
+		if (!el) return;
+		const { selectionStart: start, selectionEnd: end, value } = el;
+		const selected = value.slice(start, end);
+		input.notes = value.slice(0, start) + open + selected + close + value.slice(end);
+		await tick();
+		el.focus();
+		el.setSelectionRange(start + open.length, start + open.length + selected.length);
 	}
 
 	function submit(event: SubmitEvent) {
@@ -125,6 +156,34 @@
 			{m.recipe_field_steps()}
 			<textarea rows="8" bind:value={input.steps}></textarea>
 		</label>
+
+		<div class="notes-field">
+			<span class="field-label">{m.notes_label()}</span>
+			<div class="toolbar" role="toolbar" aria-label={m.notes_label()}>
+				<button type="button" onclick={() => wrapNotes('**', '**')} aria-label={m.notes_bold()}>
+					<strong>B</strong>
+				</button>
+				<button type="button" onclick={() => wrapNotes('*', '*')} aria-label={m.notes_italic()}>
+					<em>I</em>
+				</button>
+				{#each noteColors as color (color.key)}
+					<button
+						type="button"
+						class="swatch note-{color.key}"
+						onclick={() => wrapNotes(`[${color.key}]`, `[/${color.key}]`)}
+						aria-label={color.label()}
+					>
+						{color.label()}
+					</button>
+				{/each}
+			</div>
+			<textarea
+				rows="6"
+				aria-label={m.notes_label()}
+				bind:this={notesField}
+				bind:value={input.notes}></textarea>
+			<small>{m.notes_hint()}</small>
+		</div>
 
 		<div>
 			<button type="submit">{m.recipe_save()}</button>

@@ -20,7 +20,8 @@ function isRecipe(value: unknown): value is Recipe {
 		Array.isArray(r.steps) &&
 		r.steps.every((s) => typeof s === 'string') &&
 		typeof r.createdAt === 'string' &&
-		typeof r.archived === 'boolean'
+		typeof r.archived === 'boolean' &&
+		(r.notes === undefined || typeof r.notes === 'string')
 	);
 }
 
@@ -30,7 +31,9 @@ export function readRecipes(storage: KeyValueStorage): Recipe[] {
 	if (raw === null) return [];
 	try {
 		const parsed: unknown = JSON.parse(raw);
-		return Array.isArray(parsed) ? parsed.filter(isRecipe) : [];
+		if (!Array.isArray(parsed)) return [];
+		// Recipes saved before notes existed get empty notes instead of being dropped.
+		return parsed.filter(isRecipe).map((r) => ({ ...r, notes: r.notes ?? '' }));
 	} catch {
 		return [];
 	}

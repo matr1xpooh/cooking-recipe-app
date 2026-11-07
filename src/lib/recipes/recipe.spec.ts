@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { createRecipe, hasErrors, isHttpUrl, parseLines, validateRecipeInput } from './recipe';
 
-const valid = { title: 'Pancakes', sourceUrl: '', ingredients: '', steps: '' };
+const valid = { title: 'Pancakes', sourceUrl: '', ingredients: '', steps: '', notes: '' };
 
 describe('parseLines', () => {
 	it('trims lines and drops empty ones', () => {
@@ -50,7 +50,8 @@ describe('createRecipe', () => {
 				title: '  Pancakes ',
 				sourceUrl: ' https://example.com/p ',
 				ingredients: 'flour\n milk ',
-				steps: 'Mix\n\nCook'
+				steps: 'Mix\n\nCook',
+				notes: '  **Use** [red]less[/red] salt  '
 			},
 			{ id: 'abc', createdAt: new Date('2026-11-07T10:00:00Z') }
 		);
@@ -60,6 +61,7 @@ describe('createRecipe', () => {
 			sourceUrl: 'https://example.com/p',
 			ingredients: ['flour', 'milk'],
 			steps: ['Mix', 'Cook'],
+			notes: '**Use** [red]less[/red] salt',
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});

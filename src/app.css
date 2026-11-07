@@ -12,6 +12,11 @@
 	--danger: #b42318;
 	--focus: #2563eb;
 	--radius: 10px;
+	--note-red: #c62828;
+	--note-orange: #b45309;
+	--note-green: #15803d;
+	--note-blue: #1d4ed8;
+	--note-purple: #7e22ce;
 	color-scheme: light dark;
 }
 
@@ -27,6 +32,11 @@
 		--accent-hover: #fb923c;
 		--danger: #fca5a5;
 		--focus: #93c5fd;
+		--note-red: #f87171;
+		--note-orange: #fb923c;
+		--note-green: #4ade80;
+		--note-blue: #60a5fa;
+		--note-purple: #c084fc;
 	}
 }
 
@@ -256,4 +266,144 @@ form > div:last-of-type a {
 	h1 {
 		font-size: 2rem;
 	}
+}
+
+/* Recipe list: whole card is clickable (stretched link), source link stays separate */
+main li {
+	position: relative;
+}
+
+.card-link {
+	color: var(--text);
+	text-decoration: none;
+}
+
+.card-link::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	border-radius: var(--radius);
+}
+
+main li a:not(.card-link) {
+	position: relative;
+	z-index: 1;
+	justify-self: start;
+}
+
+main li:hover {
+	border-color: var(--accent);
+}
+
+/* Recipe detail */
+
+.back {
+	margin: 0 0 0.5rem;
+}
+
+article h2 {
+	font-size: 1.2rem;
+	margin: 1.5rem 0 0.5rem;
+}
+
+article ul.plain,
+article ol {
+	background: none;
+	border: none;
+	border-radius: 0;
+	padding: 0 0 0 1.25rem;
+	margin: 0;
+	display: block;
+}
+
+article ul.plain li,
+article ol li {
+	background: none;
+	border: none;
+	padding: 0.2rem 0;
+	display: list-item;
+}
+
+article ul.plain {
+	list-style: disc;
+}
+
+article ol {
+	list-style: decimal;
+}
+
+article ol li {
+	padding-left: 0.25rem;
+}
+
+/* Notes: formatting spans from the notes markup */
+.notes {
+	white-space: pre-wrap;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+	padding: 0.9rem 1rem;
+	margin: 0;
+	line-height: 1.6;
+}
+
+.notes .bold {
+	font-weight: 700;
+}
+
+.notes .italic {
+	font-style: italic;
+}
+
+.note-red {
+	color: var(--note-red);
+}
+
+.note-orange {
+	color: var(--note-orange);
+}
+
+.note-green {
+	color: var(--note-green);
+}
+
+.note-blue {
+	color: var(--note-blue);
+}
+
+.note-purple {
+	color: var(--note-purple);
+}
+
+/* Notes editor in the add-recipe form */
+form > .notes-field {
+	display: grid;
+	gap: 0.4rem;
+}
+
+.field-label {
+	font-weight: 600;
+}
+
+.toolbar {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+}
+
+.toolbar button {
+	min-height: 40px;
+	padding: 0 0.8rem;
+	background: var(--bg);
+	color: var(--text);
+	border: 1px solid var(--border);
+	font-size: 0.9rem;
+}
+
+.toolbar button:hover {
+	border-color: var(--accent);
+}
+
+.toolbar .swatch {
+	font-weight: 700;
 }

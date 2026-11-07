@@ -20,5 +20,19 @@
 	"import_error_page_unreachable": "No se pudo cargar la página. Revisa la dirección e inténtalo de nuevo.",
 	"import_error_page_too_large": "La página es demasiado grande para importarla.",
 	"import_error_no_recipe_found": "No se encontró ninguna receta en esa página. Rellénala manualmente.",
-	"import_error_description_not_parsed": "La descripción del vídeo no tiene secciones claras de ingredientes o pasos. Rellénalas manualmente."
+	"import_error_description_not_parsed": "La descripción del vídeo no tiene secciones claras de ingredientes o pasos. Rellénalas manualmente.",
+	"notes_label": "Notas",
+	"notes_hint": "Escribe en inglés. Usa **negrita**, *cursiva* o [red]color[/red].",
+	"notes_bold": "Negrita",
+	"notes_italic": "Cursiva",
+	"color_red": "Rojo",
+	"color_orange": "Naranja",
+	"color_green": "Verde",
+	"color_blue": "Azul",
+	"color_purple": "Morado",
+	"recipe_open_source": "Abrir fuente",
+	"recipe_ingredients_heading": "Ingredientes",
+	"recipe_steps_heading": "Pasos",
+	"recipe_notes_heading": "Notas",
+	"recipe_not_found": "Receta no encontrada."
 }
