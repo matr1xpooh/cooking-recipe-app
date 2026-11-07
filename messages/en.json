@@ -41,7 +41,7 @@
 	"show_translation": "Show translation",
 	"recipe_edit": "Edit",
 	"recipe_edit_title": "Edit recipe",
-	"ocr_label": "Add ingredients from a screenshot",
+	"ocr_label": "Choose a screenshot file",
 	"ocr_scanning": "Reading screenshot…",
 	"ocr_hint": "Attached as the original file and shown with the recipe. Its ingredient lines are added below yours.",
 	"error_image_invalid": "Please upload a PNG or JPEG image.",
@@ -64,5 +64,9 @@
 	"ingredients_conflict": "This recipe already has ingredients. Add the new lines to them, or replace the list?",
 	"ingredients_merge": "Add to list",
 	"ingredients_replace": "Replace list",
-	"image_read_option": "Read ingredients from this image"
+	"image_read_option": "Read ingredients from this image",
+	"clipboard_button": "Paste screenshot from clipboard",
+	"error_clipboard_unavailable": "This browser can't read the clipboard. Use the file button instead.",
+	"error_clipboard_denied": "Allow clipboard access for this site to paste the image, or use the file button.",
+	"error_no_image_on_clipboard": "There's no image on the clipboard. Take a screenshot first, or copy one."
 }

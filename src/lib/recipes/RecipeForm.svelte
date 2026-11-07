@@ -76,6 +76,9 @@
 	};
 
 	const scanErrorMessages: Record<string, () => string> = {
+		clipboard_unavailable: () => m.error_clipboard_unavailable(),
+		clipboard_denied: () => m.error_clipboard_denied(),
+		no_image_on_clipboard: () => m.error_no_image_on_clipboard(),
 		image_invalid: () => m.error_image_invalid(),
 		image_too_large: () => m.error_image_too_large(),
 		no_text_found: () => m.error_no_text_found(),
@@ -184,6 +187,31 @@
 	function removeImage() {
 		image = null;
 		if (source === 'image') source = 'typed';
+	}
+
+	/**
+	 * Reads an image straight from the clipboard. This is the reliable route for a
+	 * screenshot; the file button opens the file picker instead.
+	 */
+	async function pasteFromClipboard() {
+		scanError = null;
+		if (!navigator.clipboard?.read) {
+			scanError = 'clipboard_unavailable';
+			return;
+		}
+		try {
+			for (const item of await navigator.clipboard.read()) {
+				const type = item.types.find((t) => t === 'image/png' || t === 'image/jpeg');
+				if (!type) continue;
+				const blob = await item.getType(type);
+				const extension = type === 'image/png' ? 'png' : 'jpg';
+				attach(new File([blob], `clipboard.${extension}`, { type }));
+				return;
+			}
+			scanError = 'no_image_on_clipboard';
+		} catch {
+			scanError = 'clipboard_denied';
+		}
 	}
 
 	async function scanScreenshot(file: File) {
@@ -300,6 +328,9 @@
 				onchange={onFilePicked}
 			/>
 		</label>
+		<button type="button" class="file-button" onclick={pasteFromClipboard} disabled={scanning}>
+			{m.clipboard_button()}
+		</button>
 		<label class="checkbox">
 			<input type="checkbox" bind:checked={readImage} />
 			{m.image_read_option()}

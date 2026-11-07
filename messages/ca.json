@@ -41,7 +41,7 @@
 	"show_translation": "Mostra la traducció",
 	"recipe_edit": "Edita",
 	"recipe_edit_title": "Edita la recepta",
-	"ocr_label": "Afegeix ingredients des d'una captura",
+	"ocr_label": "Tria un fitxer de captura",
 	"ocr_scanning": "Llegint la captura…",
 	"ocr_hint": "S'adjunta tal com és i es mostra amb la recepta. Les seves línies d'ingredients s'afegeixen sota les teves.",
 	"error_image_invalid": "Puja una imatge PNG o JPEG.",
@@ -64,5 +64,9 @@
 	"ingredients_conflict": "Aquesta recepta ja té ingredients. Vols afegir les línies noves o substituir la llista?",
 	"ingredients_merge": "Afegeix a la llista",
 	"ingredients_replace": "Substitueix la llista",
-	"image_read_option": "Llegeix els ingredients d'aquesta imatge"
+	"image_read_option": "Llegeix els ingredients d'aquesta imatge",
+	"clipboard_button": "Enganxa captura del portapapers",
+	"error_clipboard_unavailable": "Aquest navegador no pot llegir el portapapers. Usa el botó de fitxer.",
+	"error_clipboard_denied": "Permet l'accés al portapapers per enganxar la imatge, o usa el botó de fitxer.",
+	"error_no_image_on_clipboard": "No hi ha cap imatge al portapapers. Fes primer una captura o copia'n una."
 }

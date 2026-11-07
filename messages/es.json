@@ -41,7 +41,7 @@
 	"show_translation": "Mostrar traducción",
 	"recipe_edit": "Editar",
 	"recipe_edit_title": "Editar receta",
-	"ocr_label": "Añadir ingredientes desde una captura",
+	"ocr_label": "Elegir un archivo de captura",
 	"ocr_scanning": "Leyendo la captura…",
 	"ocr_hint": "Se adjunta tal cual y se muestra con la receta. Sus líneas de ingredientes se añaden debajo de las tuyas.",
 	"error_image_invalid": "Sube una imagen PNG o JPEG.",
@@ -64,5 +64,9 @@
 	"ingredients_conflict": "Esta receta ya tiene ingredientes. ¿Añadir las nuevas líneas o reemplazar la lista?",
 	"ingredients_merge": "Añadir a la lista",
 	"ingredients_replace": "Reemplazar la lista",
-	"image_read_option": "Leer los ingredientes de esta imagen"
+	"image_read_option": "Leer los ingredientes de esta imagen",
+	"clipboard_button": "Pegar captura desde el portapapeles",
+	"error_clipboard_unavailable": "Este navegador no puede leer el portapapeles. Usa el botón de archivo.",
+	"error_clipboard_denied": "Permite el acceso al portapapeles para pegar la imagen, o usa el botón de archivo.",
+	"error_no_image_on_clipboard": "No hay ninguna imagen en el portapapeles. Haz una captura primero o copia una."
 }
