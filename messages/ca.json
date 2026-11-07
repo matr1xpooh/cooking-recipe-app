@@ -12,5 +12,12 @@
 	"recipe_save": "Desa la recepta",
 	"recipe_cancel": "Cancel·la",
 	"error_title_required": "Escriu un títol.",
-	"error_source_url_invalid": "Introdueix una adreça http:// o https:// vàlida."
+	"error_source_url_invalid": "Introdueix una adreça http:// o https:// vàlida.",
+	"import_button": "Importa des de URL",
+	"import_importing": "Important…",
+	"import_hint": "Omple els camps buits amb les dades de recepta de la pàgina.",
+	"import_error_url_not_allowed": "No es pot importar aquesta adreça.",
+	"import_error_page_unreachable": "No s'ha pogut carregar la pàgina. Revisa l'adreça i torna-ho a provar.",
+	"import_error_page_too_large": "La pàgina és massa gran per importar-la.",
+	"import_error_no_recipe_found": "No s'ha trobat cap recepta en aquesta pàgina. Omple-la manualment."
 }

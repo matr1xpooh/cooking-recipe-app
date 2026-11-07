@@ -11,14 +11,52 @@
 		type RecipeErrors,
 		type RecipeInput
 	} from '#lib/recipes/recipe.js';
+	import type { ImportErrorKey } from '#lib/recipes/import.js';
 
 	let input = $state<RecipeInput>({ title: '', sourceUrl: '', ingredients: '', steps: '' });
 	let errors = $state<RecipeErrors>({});
+	let importing = $state(false);
+	let importError = $state<ImportErrorKey | null>(null);
 
 	const errorMessages: Record<RecipeErrorKey, () => string> = {
 		title_required: () => m.error_title_required(),
 		source_url_invalid: () => m.error_source_url_invalid()
 	};
+
+	const importErrorMessages: Record<ImportErrorKey, () => string> = {
+		url_invalid: () => m.error_source_url_invalid(),
+		url_not_allowed: () => m.import_error_url_not_allowed(),
+		page_unreachable: () => m.import_error_page_unreachable(),
+		page_too_large: () => m.import_error_page_too_large(),
+		no_recipe_found: () => m.import_error_no_recipe_found()
+	};
+
+	/** Fills empty fields from the source page's recipe data. Typed values are kept. */
+	async function importFromUrl() {
+		importError = null;
+		const target = input.sourceUrl.trim();
+		if (target.length === 0) {
+			importError = 'url_invalid';
+			return;
+		}
+
+		importing = true;
+		try {
+			const res = await fetch(`/api/recipes/import?url=${encodeURIComponent(target)}`);
+			const body = await res.json();
+			if (!res.ok) {
+				importError = body.error ?? 'page_unreachable';
+				return;
+			}
+			if (input.title.trim().length === 0) input.title = body.title;
+			if (input.ingredients.trim().length === 0) input.ingredients = body.ingredients.join('\n');
+			if (input.steps.trim().length === 0) input.steps = body.steps.join('\n');
+		} catch {
+			importError = 'page_unreachable';
+		} finally {
+			importing = false;
+		}
+	}
 
 	function submit(event: SubmitEvent) {
 		event.preventDefault();
@@ -65,6 +103,16 @@
 		</label>
 		{#if errors.sourceUrl}
 			<p role="alert">{errorMessages[errors.sourceUrl]()}</p>
+		{/if}
+
+		<div>
+			<button type="button" onclick={importFromUrl} disabled={importing}>
+				{importing ? m.import_importing() : m.import_button()}
+			</button>
+			<small>{m.import_hint()}</small>
+		</div>
+		{#if importError}
+			<p role="alert">{importErrorMessages[importError]()}</p>
 		{/if}
 
 		<label>

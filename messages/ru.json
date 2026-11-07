@@ -12,5 +12,12 @@
 	"recipe_save": "Сохранить рецепт",
 	"recipe_cancel": "Отмена",
 	"error_title_required": "Введите название.",
-	"error_source_url_invalid": "Введите корректный адрес, начинающийся с http:// или https://."
+	"error_source_url_invalid": "Введите корректный адрес, начинающийся с http:// или https://.",
+	"import_button": "Импорт по ссылке",
+	"import_importing": "Импорт…",
+	"import_hint": "Заполняет пустые поля данными рецепта со страницы.",
+	"import_error_url_not_allowed": "Этот адрес нельзя импортировать.",
+	"import_error_page_unreachable": "Не удалось загрузить страницу. Проверьте адрес и попробуйте снова.",
+	"import_error_page_too_large": "Страница слишком большая для импорта.",
+	"import_error_no_recipe_found": "На этой странице не найден рецепт. Заполните поля вручную."
 }

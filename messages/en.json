@@ -12,5 +12,12 @@
 	"recipe_save": "Save recipe",
 	"recipe_cancel": "Cancel",
 	"error_title_required": "Please enter a title.",
-	"error_source_url_invalid": "Enter a valid http:// or https:// address."
+	"error_source_url_invalid": "Enter a valid http:// or https:// address.",
+	"import_button": "Import from URL",
+	"import_importing": "Importing…",
+	"import_hint": "Fills empty fields from the page's recipe data.",
+	"import_error_url_not_allowed": "That address can't be imported.",
+	"import_error_page_unreachable": "Couldn't load that page. Check the address and try again.",
+	"import_error_page_too_large": "That page is too large to import.",
+	"import_error_no_recipe_found": "No recipe found on that page. Please fill in the details manually."
 }
