@@ -40,5 +40,12 @@
 	"show_original": "Mostra l'original",
 	"show_translation": "Mostra la traducció",
 	"recipe_edit": "Edita",
-	"recipe_edit_title": "Edita la recepta"
+	"recipe_edit_title": "Edita la recepta",
+	"ocr_label": "Afegeix ingredients des d'una captura",
+	"ocr_scanning": "Llegint la captura…",
+	"ocr_hint": "PNG o JPEG. Les línies s'afegeixen sota els ingredients; revisa-les abans de desar.",
+	"error_image_invalid": "Puja una imatge PNG o JPEG.",
+	"error_image_too_large": "La imatge és massa gran (límit de 5 MB).",
+	"error_no_text_found": "No s'ha trobat text d'ingredients a la imatge.",
+	"error_ocr_failed": "No s'ha pogut llegir la captura. Torna-ho a provar."
 }

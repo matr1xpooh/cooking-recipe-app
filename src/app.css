@@ -470,3 +470,40 @@ summary {
 .edit-link {
 	margin: -0.5rem 0 1rem;
 }
+
+/* Screenshot upload: a file input styled as a button */
+.screenshot-field {
+	display: grid;
+	gap: 0.4rem;
+}
+
+.file-button {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-self: start;
+	min-height: 44px;
+	padding: 0 1rem;
+	border: 1px solid var(--accent);
+	border-radius: 999px;
+	color: var(--accent);
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.file-button:hover {
+	background: var(--bg);
+}
+
+.file-button.busy {
+	opacity: 0.6;
+	cursor: wait;
+}
+
+.file-button input {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	opacity: 0;
+	pointer-events: none;
+}

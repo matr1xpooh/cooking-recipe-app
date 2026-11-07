@@ -32,6 +32,8 @@
 	let importing = $state(false);
 	let importError = $state<ImportErrorKey | null>(null);
 	let stepsField: HTMLTextAreaElement | undefined = $state();
+	let scanning = $state(false);
+	let scanError = $state<string | null>(null);
 
 	const styleColors = [
 		{ key: 'red', label: () => m.color_red() },
@@ -79,6 +81,45 @@
 			importError = 'page_unreachable';
 		} finally {
 			importing = false;
+		}
+	}
+
+	const scanErrorMessages: Record<string, () => string> = {
+		image_invalid: () => m.error_image_invalid(),
+		image_too_large: () => m.error_image_too_large(),
+		no_text_found: () => m.error_no_text_found(),
+		ocr_failed: () => m.error_ocr_failed()
+	};
+
+	/** Reads ingredient lines from an uploaded screenshot and adds them below the typed ones. */
+	async function addFromScreenshot(event: Event) {
+		const fileInput = event.currentTarget as HTMLInputElement;
+		const file = fileInput.files?.[0];
+		if (!file) return;
+
+		scanError = null;
+		scanning = true;
+		try {
+			const body = new FormData();
+			body.append('image', file);
+			const res = await fetch('/api/recipes/ocr', { method: 'POST', body });
+			const data = await res.json().catch(() => null);
+			if (!res.ok) {
+				scanError = data?.error ?? 'ocr_failed';
+				return;
+			}
+			const lines: string[] = Array.isArray(data?.ingredients) ? data.ingredients : [];
+			// Skip lines already in the box, so uploading the same screenshot twice adds nothing.
+			const existing = new Set(input.ingredients.split('\n').map((l) => l.trim().toLowerCase()));
+			const added = lines.filter((l) => !existing.has(l.trim().toLowerCase()));
+			input.ingredients = [input.ingredients.trimEnd(), ...added]
+				.filter((l) => l.length > 0)
+				.join('\n');
+		} catch {
+			scanError = 'ocr_failed';
+		} finally {
+			scanning = false;
+			fileInput.value = '';
 		}
 	}
 
@@ -137,6 +178,22 @@
 		{m.recipe_field_ingredients()}
 		<textarea rows="6" bind:value={input.ingredients}></textarea>
 	</label>
+
+	<div class="screenshot-field">
+		<label class="file-button" class:busy={scanning}>
+			{scanning ? m.ocr_scanning() : m.ocr_label()}
+			<input
+				type="file"
+				accept="image/png,image/jpeg"
+				disabled={scanning}
+				onchange={addFromScreenshot}
+			/>
+		</label>
+		<small>{m.ocr_hint()}</small>
+	</div>
+	{#if scanError}
+		<p role="alert">{scanErrorMessages[scanError]?.() ?? m.error_ocr_failed()}</p>
+	{/if}
 
 	<div class="styled-field">
 		<span class="field-label">{m.recipe_field_steps()}</span>
