@@ -19,5 +19,6 @@
 	"import_error_url_not_allowed": "That address can't be imported.",
 	"import_error_page_unreachable": "Couldn't load that page. Check the address and try again.",
 	"import_error_page_too_large": "That page is too large to import.",
-	"import_error_no_recipe_found": "No recipe found on that page. Please fill in the details manually."
+	"import_error_no_recipe_found": "No recipe found on that page. Please fill in the details manually.",
+	"import_error_description_not_parsed": "The video description has no clear ingredients or steps headings. Please fill in the details manually."
 }

@@ -1,6 +1,11 @@
 /** Error keys returned by the import endpoint. Mapped to messages in the UI. */
 export type ImportErrorKey =
-	'url_invalid' | 'url_not_allowed' | 'page_unreachable' | 'page_too_large' | 'no_recipe_found';
+	| 'url_invalid'
+	| 'url_not_allowed'
+	| 'page_unreachable'
+	| 'page_too_large'
+	| 'no_recipe_found'
+	| 'description_not_parsed';
 
 export interface ImportedRecipe {
 	title: string;
@@ -92,9 +97,80 @@ export function extractRecipe(html: string): ImportedRecipe | null {
 	return null;
 }
 
-/** The page's og:title or <title>, used as a fallback title. */
+/** The page's og:title or <title>, used as a fallback title. YouTube's " - YouTube" suffix is dropped. */
 export function pageTitle(html: string): string {
 	const og = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']*)["']/i);
 	const title = og?.[1] ?? html.match(/<title[^>]*>([^<]*)<\/title>/i)?.[1] ?? '';
-	return cleanText(title);
+	return cleanText(title).replace(/\s+-\s+YouTube$/, '');
+}
+
+export function isYouTubeUrl(url: URL): boolean {
+	const host = url.hostname.toLowerCase();
+	return host === 'youtu.be' || host === 'youtube.com' || host.endsWith('.youtube.com');
+}
+
+/**
+ * The video description from a YouTube watch page. The page embeds it as a
+ * JSON string under "shortDescription".
+ */
+export function extractYouTubeDescription(html: string): string | null {
+	const match = html.match(/"shortDescription":"((?:\\.|[^"\\])*)"/);
+	if (!match) return null;
+	try {
+		return JSON.parse(`"${match[1]}"`) as string;
+	} catch {
+		return null;
+	}
+}
+
+// Section headings in the languages the app supports. The lookahead, not \b,
+// ends a heading because \b doesn't treat Cyrillic letters as word characters.
+const INGREDIENTS_HEADING =
+	/^(ingredients?|ingredientes?|ingredients|ингредиенты|ингредиент)(?=[\s:.!(]|$)/i;
+const STEPS_HEADING =
+	/^(steps?|method|instructions|directions|preparation|how to make|cooking|pasos|preparaci[oó]n|instrucciones|passos|preparaci[oó]|elaboraci[oó]n|elaboraci[oó]|procediment|instruccions|приготовление|шаги|пошагово|способ приготовления|рецепт)(?=[\s:.!(]|$)/i;
+const CLOSING_LINE =
+	/^(приятного аппетита|enjoy|buen provecho|bon profit|bon appetit|bon appétit|bon apetit)/i;
+const TOTAL_LINE = /^(итого|итог|total)(?=[\s:.!(]|$)/i;
+
+/** Drops price notes such as "(30 р.)" or "(«Ашан», 1 кг = 53 р.)" from an ingredient line. */
+function stripPrices(line: string): string {
+	return line.replace(/\s*\([^()]*\d[^()]*(?:р\.|₽|€|\$|£|=)[^()]*\)/g, '').trim();
+}
+
+function cleanDescriptionLine(line: string): string {
+	return line.replace(/^\d+[.)]\s+/, '').trim();
+}
+
+/**
+ * Splits a free-text video description into ingredients and steps using section
+ * headings. Returns null when no heading is found. Subheadings ("Соус:") and totals
+ * are dropped. Descriptions without clear headings won't parse.
+ */
+export function parseDescription(text: string): { ingredients: string[]; steps: string[] } | null {
+	const lines = text.split(/\r?\n/).map((line) => line.trim());
+
+	const ingredientsAt = lines.findIndex((line) => INGREDIENTS_HEADING.test(line));
+	const stepsAt = lines.findIndex((line, i) => i > ingredientsAt && STEPS_HEADING.test(line));
+	if (ingredientsAt < 0 && stepsAt < 0) return null;
+
+	const ingredientLines =
+		ingredientsAt < 0 ? [] : lines.slice(ingredientsAt + 1, stepsAt < 0 ? undefined : stepsAt);
+
+	let stepLines: string[] = [];
+	if (stepsAt >= 0) {
+		const rest = lines.slice(stepsAt + 1);
+		const closing = rest.findIndex((line) => CLOSING_LINE.test(line));
+		stepLines = closing < 0 ? rest : rest.slice(0, closing);
+	}
+
+	const clean = (items: string[], transform: (s: string) => string) =>
+		items
+			.map((line) => transform(cleanDescriptionLine(line)))
+			.filter((line) => line.length > 0 && !line.endsWith(':') && !TOTAL_LINE.test(line));
+
+	const ingredients = clean(ingredientLines, stripPrices);
+	const steps = clean(stepLines, (line) => line);
+	if (ingredients.length === 0 && steps.length === 0) return null;
+	return { ingredients, steps };
 }

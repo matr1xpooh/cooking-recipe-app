@@ -11,7 +11,8 @@ const STATUS: Record<ImportErrorKey, number> = {
 	url_not_allowed: 400,
 	page_unreachable: 502,
 	page_too_large: 413,
-	no_recipe_found: 422
+	no_recipe_found: 422,
+	description_not_parsed: 422
 };
 
 export class ImportError extends Error {

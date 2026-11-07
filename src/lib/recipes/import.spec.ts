@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
-import { extractRecipe, pageTitle } from './import';
+import {
+	extractRecipe,
+	extractYouTubeDescription,
+	isYouTubeUrl,
+	pageTitle,
+	parseDescription
+} from './import';
 
 function page(jsonLd: string, head = '<title>Page</title>'): string {
 	return `<html><head>${head}<script type="application/ld+json">${jsonLd}</script></head><body></body></html>`;
@@ -97,5 +103,107 @@ describe('pageTitle', () => {
 
 	it('falls back to <title>', () => {
 		expect(pageTitle('<title> Plain Page </title>')).toBe('Plain Page');
+	});
+});
+
+describe('parseDescription', () => {
+	const description = [
+		'Рубрика «Не слипнется!»',
+		'Пышные домашние оладьи с кремом из халвы.',
+		'3 порции ',
+		'',
+		'Цены актуальны на март 2022 года',
+		'',
+		'Ингредиенты ',
+		'',
+		'Кефир 300 мл (30 р.) («Ашан», 930 мл = 91 р.)',
+		'Сода ½ ч. ложки (1 р.) («Ашан», 500 г = 31 р.)',
+		'Сахар 1 ст. ложка (1 р.) («Ашан», 1 кг = 53 р.)',
+		'Мука 200 г (12 р.) («Ашан», 1 кг = 60 р.)',
+		'Соль щепотка ',
+		'Растительное масло (подсолнечное) 20 мл (2 р.) («Ашан», 1 л = 110 р.)',
+		'Соус:',
+		'Халва арахисовая 150 г (39 р.) («Ашан», 180 г = 47 р.)',
+		'Сметана 150 г (40 р.) («Ашан», 315 г = 84 р.)',
+		'',
+		'Итого: 3 порции оладий с халвичным соусом = 125 р.',
+		'',
+		'Приготовление',
+		'1. В кефир всыпать соду, перемешать венчиком и дать постоять 3 минуты.',
+		'2. В кефир добавить щепотку соли и сахар. Затем всыпать порциями муку.',
+		'3. На большую сковороду налить 20 мл растительного масла и обжаривать.',
+		'Соус:',
+		'4. Халву поломать на кусочки и отправить в куттер.',
+		'Сервировка',
+		'5. Оладьи переложить на порционные тарелки.',
+		'',
+		' Приятного аппетита!'
+	].join('\n');
+
+	it('splits a Russian description into ingredients and steps', () => {
+		const parsed = parseDescription(description);
+		expect(parsed?.ingredients).toEqual([
+			'Кефир 300 мл',
+			'Сода ½ ч. ложки',
+			'Сахар 1 ст. ложка',
+			'Мука 200 г',
+			'Соль щепотка',
+			'Растительное масло (подсолнечное) 20 мл',
+			'Халва арахисовая 150 г',
+			'Сметана 150 г'
+		]);
+		expect(parsed?.steps).toEqual([
+			'В кефир всыпать соду, перемешать венчиком и дать постоять 3 минуты.',
+			'В кефир добавить щепотку соли и сахар. Затем всыпать порциями муку.',
+			'На большую сковороду налить 20 мл растительного масла и обжаривать.',
+			'Халву поломать на кусочки и отправить в куттер.',
+			'Сервировка',
+			'Оладьи переложить на порционные тарелки.'
+		]);
+	});
+
+	it('handles English headings', () => {
+		const parsed = parseDescription(
+			'Ingredients:\n- 2 eggs\n- 1 cup flour\n\nSteps:\n1. Whisk\n2. Bake'
+		);
+		expect(parsed).toEqual({
+			ingredients: ['- 2 eggs', '- 1 cup flour'],
+			steps: ['Whisk', 'Bake']
+		});
+	});
+
+	it('returns null when there are no recognisable headings', () => {
+		expect(parseDescription('Subscribe for more videos! Link in bio.')).toBeNull();
+	});
+
+	it('does not treat words that merely start with a heading as one', () => {
+		expect(parseDescription('Ingredientsfree snacks are great')).toBeNull();
+	});
+});
+
+describe('extractYouTubeDescription', () => {
+	it('reads and unescapes the embedded description', () => {
+		const html =
+			'<script>var x = {"shortDescription":"Line one\\nSteps \\"quoted\\"","other":1};</script>';
+		expect(extractYouTubeDescription(html)).toBe('Line one\nSteps "quoted"');
+	});
+
+	it('returns null when the page has no description', () => {
+		expect(extractYouTubeDescription('<html></html>')).toBeNull();
+	});
+});
+
+describe('isYouTubeUrl', () => {
+	it('recognises YouTube hosts only', () => {
+		expect(isYouTubeUrl(new URL('https://www.youtube.com/watch?v=abc'))).toBe(true);
+		expect(isYouTubeUrl(new URL('https://youtu.be/abc'))).toBe(true);
+		expect(isYouTubeUrl(new URL('https://notyoutube.com/x'))).toBe(false);
+		expect(isYouTubeUrl(new URL('https://example.com/youtube.com'))).toBe(false);
+	});
+});
+
+describe('pageTitle YouTube suffix', () => {
+	it('drops the " - YouTube" suffix', () => {
+		expect(pageTitle('<title>Pancakes - YouTube</title>')).toBe('Pancakes');
 	});
 });

@@ -28,7 +28,8 @@
 		url_not_allowed: () => m.import_error_url_not_allowed(),
 		page_unreachable: () => m.import_error_page_unreachable(),
 		page_too_large: () => m.import_error_page_too_large(),
-		no_recipe_found: () => m.import_error_no_recipe_found()
+		no_recipe_found: () => m.import_error_no_recipe_found(),
+		description_not_parsed: () => m.import_error_description_not_parsed()
 	};
 
 	/** Fills empty fields from the source page's recipe data. Typed values are kept. */

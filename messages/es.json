@@ -19,5 +19,6 @@
 	"import_error_url_not_allowed": "No se puede importar esa dirección.",
 	"import_error_page_unreachable": "No se pudo cargar la página. Revisa la dirección e inténtalo de nuevo.",
 	"import_error_page_too_large": "La página es demasiado grande para importarla.",
-	"import_error_no_recipe_found": "No se encontró ninguna receta en esa página. Rellénala manualmente."
+	"import_error_no_recipe_found": "No se encontró ninguna receta en esa página. Rellénala manualmente.",
+	"import_error_description_not_parsed": "La descripción del vídeo no tiene secciones claras de ingredientes o pasos. Rellénalas manualmente."
 }
