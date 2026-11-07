@@ -14,6 +14,7 @@
 		initial,
 		submitLabel,
 		cancelHref,
+		hasSavedImage = false,
 		onsave
 	}: {
 		/** Starting values. Read once when the form mounts. */
@@ -21,8 +22,10 @@
 		submitLabel: string;
 		/** Where Cancel goes. Already resolved by the caller. */
 		cancelHref: string;
-		/** Called with valid input when the form is submitted. */
-		onsave: (input: RecipeInput) => void;
+		/** True when the recipe already has a screenshot saved with it. */
+		hasSavedImage?: boolean;
+		/** Called with valid input, and the screenshot to attach (null when none was chosen). */
+		onsave: (input: RecipeInput, image: File | null) => void;
 	} = $props();
 
 	// Copied once on mount: the form edits its own copy, not the prop.
@@ -34,6 +37,7 @@
 	let stepsField: HTMLTextAreaElement | undefined = $state();
 	let scanning = $state(false);
 	let scanError = $state<string | null>(null);
+	let image = $state<File | null>(null);
 
 	const styleColors = [
 		{ key: 'red', label: () => m.color_red() },
@@ -55,6 +59,13 @@
 		page_too_large: () => m.import_error_page_too_large(),
 		no_recipe_found: () => m.import_error_no_recipe_found(),
 		description_not_parsed: () => m.import_error_description_not_parsed()
+	};
+
+	const scanErrorMessages: Record<string, () => string> = {
+		image_invalid: () => m.error_image_invalid(),
+		image_too_large: () => m.error_image_too_large(),
+		no_text_found: () => m.error_no_text_found(),
+		ocr_failed: () => m.error_ocr_failed()
 	};
 
 	/** Fills empty fields from the source page's recipe data. Typed values are kept. */
@@ -84,22 +95,15 @@
 		}
 	}
 
-	const scanErrorMessages: Record<string, () => string> = {
-		image_invalid: () => m.error_image_invalid(),
-		image_too_large: () => m.error_image_too_large(),
-		no_text_found: () => m.error_no_text_found(),
-		ocr_failed: () => m.error_ocr_failed()
-	};
-
 	/** Chosen with the file picker. */
 	function onFilePicked(event: Event) {
 		const fileInput = event.currentTarget as HTMLInputElement;
 		const file = fileInput.files?.[0];
-		if (file) scanScreenshot(file);
+		if (file) attach(file);
 		fileInput.value = '';
 	}
 
-	/** An image on the clipboard (a Mac screenshot, for example) is read like an uploaded file. */
+	/** An image on the clipboard (a Mac screenshot, for example) is attached like a picked file. */
 	function onPaste(event: ClipboardEvent) {
 		const item = Array.from(event.clipboardData?.items ?? []).find(
 			(i) => i.kind === 'file' && i.type.startsWith('image/')
@@ -107,6 +111,15 @@
 		const file = item?.getAsFile();
 		if (!file) return; // plain text pastes behave as normal
 		event.preventDefault();
+		attach(file);
+	}
+
+	/**
+	 * Keeps the screenshot as the original file, to be saved with the recipe. It is
+	 * also read for ingredient lines, which are added below the typed ones.
+	 */
+	function attach(file: File) {
+		image = file;
 		scanScreenshot(file);
 	}
 
@@ -124,7 +137,7 @@
 				return;
 			}
 			const lines: string[] = Array.isArray(data?.ingredients) ? data.ingredients : [];
-			// Skip lines already in the box, so uploading the same screenshot twice adds nothing.
+			// Skip lines already in the box, so reading the same screenshot twice adds nothing.
 			const existing = new Set(input.ingredients.split('\n').map((l) => l.trim().toLowerCase()));
 			const added = lines.filter((l) => !existing.has(l.trim().toLowerCase()));
 			input.ingredients = [input.ingredients.trimEnd(), ...added]
@@ -153,7 +166,7 @@
 		event.preventDefault();
 		errors = validateRecipeInput(input);
 		if (hasErrors(errors)) return;
-		onsave({ ...input });
+		onsave({ ...input }, image);
 	}
 </script>
 
@@ -204,6 +217,16 @@
 			/>
 		</label>
 		<small>{m.ocr_hint()}</small>
+		{#if image}
+			<p class="attached">
+				<span>{m.image_attached()}: {image.name}</span>
+				<button type="button" class="link-button" onclick={() => (image = null)}>
+					{m.image_remove()}
+				</button>
+			</p>
+		{:else if hasSavedImage}
+			<p class="meta">{m.image_saved_note()}</p>
+		{/if}
 	</div>
 	{#if scanError}
 		<p role="alert">{scanErrorMessages[scanError]?.() ?? m.error_ocr_failed()}</p>

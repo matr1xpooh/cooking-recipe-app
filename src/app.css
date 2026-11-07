@@ -507,3 +507,33 @@ summary {
 	opacity: 0;
 	pointer-events: none;
 }
+
+/* Attached screenshot: shown as the original file */
+.screenshot img {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.attached {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+	margin: 0;
+	font-size: 0.95rem;
+}
+
+.link-button {
+	min-height: 40px;
+	padding: 0 0.5rem;
+	background: none;
+	border: none;
+	color: var(--accent);
+	font: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	text-decoration: underline;
+}

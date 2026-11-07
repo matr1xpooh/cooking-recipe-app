@@ -10,6 +10,7 @@
 	import { translateFields } from '#lib/recipes/translate-client.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
+	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
 	let translated = $state<{ fields: RecipeFields; failed: boolean } | null>(null);
@@ -39,6 +40,26 @@
 		});
 	});
 
+	// The screenshot is loaded from IndexedDB as an object URL, revoked when it changes.
+	let screenshotUrl = $state<string | null>(null);
+	$effect(() => {
+		const current = recipe;
+		if (!current?.hasImage) return;
+		let url: string | null = null;
+		let cancelled = false;
+		loadImage(current.id).then((blob) => {
+			if (blob && !cancelled) {
+				url = URL.createObjectURL(blob);
+				screenshotUrl = url;
+			}
+		});
+		return () => {
+			cancelled = true;
+			if (url) URL.revokeObjectURL(url);
+			screenshotUrl = null;
+		};
+	});
+
 	const shown = $derived<RecipeFields | null>(
 		recipe ? (translated && !showOriginal ? translated.fields : fieldsOf(recipe)) : null
 	);
@@ -57,6 +78,13 @@
 			<p class="edit-link">
 				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
 			</p>
+			{#if screenshotUrl}
+				<section class="screenshot">
+					<h2>{m.recipe_screenshot_heading()}</h2>
+					<img src={screenshotUrl} alt={m.recipe_screenshot_alt()} />
+				</section>
+			{/if}
+
 			{#if recipe.sourceUrl}
 				<!-- External user-supplied URL: resolve() only applies to app routes. -->
 				<p>

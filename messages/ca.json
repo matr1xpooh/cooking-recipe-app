@@ -43,9 +43,15 @@
 	"recipe_edit_title": "Edita la recepta",
 	"ocr_label": "Afegeix ingredients des d'una captura",
 	"ocr_scanning": "Llegint la captura…",
-	"ocr_hint": "Puja un PNG o JPEG, o enganxa una captura del portapapers. Les línies s'afegeixen sota els ingredients; revisa-les abans de desar.",
+	"ocr_hint": "S'adjunta tal com és i es mostra amb la recepta. Les seves línies d'ingredients s'afegeixen sota les teves.",
 	"error_image_invalid": "Puja una imatge PNG o JPEG.",
 	"error_image_too_large": "La imatge és massa gran (límit de 5 MB).",
 	"error_no_text_found": "No s'ha trobat text d'ingredients a la imatge.",
-	"error_ocr_failed": "No s'ha pogut llegir la captura. Torna-ho a provar."
+	"error_ocr_failed": "No s'ha pogut llegir la captura. Torna-ho a provar.",
+	"image_attached": "Captura adjuntada",
+	"image_remove": "Treu-la",
+	"image_saved_note": "Aquesta recepta té una captura desada. Adjunta'n una altra per substituir-la.",
+	"recipe_screenshot_heading": "Captura",
+	"recipe_screenshot_alt": "Captura de la recepta",
+	"error_image_save_failed": "No s'ha pogut desar la captura, així que la recepta no s'ha desat."
 }

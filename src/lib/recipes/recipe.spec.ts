@@ -71,6 +71,7 @@ describe('createRecipe', () => {
 			ingredients: ['flour', 'milk'],
 			steps: ['Mix', 'Cook'],
 			notes: '',
+			hasImage: false,
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});
@@ -103,6 +104,7 @@ describe('applyEdit', () => {
 			ingredients: ['beef', 'onion'],
 			steps: ['**Brown** it'],
 			notes: 'legacy',
+			hasImage: false,
 			createdAt: '2026-01-01T00:00:00.000Z',
 			archived: true
 		});

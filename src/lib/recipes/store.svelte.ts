@@ -21,7 +21,8 @@ function isRecipe(value: unknown): value is Recipe {
 		r.steps.every((s) => typeof s === 'string') &&
 		typeof r.createdAt === 'string' &&
 		typeof r.archived === 'boolean' &&
-		(r.notes === undefined || typeof r.notes === 'string')
+		(r.notes === undefined || typeof r.notes === 'string') &&
+		(r.hasImage === undefined || typeof r.hasImage === 'boolean')
 	);
 }
 
@@ -41,6 +42,7 @@ export function readRecipes(storage: KeyValueStorage): Recipe[] {
 			ingredients: r.ingredients,
 			steps: r.steps,
 			notes: r.notes ?? '',
+			hasImage: r.hasImage === true,
 			createdAt: r.createdAt,
 			archived: r.archived
 		}));

@@ -43,9 +43,15 @@
 	"recipe_edit_title": "Editar receta",
 	"ocr_label": "Añadir ingredientes desde una captura",
 	"ocr_scanning": "Leyendo la captura…",
-	"ocr_hint": "Sube un PNG o JPEG, o pega una captura desde el portapapeles. Las líneas se añaden debajo de los ingredientes; revísalas antes de guardar.",
+	"ocr_hint": "Se adjunta tal cual y se muestra con la receta. Sus líneas de ingredientes se añaden debajo de las tuyas.",
 	"error_image_invalid": "Sube una imagen PNG o JPEG.",
 	"error_image_too_large": "La imagen es demasiado grande (límite de 5 MB).",
 	"error_no_text_found": "No se encontró texto de ingredientes en la imagen.",
-	"error_ocr_failed": "No se pudo leer la captura. Inténtalo de nuevo."
+	"error_ocr_failed": "No se pudo leer la captura. Inténtalo de nuevo.",
+	"image_attached": "Captura adjunta",
+	"image_remove": "Quitar",
+	"image_saved_note": "Esta receta tiene una captura guardada. Adjunta otra para reemplazarla.",
+	"recipe_screenshot_heading": "Captura",
+	"recipe_screenshot_alt": "Captura de la receta",
+	"error_image_save_failed": "No se pudo guardar la captura, así que la receta no se guardó."
 }

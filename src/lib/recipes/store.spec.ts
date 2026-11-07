@@ -25,6 +25,7 @@ const recipe: Recipe = {
 	ingredients: ['water'],
 	steps: ['Boil'],
 	notes: '',
+	hasImage: false,
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };
@@ -77,5 +78,14 @@ describe('RecipeStore.update', () => {
 		store.update({ ...recipe, id: 'missing', title: 'x' });
 		expect(store.recipes).toHaveLength(1);
 		expect(store.recipes[0].title).toBe('Soup');
+	});
+});
+
+describe('readRecipes image flag', () => {
+	it('defaults hasImage to false for recipes saved before screenshots existed', () => {
+		const legacy: Partial<Recipe> = { ...recipe };
+		delete legacy.hasImage;
+		const back = readRecipes(memoryStorage({ [RECIPES_STORAGE_KEY]: JSON.stringify([legacy]) }));
+		expect(back[0].hasImage).toBe(false);
 	});
 });

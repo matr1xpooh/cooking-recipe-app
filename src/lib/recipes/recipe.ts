@@ -11,6 +11,8 @@ export interface Recipe {
 	 * page; new recipes always store an empty string.
 	 */
 	notes: string;
+	/** True when an original screenshot is stored for this recipe (see image-store.ts). */
+	hasImage: boolean;
 	createdAt: string;
 	archived: boolean;
 }
@@ -79,7 +81,10 @@ export function applyEdit(recipe: Recipe, input: RecipeInput): Recipe {
 }
 
 /** Builds a Recipe from valid input. Callers should run validateRecipeInput first. */
-export function createRecipe(input: RecipeInput, options: { id: string; createdAt: Date }): Recipe {
+export function createRecipe(
+	input: RecipeInput,
+	options: { id: string; createdAt: Date; hasImage?: boolean }
+): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
 		id: options.id,
@@ -88,6 +93,7 @@ export function createRecipe(input: RecipeInput, options: { id: string; createdA
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps),
 		notes: '',
+		hasImage: options.hasImage ?? false,
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};
