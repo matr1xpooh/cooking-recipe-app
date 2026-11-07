@@ -43,7 +43,7 @@
 	"recipe_edit_title": "Edit recipe",
 	"ocr_label": "Add ingredients from a screenshot",
 	"ocr_scanning": "Reading screenshot…",
-	"ocr_hint": "PNG or JPEG. Lines are added below the ingredients you have; check them before saving.",
+	"ocr_hint": "Upload a PNG or JPEG, or paste a screenshot from the clipboard. Lines are added below your ingredients; check them before saving.",
 	"error_image_invalid": "Please upload a PNG or JPEG image.",
 	"error_image_too_large": "That image is too large (5 MB limit).",
 	"error_no_text_found": "No ingredient text found in that image.",

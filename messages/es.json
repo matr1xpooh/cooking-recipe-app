@@ -43,7 +43,7 @@
 	"recipe_edit_title": "Editar receta",
 	"ocr_label": "Añadir ingredientes desde una captura",
 	"ocr_scanning": "Leyendo la captura…",
-	"ocr_hint": "PNG o JPEG. Las líneas se añaden debajo de los ingredientes; revísalas antes de guardar.",
+	"ocr_hint": "Sube un PNG o JPEG, o pega una captura desde el portapapeles. Las líneas se añaden debajo de los ingredientes; revísalas antes de guardar.",
 	"error_image_invalid": "Sube una imagen PNG o JPEG.",
 	"error_image_too_large": "La imagen es demasiado grande (límite de 5 MB).",
 	"error_no_text_found": "No se encontró texto de ingredientes en la imagen.",

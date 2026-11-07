@@ -91,12 +91,27 @@
 		ocr_failed: () => m.error_ocr_failed()
 	};
 
-	/** Reads ingredient lines from an uploaded screenshot and adds them below the typed ones. */
-	async function addFromScreenshot(event: Event) {
+	/** Chosen with the file picker. */
+	function onFilePicked(event: Event) {
 		const fileInput = event.currentTarget as HTMLInputElement;
 		const file = fileInput.files?.[0];
-		if (!file) return;
+		if (file) scanScreenshot(file);
+		fileInput.value = '';
+	}
 
+	/** An image on the clipboard (a Mac screenshot, for example) is read like an uploaded file. */
+	function onPaste(event: ClipboardEvent) {
+		const item = Array.from(event.clipboardData?.items ?? []).find(
+			(i) => i.kind === 'file' && i.type.startsWith('image/')
+		);
+		const file = item?.getAsFile();
+		if (!file) return; // plain text pastes behave as normal
+		event.preventDefault();
+		scanScreenshot(file);
+	}
+
+	/** Reads ingredient lines from a screenshot and adds them below the typed ones. */
+	async function scanScreenshot(file: File) {
 		scanError = null;
 		scanning = true;
 		try {
@@ -119,7 +134,6 @@
 			scanError = 'ocr_failed';
 		} finally {
 			scanning = false;
-			fileInput.value = '';
 		}
 	}
 
@@ -143,7 +157,7 @@
 	}
 </script>
 
-<form onsubmit={submit} novalidate>
+<form onsubmit={submit} onpaste={onPaste} novalidate>
 	<label>
 		{m.recipe_field_title()}
 		<input type="text" bind:value={input.title} aria-invalid={errors.title ? 'true' : undefined} />
@@ -186,7 +200,7 @@
 				type="file"
 				accept="image/png,image/jpeg"
 				disabled={scanning}
-				onchange={addFromScreenshot}
+				onchange={onFilePicked}
 			/>
 		</label>
 		<small>{m.ocr_hint()}</small>
