@@ -57,6 +57,8 @@ export interface Recipe {
 	title: string;
 	/** External video or webpage URL, or null when none was given. */
 	sourceUrl: string | null;
+	/** Where the video starts, in seconds. Null when not given. Only meaningful with a video link. */
+	sourceStart: number | null;
 	ingredients: string[];
 	/** One step per item. Steps may contain the styling markup (see notes.ts). */
 	steps: string[];
@@ -79,16 +81,18 @@ export interface Recipe {
 export interface RecipeInput {
 	title: string;
 	sourceUrl: string;
+	/** Start time as typed: "83", "1:23" or "1:02:03". Blank when not given. */
+	sourceStart: string;
 	ingredients: string;
 	steps: string;
 	tags: Tag[];
 }
 
-export type RecipeField = 'title' | 'sourceUrl';
+export type RecipeField = 'title' | 'sourceUrl' | 'sourceStart';
 
 export type RecipeErrors = Partial<Record<RecipeField, RecipeErrorKey>>;
 
-export type RecipeErrorKey = 'title_required' | 'source_url_invalid';
+export type RecipeErrorKey = 'title_required' | 'source_url_invalid' | 'start_invalid';
 
 /** Splits multi-line form text into trimmed, non-empty items. */
 export function parseLines(text: string): string[] {
@@ -116,6 +120,9 @@ export function validateRecipeInput(input: RecipeInput): RecipeErrors {
 	if (sourceUrl.length > 0 && !isHttpUrl(sourceUrl)) {
 		errors.sourceUrl = 'source_url_invalid';
 	}
+	if (input.sourceStart.trim().length > 0 && parseStart(input.sourceStart) === undefined) {
+		errors.sourceStart = 'start_invalid';
+	}
 	return errors;
 }
 
@@ -136,6 +143,7 @@ export function applyEdit(recipe: Recipe, input: RecipeInput, source: Ingredient
 		tags: input.tags,
 		title: input.title.trim(),
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
+		sourceStart: sourceUrl.length > 0 ? (parseStart(input.sourceStart) ?? null) : null,
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps)
 	};
@@ -156,6 +164,7 @@ export function createRecipe(
 		id: options.id,
 		title: input.title.trim(),
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
+		sourceStart: sourceUrl.length > 0 ? (parseStart(input.sourceStart) ?? null) : null,
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps),
 		notes: '',
@@ -181,4 +190,43 @@ export function mergeIngredientLines(current: string[], incoming: string[]): str
 		result.push(line.trim());
 	}
 	return result;
+}
+
+/**
+ * A start time typed as "83", "1:23" or "1:02:03" in seconds. Blank gives null.
+ * Undefined when the text is not a time.
+ */
+export function parseStart(text: string): number | null | undefined {
+	const value = text.trim();
+	if (value.length === 0) return null;
+	if (/^\d+$/.test(value)) return Number(value);
+	const parts = value.split(':');
+	if (!parts.every((p) => /^\d{1,2}$/.test(p)) || parts.length < 2 || parts.length > 3)
+		return undefined;
+	const [h, m, sec] = parts.length === 3 ? parts.map(Number) : [0, ...parts.map(Number)];
+	if (m > 59 || sec > 59) return undefined;
+	return h * 3600 + m * 60 + sec;
+}
+
+/** Seconds as m:ss, or h:mm:ss past an hour. Blank for null. */
+export function formatStart(seconds: number | null): string {
+	if (seconds === null) return '';
+	const h = Math.floor(seconds / 3600);
+	const m = Math.floor((seconds % 3600) / 60);
+	const sec = seconds % 60;
+	const pad = (n: number) => String(n).padStart(2, '0');
+	return h > 0 ? `${h}:${pad(m)}:${pad(sec)}` : `${m}:${pad(sec)}`;
+}
+
+/** The link to open for a recipe: the video, starting at the given time when there is one. */
+export function sourceHref(url: string, start: number | null): string {
+	if (start === null || start <= 0) return url;
+	try {
+		const u = new URL(url);
+		if (!(u.hostname === 'youtu.be' || u.hostname.endsWith('youtube.com'))) return url;
+		u.searchParams.set('t', `${start}s`);
+		return u.toString();
+	} catch {
+		return url;
+	}
 }

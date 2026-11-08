@@ -11,6 +11,7 @@ const recipe: Recipe = {
 	id: 'abc-1',
 	title: 'Soup',
 	sourceUrl: null,
+	sourceStart: null,
 	ingredients: ['water'],
 	steps: ['Boil'],
 	notes: '',

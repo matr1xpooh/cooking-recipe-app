@@ -15,6 +15,7 @@ export function isRecipe(value: unknown): value is Recipe {
 		typeof r.id === 'string' &&
 		typeof r.title === 'string' &&
 		(r.sourceUrl === null || typeof r.sourceUrl === 'string') &&
+		(r.sourceStart === undefined || r.sourceStart === null || typeof r.sourceStart === 'number') &&
 		Array.isArray(r.ingredients) &&
 		r.ingredients.every((i) => typeof i === 'string') &&
 		Array.isArray(r.steps) &&
@@ -54,6 +55,7 @@ export function normalizeRecipe(r: Recipe & { category?: unknown }): Recipe {
 		id: r.id,
 		title: r.title,
 		sourceUrl: r.sourceUrl,
+		sourceStart: typeof r.sourceStart === 'number' ? r.sourceStart : null,
 		ingredients: r.ingredients,
 		steps: r.steps,
 		notes: r.notes ?? '',

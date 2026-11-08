@@ -95,5 +95,9 @@
 	"tags_add_placeholder": "Введите тег и нажмите Enter",
 	"tags_add_button": "Добавить тег",
 	"tags_limit": "У рецепта может быть до {n} тегов.",
-	"tag_remove": "Удалить {tag}"
+	"tag_remove": "Удалить {tag}",
+	"recipe_field_start": "Время начала (необязательно)",
+	"recipe_start_hint": "Для видео: с какой минуты начинается рецепт, например 4:30.",
+	"error_start_invalid": "Укажите время, например 4:30 или 1:02:15.",
+	"recipe_starts_at": "Начинается с {time}"
 }

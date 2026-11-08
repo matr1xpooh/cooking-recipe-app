@@ -1,6 +1,9 @@
 import { describe, it, expect } from 'vitest';
 import {
 	MAX_TAGS_PER_RECIPE,
+	formatStart,
+	parseStart,
+	sourceHref,
 	normalizeTag,
 	normalizeTags,
 	applyEdit,
@@ -15,6 +18,7 @@ import {
 const valid = {
 	title: 'Pancakes',
 	sourceUrl: '',
+	sourceStart: '',
 	ingredients: '',
 	steps: '',
 	tags: []
@@ -66,6 +70,7 @@ describe('createRecipe', () => {
 			{
 				title: '  Pancakes ',
 				sourceUrl: ' https://example.com/p ',
+				sourceStart: '',
 				ingredients: 'flour\n milk ',
 				steps: 'Mix\n\nCook',
 				tags: ['dessert']
@@ -79,6 +84,7 @@ describe('createRecipe', () => {
 			id: 'abc',
 			title: 'Pancakes',
 			sourceUrl: 'https://example.com/p',
+			sourceStart: null,
 			ingredients: ['flour', 'milk'],
 			steps: ['Mix', 'Cook'],
 			notes: '',
@@ -104,6 +110,7 @@ describe('applyEdit', () => {
 		{
 			title: 'Soup',
 			sourceUrl: 'https://example.com/soup',
+			sourceStart: '',
 			ingredients: 'water',
 			steps: 'Boil',
 			tags: []
@@ -117,6 +124,7 @@ describe('applyEdit', () => {
 			{
 				title: '  Stew ',
 				sourceUrl: '',
+				sourceStart: '',
 				ingredients: 'beef\n\nonion',
 				steps: '**Brown** it',
 				tags: []
@@ -127,6 +135,7 @@ describe('applyEdit', () => {
 			id: 'keep-me',
 			title: 'Stew',
 			sourceUrl: null,
+			sourceStart: null,
 			ingredients: ['beef', 'onion'],
 			steps: ['**Brown** it'],
 			notes: 'legacy',
@@ -171,5 +180,36 @@ describe('typed tags', () => {
 
 	it('ignores non-text values', () => {
 		expect(normalizeTags(['soup', 42, null, 'stew'])).toEqual(['soup', 'stew']);
+	});
+});
+
+describe('video start time', () => {
+	it('reads seconds, m:ss and h:mm:ss', () => {
+		expect(parseStart('83')).toBe(83);
+		expect(parseStart('1:23')).toBe(83);
+		expect(parseStart('1:02:03')).toBe(3723);
+		expect(parseStart('')).toBeNull();
+	});
+
+	it('rejects times it cannot read', () => {
+		expect(parseStart('4:75')).toBeUndefined();
+		expect(parseStart('soon')).toBeUndefined();
+		expect(parseStart('1:2:3:4')).toBeUndefined();
+	});
+
+	it('formats seconds back for editing', () => {
+		expect(formatStart(83)).toBe('1:23');
+		expect(formatStart(3723)).toBe('1:02:03');
+		expect(formatStart(null)).toBe('');
+	});
+
+	it('opens a video at its start time, and leaves other links alone', () => {
+		expect(sourceHref('https://www.youtube.com/watch?v=abc', 83)).toBe(
+			'https://www.youtube.com/watch?v=abc&t=83s'
+		);
+		expect(sourceHref('https://www.youtube.com/watch?v=abc', null)).toBe(
+			'https://www.youtube.com/watch?v=abc'
+		);
+		expect(sourceHref('https://example.com/recipe', 83)).toBe('https://example.com/recipe');
 	});
 });

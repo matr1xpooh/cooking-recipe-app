@@ -21,6 +21,7 @@ const recipe: Recipe = {
 	id: 'r1',
 	title: 'Soup',
 	sourceUrl: null,
+	sourceStart: null,
 	ingredients: ['water', 'salt'],
 	steps: ['**Boil** it'],
 	notes: 'legacy *note*',

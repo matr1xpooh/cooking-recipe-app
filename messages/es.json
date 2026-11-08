@@ -95,5 +95,9 @@
 	"tags_add_placeholder": "Escribe una etiqueta y pulsa Intro",
 	"tags_add_button": "Añadir etiqueta",
 	"tags_limit": "Una receta puede tener hasta {n} etiquetas.",
-	"tag_remove": "Quitar {tag}"
+	"tag_remove": "Quitar {tag}",
+	"recipe_field_start": "Hora de inicio (opcional)",
+	"recipe_start_hint": "Para un vídeo: dónde empieza la receta, por ejemplo 4:30.",
+	"error_start_invalid": "Escribe una hora como 4:30 o 1:02:15.",
+	"recipe_starts_at": "Empieza en {time}"
 }

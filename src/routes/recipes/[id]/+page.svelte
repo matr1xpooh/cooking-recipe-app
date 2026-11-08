@@ -13,7 +13,12 @@
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
-	import { MAX_TAGS_PER_RECIPE, normalizeTag } from '#lib/recipes/recipe.js';
+	import {
+		MAX_TAGS_PER_RECIPE,
+		formatStart,
+		normalizeTag,
+		sourceHref
+	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
@@ -181,10 +186,16 @@
 				{#if recipe.sourceUrl}
 					<span aria-hidden="true">·</span>
 					<!-- External user-supplied URL: resolve() only applies to app routes. -->
-					<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-					<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
-						>{m.recipe_open_source()}</a
+					<!-- eslint-disable svelte/no-navigation-without-resolve -->
+					<a
+						href={sourceHref(recipe.sourceUrl, recipe.sourceStart)}
+						target="_blank"
+						rel="noopener noreferrer">{m.recipe_open_source()}</a
 					>
+					<!-- eslint-enable svelte/no-navigation-without-resolve -->
+					{#if recipe.sourceStart !== null}
+						<small>{m.recipe_starts_at({ time: formatStart(recipe.sourceStart) })}</small>
+					{/if}
 				{/if}
 				<span aria-hidden="true">·</span>
 				<button type="button" class="link-button" onclick={toggleArchive}>
@@ -242,10 +253,13 @@
 						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
 						{#if recipe.source === 'web' && recipe.sourceUrl}
 							·
-							<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
-							<a href={recipe.sourceUrl} target="_blank" rel="noopener noreferrer"
-								>{m.recipe_open_source()}</a
+							<!-- eslint-disable svelte/no-navigation-without-resolve -->
+							<a
+								href={sourceHref(recipe.sourceUrl, recipe.sourceStart)}
+								target="_blank"
+								rel="noopener noreferrer">{m.recipe_open_source()}</a
 							>
+							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
 					</p>
 					{#if shown.ingredients.length > 0}

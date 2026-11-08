@@ -95,5 +95,9 @@
 	"tags_add_placeholder": "Type a tag, then Enter",
 	"tags_add_button": "Add tag",
 	"tags_limit": "A recipe can have up to {n} tags.",
-	"tag_remove": "Remove {tag}"
+	"tag_remove": "Remove {tag}",
+	"recipe_field_start": "Start time (optional)",
+	"recipe_start_hint": "For a video: where the recipe begins, such as 4:30.",
+	"error_start_invalid": "Enter a time like 4:30 or 1:02:15.",
+	"recipe_starts_at": "Starts at {time}"
 }

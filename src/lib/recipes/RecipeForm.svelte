@@ -115,7 +115,8 @@
 
 	const errorMessages: Record<RecipeErrorKey, () => string> = {
 		title_required: () => m.error_title_required(),
-		source_url_invalid: () => m.error_source_url_invalid()
+		source_url_invalid: () => m.error_source_url_invalid(),
+		start_invalid: () => m.error_start_invalid()
 	};
 
 	const importErrorMessages: Record<ImportErrorKey, () => string> = {
@@ -351,6 +352,21 @@
 	</label>
 	{#if errors.sourceUrl}
 		<p role="alert">{errorMessages[errors.sourceUrl]()}</p>
+	{/if}
+
+	<label>
+		{m.recipe_field_start()}
+		<input
+			type="text"
+			inputmode="numeric"
+			placeholder="4:30"
+			bind:value={input.sourceStart}
+			aria-invalid={errors.sourceStart ? 'true' : undefined}
+		/>
+		<small>{m.recipe_start_hint()}</small>
+	</label>
+	{#if errors.sourceStart}
+		<p role="alert">{errorMessages[errors.sourceStart]()}</p>
 	{/if}
 
 	<div>

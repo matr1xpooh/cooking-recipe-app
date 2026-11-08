@@ -7,7 +7,12 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RecipeForm from '#lib/recipes/RecipeForm.svelte';
 	import { saveImage } from '#lib/recipes/image-store.js';
-	import { applyEdit, type IngredientSource, type RecipeInput } from '#lib/recipes/recipe.js';
+	import {
+		applyEdit,
+		formatStart,
+		type IngredientSource,
+		type RecipeInput
+	} from '#lib/recipes/recipe.js';
 
 	let loaded = $state(false);
 	let saveError = $state<string | null>(null);
@@ -52,6 +57,7 @@
 				initial={{
 					title: recipe.title,
 					sourceUrl: recipe.sourceUrl ?? '',
+					sourceStart: formatStart(recipe.sourceStart),
 					ingredients: recipe.ingredients.join('\n'),
 					steps: recipe.steps.join('\n'),
 					tags: recipe.tags

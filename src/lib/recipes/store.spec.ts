@@ -6,6 +6,7 @@ const recipe: Recipe = {
 	id: '1',
 	title: 'Soup',
 	sourceUrl: null,
+	sourceStart: null,
 	ingredients: ['water'],
 	steps: ['Boil'],
 	notes: '',
