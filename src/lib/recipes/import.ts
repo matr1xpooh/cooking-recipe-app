@@ -155,6 +155,8 @@ const STEPS_HEADING =
 	/^(steps?|method|instructions|directions|preparation|how to make|cooking|pasos|preparaci[oó]n|instrucciones|passos|preparaci[oó]|elaboraci[oó]n|elaboraci[oó]|procediment|instruccions|приготовление|шаги|пошагово|способ приготовления|рецепт)(?=[\s:.!(]|$)/i;
 const CLOSING_LINE =
 	/^(приятного аппетита|enjoy|buen provecho|bon profit|bon appetit|bon appétit|bon apetit)/i;
+// Credits that follow a recipe in many descriptions: links, music and artist lines.
+const CREDIT_LINE = /https?:\/\/|^(song|artist|music)\b|^#|thanks for watching/i;
 const TOTAL_LINE = /^(итого|итог|total)(?=[\s:.!(]|$)/i;
 
 /** Drops price notes such as "(30 р.)" or "(«Ашан», 1 кг = 53 р.)" from an ingredient line. */
@@ -190,6 +192,7 @@ export function parseDescription(text: string): { ingredients: string[]; steps: 
 
 	const clean = (items: string[], transform: (s: string) => string) =>
 		items
+			.filter((line) => !CREDIT_LINE.test(line))
 			.map((line) => transform(cleanDescriptionLine(line)))
 			.filter((line) => line.length > 0 && !line.endsWith(':') && !TOTAL_LINE.test(line));
 

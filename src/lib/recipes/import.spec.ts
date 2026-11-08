@@ -245,3 +245,12 @@ describe('picture URLs', () => {
 		expect(pageImage('<title>none</title>')).toBeUndefined();
 	});
 });
+
+describe('parseDescription drops credits after the recipe', () => {
+	it('keeps music and link lines out of the ingredients', () => {
+		const parsed = parseDescription(
+			'Ingredients -\n2 eggs\n1 cup flour\n\nSteps:\nMix.\n\nMusic in this video\nhttps://example.com/track\nSong - Something\nArtist - Someone'
+		);
+		expect(parsed).toEqual({ ingredients: ['2 eggs', '1 cup flour'], steps: ['Mix.'] });
+	});
+});
