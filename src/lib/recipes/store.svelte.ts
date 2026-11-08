@@ -1,91 +1,74 @@
-import { isIngredientSource, type Recipe } from './recipe';
+import type { Recipe } from './recipe';
+import { fetchRecipes, postRecipe } from './recipe-api';
+import { migrateLegacyRecipes } from './legacy-local';
 
-export const RECIPES_STORAGE_KEY = 'recipes.v1';
-
-/** The subset of the Web Storage API the store needs. */
+/** The subset of the Web Storage API the translation cache uses. */
 export interface KeyValueStorage {
 	getItem(key: string): string | null;
 	setItem(key: string, value: string): void;
 }
 
-function isRecipe(value: unknown): value is Recipe {
-	if (typeof value !== 'object' || value === null) return false;
-	const r = value as Record<string, unknown>;
-	return (
-		typeof r.id === 'string' &&
-		typeof r.title === 'string' &&
-		(r.sourceUrl === null || typeof r.sourceUrl === 'string') &&
-		Array.isArray(r.ingredients) &&
-		r.ingredients.every((i) => typeof i === 'string') &&
-		Array.isArray(r.steps) &&
-		r.steps.every((s) => typeof s === 'string') &&
-		typeof r.createdAt === 'string' &&
-		typeof r.archived === 'boolean' &&
-		(r.notes === undefined || typeof r.notes === 'string') &&
-		(r.hasImage === undefined || typeof r.hasImage === 'boolean') &&
-		(r.source === undefined || isIngredientSource(r.source))
-	);
+/** The server calls the store needs. Injected so the store can be tested without a server. */
+export interface RecipeApi {
+	list(): Promise<Recipe[]>;
+	save(recipe: Recipe): Promise<void>;
+	migrate(): Promise<void>;
 }
 
-/** Reads recipes from storage. Corrupt or missing data yields an empty list. */
-export function readRecipes(storage: KeyValueStorage): Recipe[] {
-	const raw = storage.getItem(RECIPES_STORAGE_KEY);
-	if (raw === null) return [];
-	try {
-		const parsed: unknown = JSON.parse(raw);
-		if (!Array.isArray(parsed)) return [];
-		// Copy only known fields: drops stale keys from older versions. Recipes saved
-		// before notes existed get empty notes instead of being dropped.
-		return parsed.filter(isRecipe).map((r) => ({
-			id: r.id,
-			title: r.title,
-			sourceUrl: r.sourceUrl,
-			ingredients: r.ingredients,
-			steps: r.steps,
-			notes: r.notes ?? '',
-			hasImage: r.hasImage === true,
-			// Recipes saved before sources existed: a screenshot means the list came from it.
-			source: isIngredientSource(r.source) ? r.source : r.hasImage === true ? 'image' : 'typed',
-			createdAt: r.createdAt,
-			archived: r.archived
-		}));
-	} catch {
-		return [];
-	}
-}
+const serverApi: RecipeApi = {
+	list: fetchRecipes,
+	save: postRecipe,
+	migrate: migrateLegacyRecipes
+};
 
+/**
+ * The recipe list, kept on the server. Changes show at once and are reverted if the
+ * server refuses them, in which case the error is thrown for the page to show.
+ */
 export class RecipeStore {
 	recipes = $state<Recipe[]>([]);
-	private storage: KeyValueStorage | null;
+	loadError = $state<string | null>(null);
+	private api: RecipeApi;
 
-	constructor(storage: KeyValueStorage | null) {
-		this.storage = storage;
+	constructor(api: RecipeApi) {
+		this.api = api;
 	}
 
-	/** Loads persisted recipes. Call on the client only; a no-op without storage. */
-	load(): void {
-		if (!this.storage) return;
-		this.recipes = readRecipes(this.storage);
+	/** Loads the recipes from the server, moving browser-held ones over first. */
+	async load(): Promise<void> {
+		try {
+			await this.api.migrate();
+			this.recipes = await this.api.list();
+			this.loadError = null;
+		} catch {
+			this.loadError = 'load_failed';
+		}
 	}
 
-	/** Adds a recipe to the top of the list and persists the list. */
-	add(recipe: Recipe): void {
-		this.recipes = [recipe, ...this.recipes];
-		this.persist();
+	/** Adds a recipe to the top of the list and saves it. */
+	async add(recipe: Recipe): Promise<void> {
+		const previous = this.recipes;
+		this.recipes = [recipe, ...previous];
+		try {
+			await this.api.save(recipe);
+		} catch (error) {
+			this.recipes = previous;
+			throw error;
+		}
 	}
 
-	/** Replaces the recipe with the same id and persists the list. Unknown ids are ignored. */
-	update(recipe: Recipe): void {
-		if (!this.recipes.some((r) => r.id === recipe.id)) return;
-		this.recipes = this.recipes.map((r) => (r.id === recipe.id ? recipe : r));
-		this.persist();
-	}
-
-	private persist(): void {
-		this.storage?.setItem(RECIPES_STORAGE_KEY, JSON.stringify(this.recipes));
+	/** Replaces the recipe with the same id and saves it. Unknown ids are ignored. */
+	async update(recipe: Recipe): Promise<void> {
+		const previous = this.recipes;
+		if (!previous.some((r) => r.id === recipe.id)) return;
+		this.recipes = previous.map((r) => (r.id === recipe.id ? recipe : r));
+		try {
+			await this.api.save(recipe);
+		} catch (error) {
+			this.recipes = previous;
+			throw error;
+		}
 	}
 }
 
-export const recipeStore = new RecipeStore(
-	typeof localStorage === 'undefined' ? null : localStorage
-);
+export const recipeStore = new RecipeStore(serverApi);

@@ -50,7 +50,6 @@
 	"image_remove": "Quitar",
 	"recipe_screenshot_heading": "Captura",
 	"recipe_screenshot_alt": "Captura de la receta",
-	"error_image_save_failed": "No se pudo guardar la captura, así que la receta no se guardó.",
 	"ingredients_source": "Origen",
 	"source_typed": "Escritos a mano",
 	"source_web": "De una página web",
@@ -66,5 +65,7 @@
 	"tab_image": "Imagen",
 	"image_read_text": "Leer texto de la imagen",
 	"image_empty": "Aún no hay imagen. Elige un archivo o pega una captura.",
-	"ingredients_hint": "Un ingrediente por línea."
+	"ingredients_hint": "Un ingrediente por línea.",
+	"error_save_failed": "No se pudo guardar la receta. Comprueba que el servidor de la app está en marcha e inténtalo de nuevo.",
+	"error_load_failed": "No se pudieron cargar tus recetas. Comprueba que el servidor de la app está en marcha."
 }

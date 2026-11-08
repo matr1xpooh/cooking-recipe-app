@@ -34,6 +34,10 @@
 		<a href={resolve('/recipes/new')}>{m.recipes_add()}</a>
 	</header>
 
+	{#if recipeStore.loadError}
+		<p role="alert">{m.error_load_failed()}</p>
+	{/if}
+
 	{#if recipeStore.recipes.length === 0}
 		<p>{m.recipes_empty()}</p>
 	{:else}

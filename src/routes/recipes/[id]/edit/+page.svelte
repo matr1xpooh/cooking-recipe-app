@@ -12,8 +12,8 @@
 	let loaded = $state(false);
 	let saveError = $state<string | null>(null);
 
-	onMount(() => {
-		recipeStore.load();
+	onMount(async () => {
+		await recipeStore.load();
 		loaded = true;
 	});
 
@@ -24,14 +24,14 @@
 		try {
 			// A new screenshot replaces the saved one; otherwise the saved one is kept.
 			if (image) await saveImage(recipe.id, image);
+			await recipeStore.update({
+				...applyEdit(recipe, input, source),
+				hasImage: recipe.hasImage || image !== null
+			});
 		} catch {
-			saveError = m.error_image_save_failed();
+			saveError = m.error_save_failed();
 			return;
 		}
-		recipeStore.update({
-			...applyEdit(recipe, input, source),
-			hasImage: recipe.hasImage || image !== null
-		});
 		goto(resolve('/recipes/[id]', { id: recipe.id }));
 	}
 </script>
