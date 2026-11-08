@@ -77,3 +77,42 @@ export async function fetchPicture(pageImageUrl: string): Promise<Blob | null> {
 		return null;
 	}
 }
+
+/** A translation edited by hand: the source text it was made from, and the fields. */
+export interface EditedTranslation {
+	hash: string;
+	fields: { title: string; ingredients: string[]; steps: string[]; notes: string };
+}
+
+/** The edited translation of a recipe into a language, or null when there is none. */
+export async function fetchOverride(
+	recipeId: string,
+	language: string
+): Promise<EditedTranslation | null> {
+	const res = await fetch(
+		`/api/recipes/${encodeURIComponent(recipeId)}/translations/${encodeURIComponent(language)}`
+	);
+	if (res.status === 404) return null;
+	if (!res.ok) throw new Error(`translation load failed: ${res.status}`);
+	return res.json();
+}
+
+export async function saveOverride(
+	recipeId: string,
+	language: string,
+	value: EditedTranslation
+): Promise<void> {
+	const res = await fetch(
+		`/api/recipes/${encodeURIComponent(recipeId)}/translations/${encodeURIComponent(language)}`,
+		{ method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(value) }
+	);
+	if (!res.ok) throw new Error(`translation save failed: ${res.status}`);
+}
+
+export async function deleteOverride(recipeId: string, language: string): Promise<void> {
+	const res = await fetch(
+		`/api/recipes/${encodeURIComponent(recipeId)}/translations/${encodeURIComponent(language)}`,
+		{ method: 'DELETE' }
+	);
+	if (!res.ok && res.status !== 404) throw new Error(`translation reset failed: ${res.status}`);
+}

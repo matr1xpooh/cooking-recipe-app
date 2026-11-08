@@ -106,5 +106,10 @@
 	"tags_untag_confirm": "{n} recipes will be untagged. Delete \"{tag}\"?",
 	"tags_delete_label": "Delete tag {tag}",
 	"search_placeholder": "Search by name",
-	"search_none": "No recipes match \"{query}\"."
+	"search_none": "No recipes match \"{query}\".",
+	"translation_edit": "Edit translation",
+	"translation_save": "Save translation",
+	"translation_reset": "Use machine translation",
+	"translation_stale": "The original text has changed since this translation was saved. Check it.",
+	"translation_edited_note": "Edited translation"
 }

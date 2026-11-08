@@ -10,7 +10,13 @@
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import { translateFields } from '#lib/recipes/translate-client.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
-	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
+	import { fieldsOf, sourceHash, type RecipeFields } from '#lib/recipes/translation-fields.js';
+	import {
+		deleteOverride,
+		fetchOverride,
+		saveOverride,
+		type EditedTranslation
+	} from '#lib/recipes/recipe-api.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import {
@@ -36,6 +42,11 @@
 	let showOriginal = $state(false);
 	let ingredientsTab = $state<'text' | 'image'>('image');
 	let latestRequest = 0;
+	/** The translation edited by hand, if there is one. It takes the place of the machine translation. */
+	let override = $state<EditedTranslation | null>(null);
+	let editingTranslation = $state(false);
+	let translationDraft = $state({ title: '', ingredients: '', steps: '', notes: '' });
+	let translationError = $state<string | null>(null);
 
 	onMount(() => {
 		recipeStore.load();
@@ -52,9 +63,13 @@
 		if (!current || !isLanguage(locale)) return;
 		const request = ++latestRequest;
 		translating = true;
-		translateFields(fieldsOf(current), current.id, locale, translationCache).then((result) => {
+		Promise.all([
+			translateFields(fieldsOf(current), current.id, locale, translationCache),
+			fetchOverride(current.id, locale).catch(() => null)
+		]).then(([result, saved]) => {
 			if (request !== latestRequest) return;
 			translated = result;
+			override = saved;
 			translating = false;
 		});
 	});
@@ -133,8 +148,70 @@
 	};
 
 	const shown = $derived<RecipeFields | null>(
-		recipe ? (translated && !showOriginal ? translated.fields : fieldsOf(recipe)) : null
+		recipe
+			? showOriginal
+				? fieldsOf(recipe)
+				: override
+					? override.fields
+					: translated
+						? translated.fields
+						: fieldsOf(recipe)
+			: null
 	);
+
+	/** The original text changed after the edited translation was saved. */
+	const translationStale = $derived(
+		override !== null && recipe !== undefined && override.hash !== sourceHash(recipe)
+	);
+
+	function lines(text: string): string[] {
+		return text
+			.split('\n')
+			.map((line) => line.trim())
+			.filter((line) => line.length > 0);
+	}
+
+	function startEditTranslation() {
+		if (!shown) return;
+		showOriginal = false;
+		translationDraft = {
+			title: shown.title,
+			ingredients: shown.ingredients.join('\n'),
+			steps: shown.steps.join('\n'),
+			notes: shown.notes
+		};
+		translationError = null;
+		editingTranslation = true;
+	}
+
+	async function saveTranslation() {
+		if (!recipe || !isLanguage(locale)) return;
+		const fields = {
+			title: translationDraft.title.trim(),
+			ingredients: lines(translationDraft.ingredients),
+			steps: lines(translationDraft.steps),
+			notes: translationDraft.notes.trim()
+		};
+		const hash = sourceHash(recipe);
+		try {
+			await saveOverride(recipe.id, locale, { hash, fields });
+			override = { hash, fields };
+			editingTranslation = false;
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
+
+	async function resetTranslation() {
+		if (!recipe || !isLanguage(locale)) return;
+		try {
+			await deleteOverride(recipe.id, locale);
+			override = null;
+			editingTranslation = false;
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
 </script>
 
 <svelte:head>
@@ -223,6 +300,59 @@
 						</button>
 					{/if}
 				</p>
+			{/if}
+
+			{#if !translating && recipe && isLanguage(locale)}
+				<div class="translation-tools">
+					{#if translationStale}
+						<p role="status">{m.translation_stale()}</p>
+					{/if}
+					{#if override && !editingTranslation}
+						<p class="meta">{m.translation_edited_note()}</p>
+					{/if}
+					{#if !editingTranslation}
+						<button type="button" class="link-button" onclick={startEditTranslation}
+							>{m.translation_edit()}</button
+						>
+					{:else}
+						<form
+							class="translation-edit"
+							onsubmit={(event) => {
+								event.preventDefault();
+								saveTranslation();
+							}}
+						>
+							<label>
+								{m.recipe_field_title()}
+								<input type="text" bind:value={translationDraft.title} />
+							</label>
+							<label>
+								{m.recipe_field_ingredients()}
+								<textarea rows="6" bind:value={translationDraft.ingredients}></textarea>
+							</label>
+							<label>
+								{m.recipe_field_steps()}
+								<textarea rows="8" bind:value={translationDraft.steps}></textarea>
+							</label>
+							<div class="translation-actions">
+								<button type="submit">{m.translation_save()}</button>
+								<button
+									type="button"
+									class="link-button"
+									onclick={() => (editingTranslation = false)}>{m.recipe_cancel()}</button
+								>
+								{#if override}
+									<button type="button" class="link-button danger" onclick={resetTranslation}
+										>{m.translation_reset()}</button
+									>
+								{/if}
+							</div>
+							{#if translationError}
+								<p role="alert">{translationError}</p>
+							{/if}
+						</form>
+					{/if}
+				</div>
 			{/if}
 
 			<section>

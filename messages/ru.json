@@ -106,5 +106,10 @@
 	"tags_untag_confirm": "С {n} рецептов тег будет снят. Удалить «{tag}»?",
 	"tags_delete_label": "Удалить тег {tag}",
 	"search_placeholder": "Поиск по названию",
-	"search_none": "Нет рецептов по запросу «{query}»."
+	"search_none": "Нет рецептов по запросу «{query}».",
+	"translation_edit": "Редактировать перевод",
+	"translation_save": "Сохранить перевод",
+	"translation_reset": "Вернуть машинный перевод",
+	"translation_stale": "Исходный текст изменился после сохранения этого перевода. Проверьте его.",
+	"translation_edited_note": "Перевод отредактирован"
 }

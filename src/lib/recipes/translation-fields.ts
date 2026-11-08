@@ -49,3 +49,30 @@ export function hashItems(items: TranslateItem[]): string {
 	}
 	return (hash >>> 0).toString(16);
 }
+
+/** Limits on an edited translation, to keep one save small. */
+export const MAX_TRANSLATED_LINES = 200;
+export const MAX_TRANSLATED_TEXT = 4000;
+
+/** Checks a value has the shape of translated fields (see RecipeFields). */
+export function isTranslatedFields(value: unknown): value is RecipeFields {
+	if (typeof value !== 'object' || value === null) return false;
+	const v = value as Record<string, unknown>;
+	const list = (x: unknown) =>
+		Array.isArray(x) &&
+		x.length <= MAX_TRANSLATED_LINES &&
+		x.every((item) => typeof item === 'string' && item.length <= MAX_TRANSLATED_TEXT);
+	return (
+		typeof v.title === 'string' &&
+		v.title.length <= MAX_TRANSLATED_TEXT &&
+		list(v.ingredients) &&
+		list(v.steps) &&
+		typeof v.notes === 'string' &&
+		v.notes.length <= MAX_TRANSLATED_TEXT
+	);
+}
+
+/** A stable key for the source text: when it changes, an edited translation may be out of date. */
+export function sourceHash(recipe: Recipe): string {
+	return hashItems(toItems(fieldsOf(recipe)));
+}

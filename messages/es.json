@@ -106,5 +106,10 @@
 	"tags_untag_confirm": "{n} recetas dejarán de tener la etiqueta. ¿Eliminar \"{tag}\"?",
 	"tags_delete_label": "Eliminar etiqueta {tag}",
 	"search_placeholder": "Buscar por nombre",
-	"search_none": "Ninguna receta coincide con \"{query}\"."
+	"search_none": "Ninguna receta coincide con \"{query}\".",
+	"translation_edit": "Editar traducción",
+	"translation_save": "Guardar traducción",
+	"translation_reset": "Usar traducción automática",
+	"translation_stale": "El texto original ha cambiado desde que se guardó esta traducción. Revísala.",
+	"translation_edited_note": "Traducción editada"
 }

@@ -106,5 +106,10 @@
 	"tags_untag_confirm": "{n} receptes perdran l'etiqueta. Eliminar \"{tag}\"?",
 	"tags_delete_label": "Elimina l'etiqueta {tag}",
 	"search_placeholder": "Cerca per nom",
-	"search_none": "Cap recepta coincideix amb \"{query}\"."
+	"search_none": "Cap recepta coincideix amb \"{query}\".",
+	"translation_edit": "Edita la traducció",
+	"translation_save": "Desa la traducció",
+	"translation_reset": "Usa la traducció automàtica",
+	"translation_stale": "El text original ha canviat des que es va desar aquesta traducció. Revisa-la.",
+	"translation_edited_note": "Traducció editada"
 }
