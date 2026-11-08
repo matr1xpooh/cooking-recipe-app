@@ -1,4 +1,4 @@
-import type { Recipe } from './recipe';
+import { normalizeTag, normalizeTags, type Recipe } from './recipe';
 import { deleteRecipe, fetchRecipes, postRecipe } from './recipe-api';
 import { migrateLegacyRecipes } from './legacy-local';
 
@@ -84,6 +84,36 @@ export class RecipeStore {
 			for (const id of ids) {
 				await this.api.remove(id);
 				this.recipes = this.recipes.filter((r) => r.id !== id);
+			}
+		} catch (error) {
+			this.recipes = await this.api.list();
+			throw error;
+		}
+	}
+
+	/**
+	 * Renames a tag on every recipe that has it. Renaming to a tag that already exists
+	 * merges the two. Reloads from the server if a save is refused.
+	 */
+	async renameTag(from: string, to: string): Promise<void> {
+		const target = normalizeTag(to);
+		if (!target || target === from) return;
+		await this.changeTags(from, (tags) =>
+			normalizeTags(tags.map((t) => (t === from ? target : t)))
+		);
+	}
+
+	/** Removes a tag from every recipe that has it. */
+	async removeTag(tag: string): Promise<void> {
+		await this.changeTags(tag, (tags) => tags.filter((t) => t !== tag));
+	}
+
+	private async changeTags(tag: string, change: (tags: string[]) => string[]): Promise<void> {
+		try {
+			for (const recipe of this.recipes.filter((r) => r.tags.includes(tag))) {
+				const next = { ...recipe, tags: change(recipe.tags) };
+				await this.api.save(next);
+				this.recipes = this.recipes.map((r) => (r.id === next.id ? next : r));
 			}
 		} catch (error) {
 			this.recipes = await this.api.list();

@@ -765,3 +765,34 @@ button.tag.on,
 	font-size: 1rem;
 	line-height: 1;
 }
+
+/* Manage tags page */
+.tag-manage {
+	list-style: none;
+	padding: 0;
+	margin: 1rem 0;
+	display: grid;
+	gap: 0.75rem;
+}
+
+.tag-manage li {
+	display: grid;
+	gap: 0.4rem;
+	padding: 0.75rem;
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.tag-line,
+.tag-rename {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.tag-rename input {
+	flex: 1;
+	min-width: 10rem;
+}

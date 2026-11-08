@@ -100,5 +100,12 @@
 	"recipe_start_hint": "Per a un vídeo: on comença la recepta, per exemple 4:30.",
 	"error_start_invalid": "Escriu una hora com 4:30 o 1:02:15.",
 	"recipe_starts_at": "Comença a {time}",
-	"error_duplicate": "Aquesta recepta ja està desada:"
+	"error_duplicate": "Aquesta recepta ja està desada:",
+	"manage_tags": "Gestiona les etiquetes",
+	"tags_manage_hint": "Reanomena una etiqueta per canviar-la a totes les receptes. Si el nom nou ja existeix, es combinen. Treure-la l'elimina de totes les receptes.",
+	"tags_none": "Encara no hi ha etiquetes.",
+	"tags_rename": "Reanomena",
+	"tags_rename_placeholder": "Nou nom",
+	"tags_remove_all": "Treu de totes",
+	"tags_confirm_remove": "Treure \"{tag}\" de {n} recepta(es)?"
 }

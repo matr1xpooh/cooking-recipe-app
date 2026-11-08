@@ -128,6 +128,7 @@
 	<header>
 		<h1>{m.recipes_title()}</h1>
 		<a href={resolve('/recipes/new')}>{m.recipes_add()}</a>
+		<a href={resolve('/tags')}>{m.manage_tags()}</a>
 	</header>
 
 	{#if recipeStore.loadError}

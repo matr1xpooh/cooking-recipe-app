@@ -141,3 +141,35 @@ describe('RecipeStore archive and delete', () => {
 		expect(store.recipes.map((r) => r.id)).toEqual(['1']);
 	});
 });
+
+describe('RecipeStore tag management', () => {
+	const soupA: Recipe = { ...recipe, id: 'a', title: 'A', tags: ['patatas', 'soup'] };
+	const soupB: Recipe = { ...recipe, id: 'b', title: 'B', tags: ['potatoes'] };
+	const plain: Recipe = { ...recipe, id: 'c', title: 'C', tags: [] };
+
+	it('renames a tag on every recipe that has it', async () => {
+		const { api, server } = fakeApi([soupA, soupB, plain]);
+		const store = new RecipeStore(api);
+		await store.load();
+		await store.renameTag('patatas', 'Potatoes');
+		expect(store.recipes.find((r) => r.id === 'a')?.tags).toEqual(['potatoes', 'soup']);
+		expect(server.find((r) => r.id === 'a')?.tags).toEqual(['potatoes', 'soup']);
+		expect(store.recipes.find((r) => r.id === 'c')?.tags).toEqual([]);
+	});
+
+	it('merges when the new name already exists, without duplicates', async () => {
+		const { api } = fakeApi([soupA, soupB]);
+		const store = new RecipeStore(api);
+		await store.load();
+		await store.renameTag('patatas', 'potatoes');
+		expect(store.recipes.find((r) => r.id === 'a')?.tags).toEqual(['potatoes', 'soup']);
+	});
+
+	it('removes a tag from every recipe', async () => {
+		const { api } = fakeApi([soupA, soupB]);
+		const store = new RecipeStore(api);
+		await store.load();
+		await store.removeTag('soup');
+		expect(store.recipes.find((r) => r.id === 'a')?.tags).toEqual(['patatas']);
+	});
+});
