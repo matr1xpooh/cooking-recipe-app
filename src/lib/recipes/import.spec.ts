@@ -207,3 +207,16 @@ describe('pageTitle YouTube suffix', () => {
 		expect(pageTitle('<title>Pancakes - YouTube</title>')).toBe('Pancakes');
 	});
 });
+
+describe('extractRecipe with raw control characters', () => {
+	it('reads a recipe whose JSON-LD has a raw tab inside a string', () => {
+		const json =
+			'{"@type":"Recipe","name":"Beef\tand broccoli","recipeIngredient":["10 oz. beef"],"recipeInstructions":["Stir."]}';
+		const html = `<html><script type="application/ld+json">${json}</script></html>`;
+		expect(extractRecipe(html)).toEqual({
+			title: 'Beef and broccoli',
+			ingredients: ['10 oz. beef'],
+			steps: ['Stir.']
+		});
+	});
+});

@@ -80,7 +80,8 @@ export function extractRecipe(html: string): ImportedRecipe | null {
 	for (const match of html.matchAll(LD_JSON_SCRIPT)) {
 		let data: unknown;
 		try {
-			data = JSON.parse(match[1]);
+			// Raw tabs and newlines inside JSON strings are invalid JSON, and many sites emit them.
+			data = JSON.parse(match[1].replace(/[\u0000-\u001f]/g, ' '));
 		} catch {
 			continue;
 		}
