@@ -41,7 +41,7 @@
 	"show_translation": "Mostrar traducción",
 	"recipe_edit": "Editar",
 	"recipe_edit_title": "Editar receta",
-	"ocr_label": "Elegir un archivo de captura",
+	"ocr_label": "Añadir archivos de imagen",
 	"ocr_scanning": "Leyendo la captura…",
 	"error_image_invalid": "Sube una imagen PNG o JPEG.",
 	"error_image_too_large": "La imagen es demasiado grande (límite de 5 MB).",

@@ -59,23 +59,22 @@
 		});
 	});
 
-	// The screenshot is loaded from IndexedDB as an object URL, revoked when it changes.
-	let screenshotUrl = $state<string | null>(null);
+	// The recipe's images are loaded from the server as object URLs, revoked when they change.
+	let imageUrls = $state<string[]>([]);
 	$effect(() => {
 		const current = recipe;
-		if (!current?.hasImage) return;
-		let url: string | null = null;
+		if (!current || current.images.length === 0) return;
 		let cancelled = false;
-		loadImage(current.id).then((blob) => {
-			if (blob && !cancelled) {
-				url = URL.createObjectURL(blob);
-				screenshotUrl = url;
-			}
+		let urls: string[] = [];
+		Promise.all(current.images.map((id) => loadImage(current.id, id))).then((blobs) => {
+			if (cancelled) return;
+			urls = blobs.flatMap((blob) => (blob ? [URL.createObjectURL(blob)] : []));
+			imageUrls = urls;
 		});
 		return () => {
 			cancelled = true;
-			if (url) URL.revokeObjectURL(url);
-			screenshotUrl = null;
+			urls.forEach((url) => URL.revokeObjectURL(url));
+			imageUrls = [];
 		};
 	});
 
@@ -228,7 +227,7 @@
 
 			<section>
 				<h2>{m.recipe_ingredients_heading()}</h2>
-				{#if screenshotUrl}
+				{#if imageUrls.length > 0}
 					<div class="tabs" role="tablist" aria-label={m.recipe_ingredients_heading()}>
 						<button
 							type="button"
@@ -248,7 +247,7 @@
 						>
 					</div>
 				{/if}
-				{#if !screenshotUrl || ingredientsTab === 'text'}
+				{#if imageUrls.length === 0 || ingredientsTab === 'text'}
 					<p class="meta">
 						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
 						{#if recipe.source === 'web' && recipe.sourceUrl}
@@ -269,8 +268,12 @@
 							{/each}
 						</ul>
 					{/if}
-				{:else if screenshotUrl}
-					<img class="preview" src={screenshotUrl} alt={m.recipe_screenshot_alt()} />
+				{:else if imageUrls.length > 0}
+					<div class="gallery">
+						{#each imageUrls as url (url)}
+							<img class="preview" src={url} alt={m.recipe_screenshot_alt()} />
+						{/each}
+					</div>
 				{/if}
 			</section>
 

@@ -67,8 +67,8 @@ export interface Recipe {
 	 * page; new recipes always store an empty string.
 	 */
 	notes: string;
-	/** True when an original screenshot is stored for this recipe (see image-store.ts). */
-	hasImage: boolean;
+	/** Ids of the recipe's original images, in order. The bytes are stored on the server. */
+	images: string[];
 	/** Where the ingredient list came from. */
 	source: IngredientSource;
 	/** Tags for the kind of food. Empty when none apply. */
@@ -135,11 +135,17 @@ export function hasErrors(errors: RecipeErrors): boolean {
  * creation date, legacy notes and archive state are kept. Callers should run
  * validateRecipeInput first.
  */
-export function applyEdit(recipe: Recipe, input: RecipeInput, source: IngredientSource): Recipe {
+export function applyEdit(
+	recipe: Recipe,
+	input: RecipeInput,
+	source: IngredientSource,
+	images: string[]
+): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
 		...recipe,
 		source,
+		images,
 		tags: input.tags,
 		title: input.title.trim(),
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
@@ -155,7 +161,7 @@ export function createRecipe(
 	options: {
 		id: string;
 		createdAt: Date;
-		hasImage?: boolean;
+		images?: string[];
 		source?: IngredientSource;
 	}
 ): Recipe {
@@ -168,7 +174,7 @@ export function createRecipe(
 		ingredients: parseLines(input.ingredients),
 		steps: parseLines(input.steps),
 		notes: '',
-		hasImage: options.hasImage ?? false,
+		images: options.images ?? [],
 		source: options.source ?? 'typed',
 		tags: input.tags,
 		createdAt: options.createdAt.toISOString(),

@@ -4,10 +4,10 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
-	import { DuplicateRecipeError } from '#lib/recipes/recipe-api.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RecipeForm from '#lib/recipes/RecipeForm.svelte';
-	import { saveImage } from '#lib/recipes/image-store.js';
+	import { removeImage, uploadImage } from '#lib/recipes/image-store.js';
+	import { DuplicateRecipeError } from '#lib/recipes/recipe-api.js';
 	import {
 		applyEdit,
 		formatStart,
@@ -26,15 +26,20 @@
 
 	const recipe = $derived(recipeStore.recipes.find((r) => r.id === page.params.id));
 
-	async function save(input: RecipeInput, source: IngredientSource, image: File | null) {
+	async function save(
+		input: RecipeInput,
+		source: IngredientSource,
+		newImages: File[],
+		keptImageIds: string[]
+	) {
 		if (!recipe) return;
+		// Copied before saving: the recipe changes once the update lands.
+		const previousImages = [...recipe.images];
+		const recipeId = recipe.id;
 		try {
-			// A new screenshot replaces the saved one; otherwise the saved one is kept.
-			if (image) await saveImage(recipe.id, image);
-			await recipeStore.update({
-				...applyEdit(recipe, input, source),
-				hasImage: recipe.hasImage || image !== null
-			});
+			const uploaded: string[] = [];
+			for (const file of newImages) uploaded.push(await uploadImage(recipe.id, file));
+			await recipeStore.update(applyEdit(recipe, input, source, [...keptImageIds, ...uploaded]));
 		} catch (error) {
 			if (error instanceof DuplicateRecipeError) {
 				duplicate = error.existing;
@@ -43,7 +48,11 @@
 			saveError = m.error_save_failed();
 			return;
 		}
-		goto(resolve('/recipes/[id]', { id: recipe.id }));
+		// Images the user removed are deleted once the recipe no longer lists them.
+		for (const imageId of previousImages.filter((id) => !keptImageIds.includes(id))) {
+			await removeImage(recipeId, imageId).catch(() => undefined);
+		}
+		goto(resolve('/recipes/[id]', { id: recipeId }));
 	}
 </script>
 
@@ -77,7 +86,7 @@
 				initialSource={recipe.source}
 				submitLabel={m.recipe_save()}
 				cancelHref={resolve('/recipes/[id]', { id: recipe.id })}
-				savedImageId={recipe.hasImage ? recipe.id : null}
+				savedImageIds={recipe.images}
 				ownId={recipe.id}
 				onsave={save}
 			/>

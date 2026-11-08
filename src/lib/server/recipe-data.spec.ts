@@ -3,6 +3,7 @@ import { mkdtemp, readdir, readFile, rm, writeFile, mkdir } from 'node:fs/promis
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import {
+	deleteImage,
 	deleteRecipe,
 	findRecipeByUrl,
 	findSameRecipe,
@@ -23,7 +24,7 @@ const recipe: Recipe = {
 	ingredients: ['water'],
 	steps: ['Boil'],
 	notes: '',
-	hasImage: false,
+	images: [],
 	source: 'typed',
 
 	tags: [],
@@ -66,26 +67,46 @@ describe('recipe files on disk', () => {
 		expect(files.some((f) => f.startsWith('recipes.corrupt-'))).toBe(true);
 	});
 
-	it('keeps a screenshot as the original bytes and replaces it on the next save', async () => {
-		await saveImage('abc-1', PNG, 'image/png');
-		const back = await readImage('abc-1');
-		expect(back?.type).toBe('image/png');
-		expect(Array.from(back!.bytes)).toEqual(Array.from(PNG));
-		await saveImage('abc-1', new Uint8Array([0xff, 0xd8, 0xff, 9]), 'image/jpeg');
-		expect((await readImage('abc-1'))?.type).toBe('image/jpeg');
-		expect((await readdir(path.join(dir, 'images'))).length).toBe(1);
+	it('keeps each image as its original bytes, several per recipe', async () => {
+		await saveImage('abc-1', 'one', PNG, 'image/png');
+		await saveImage('abc-1', 'two', new Uint8Array([0xff, 0xd8, 0xff, 9]), 'image/jpeg');
+		const first = await readImage('abc-1', 'one');
+		expect(first?.type).toBe('image/png');
+		expect(Array.from(first!.bytes)).toEqual(Array.from(PNG));
+		expect((await readImage('abc-1', 'two'))?.type).toBe('image/jpeg');
+		expect((await readdir(path.join(dir, 'images', 'abc-1'))).length).toBe(2);
 	});
 
-	it('returns null for a recipe with no screenshot', async () => {
-		expect(await readImage('nothing')).toBeNull();
+	it('removes one image and leaves the others', async () => {
+		await saveImage('abc-1', 'one', PNG, 'image/png');
+		await saveImage('abc-1', 'two', PNG, 'image/png');
+		await deleteImage('abc-1', 'one');
+		expect(await readImage('abc-1', 'one')).toBeNull();
+		expect(await readImage('abc-1', 'two')).not.toBeNull();
+	});
+
+	it('returns null for an image that is not there', async () => {
+		expect(await readImage('nothing', 'none')).toBeNull();
+	});
+
+	it('moves the old single screenshot into the recipe folder as image "legacy"', async () => {
+		await mkdir(path.join(dir, 'images'), { recursive: true });
+		await writeFile(path.join(dir, 'images', 'abc-1.png'), PNG);
+		await writeFile(
+			path.join(dir, 'recipes.json'),
+			JSON.stringify([{ ...recipe, hasImage: true, images: undefined }])
+		);
+		const [migrated] = await listRecipes();
+		expect(migrated.images).toEqual(['legacy']);
+		expect(Array.from((await readImage('abc-1', 'legacy'))!.bytes)).toEqual(Array.from(PNG));
 	});
 
 	it('deletes a recipe and its screenshot', async () => {
 		await saveRecipe(recipe);
-		await saveImage('abc-1', PNG, 'image/png');
+		await saveImage('abc-1', 'one', PNG, 'image/png');
 		expect(await deleteRecipe('abc-1')).toBe(true);
 		expect(await listRecipes()).toEqual([]);
-		expect(await readImage('abc-1')).toBeNull();
+		expect(await readImage('abc-1', 'one')).toBeNull();
 	});
 
 	it('reports when there is nothing to delete', async () => {

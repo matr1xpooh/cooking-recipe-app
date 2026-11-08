@@ -1,4 +1,5 @@
-import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, rm, writeFile, access } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import type { Recipe } from '#lib/recipes/recipe.js';
 import { isRecipe, normalizeRecipe } from '#lib/recipes/validate.js';
@@ -8,8 +9,9 @@ import { sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
 /**
  * Recipes on this machine's disk. The data directory defaults to ./data under the
  * project and can be set with RECIPE_DATA_DIR. Layout:
- *   recipes.json        all recipes, newest first
- *   images/<id>.png|jpg the original screenshot for a recipe
+ *   recipes.json                       all recipes, newest first
+ *   images/<recipe id>/<image id>.png|jpg   each recipe's original images
+ * A recipe's image list is kept in recipes.json; the files hold the bytes.
  */
 
 export function dataDir(): string {
@@ -36,6 +38,33 @@ async function writeAtomically(file: string, data: string | Uint8Array): Promise
 	await rename(tmp, file);
 }
 
+const IMAGE_EXTENSIONS: Record<ImageType, string> = { 'image/png': 'png', 'image/jpeg': 'jpg' };
+const LEGACY_IMAGE = 'legacy';
+
+function recipeImageDir(recipeId: string): string {
+	return path.join(dataDir(), 'images', recipeId);
+}
+
+/**
+ * Moves the single screenshot kept before there were several per recipe into the
+ * recipe's folder. Returns true when a file was moved.
+ */
+async function migrateLegacyImage(recipe: Recipe): Promise<boolean> {
+	if (!recipe.images.includes(LEGACY_IMAGE)) return false;
+	for (const ext of Object.values(IMAGE_EXTENSIONS)) {
+		const old = path.join(dataDir(), 'images', `${recipe.id}.${ext}`);
+		try {
+			await access(old);
+		} catch {
+			continue;
+		}
+		await mkdir(recipeImageDir(recipe.id), { recursive: true });
+		await rename(old, path.join(recipeImageDir(recipe.id), `${LEGACY_IMAGE}.${ext}`));
+		return true;
+	}
+	return false;
+}
+
 /** Reads all recipes. A file that can't be parsed is moved aside, never overwritten. */
 async function readAll(): Promise<Recipe[]> {
 	const file = path.join(dataDir(), 'recipes.json');
@@ -46,14 +75,19 @@ async function readAll(): Promise<Recipe[]> {
 		if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
 		throw error;
 	}
+	let recipes: Recipe[];
 	try {
 		const parsed: unknown = JSON.parse(raw);
 		if (!Array.isArray(parsed)) throw new Error('not an array');
-		return parsed.filter(isRecipe).map(normalizeRecipe);
+		recipes = parsed.filter(isRecipe).map((r) => normalizeRecipe(r));
 	} catch {
 		await rename(file, path.join(dataDir(), `recipes.corrupt-${Date.now()}.json`));
 		return [];
 	}
+	let moved = false;
+	for (const recipe of recipes) moved = (await migrateLegacyImage(recipe)) || moved;
+	if (moved) await writeAll(recipes);
+	return recipes;
 }
 
 async function writeAll(recipes: Recipe[]): Promise<void> {
@@ -73,57 +107,67 @@ export function saveRecipe(recipe: Recipe): Promise<void> {
 		const next = normalizeRecipe(recipe);
 		if (index >= 0) all[index] = next;
 		else all.unshift(next);
+		// The recipe may now list a picture that is still in the old place: move it.
+		for (const r of all) await migrateLegacyImage(r);
 		await writeAll(all);
 	});
 }
 
-/** Removes the recipe and its screenshot. Returns false when no such recipe exists. */
+/** Removes the recipe and all its images. Returns false when no such recipe exists. */
 export function deleteRecipe(id: string): Promise<boolean> {
 	return serial(async () => {
 		const all = await readAll();
 		const remaining = all.filter((r) => r.id !== id);
 		if (remaining.length === all.length) return false;
 		await writeAll(remaining);
-		const dir = path.join(dataDir(), 'images');
-		for (const ext of ['png', 'jpg']) {
-			await rm(path.join(dir, `${id}.${ext}`), { force: true });
-		}
+		await rm(recipeImageDir(id), { recursive: true, force: true });
 		return true;
 	});
 }
 
-const IMAGE_EXTENSIONS: Record<ImageType, string> = { 'image/png': 'png', 'image/jpeg': 'jpg' };
+/** A new id for an image. */
+export function newImageId(): string {
+	return randomUUID();
+}
 
-/** Stores the screenshot's original bytes, replacing any earlier one for the recipe. */
-export function saveImage(id: string, bytes: Uint8Array, type: ImageType): Promise<void> {
+/** Stores one original image of a recipe. */
+export function saveImage(
+	recipeId: string,
+	imageId: string,
+	bytes: Uint8Array,
+	type: ImageType
+): Promise<void> {
 	return serial(async () => {
-		const dir = path.join(dataDir(), 'images');
+		const dir = recipeImageDir(recipeId);
 		await mkdir(dir, { recursive: true });
-		for (const ext of Object.values(IMAGE_EXTENSIONS)) {
-			await rm(path.join(dir, `${id}.${ext}`), { force: true });
-		}
-		await writeAtomically(path.join(dir, `${id}.${IMAGE_EXTENSIONS[type]}`), bytes);
+		await writeAtomically(path.join(dir, `${imageId}.${IMAGE_EXTENSIONS[type]}`), bytes);
 	});
 }
 
-/** The stored screenshot for a recipe, or null when there is none. */
+/** One original image of a recipe, or null when it is not there. */
 export async function readImage(
-	id: string
+	recipeId: string,
+	imageId: string
 ): Promise<{ bytes: Uint8Array; type: ImageType } | null> {
-	const dir = path.join(dataDir(), 'images');
-	let files: string[];
-	try {
-		files = await readdir(dir);
-	} catch {
-		return null;
-	}
 	for (const [type, ext] of Object.entries(IMAGE_EXTENSIONS) as [ImageType, string][]) {
-		if (files.includes(`${id}.${ext}`)) {
-			const bytes = new Uint8Array(await readFile(path.join(dir, `${id}.${ext}`)));
+		const file = path.join(recipeImageDir(recipeId), `${imageId}.${ext}`);
+		try {
+			const bytes = new Uint8Array(await readFile(file));
 			return sniffImageType(bytes) === type ? { bytes, type } : null;
+		} catch {
+			continue;
 		}
 	}
 	return null;
+}
+
+/** Removes one image file. Missing files are ignored. */
+export function deleteImage(recipeId: string, imageId: string): Promise<void> {
+	return serial(async () => {
+		for (const ext of Object.values(IMAGE_EXTENSIONS)) {
+			await rm(path.join(recipeImageDir(recipeId), `${imageId}.${ext}`), { force: true });
+		}
+	});
 }
 
 /**

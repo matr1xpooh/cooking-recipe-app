@@ -21,13 +21,14 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { suggestTags } from '#lib/recipes/tag-suggest.js';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	let {
 		initial,
 		initialSource = 'typed',
 		submitLabel,
 		cancelHref,
-		savedImageId = null,
+		savedImageIds = [],
 		ownId,
 		onsave
 	}: {
@@ -37,12 +38,20 @@
 		submitLabel: string;
 		/** Where Cancel goes. Already resolved by the caller. */
 		cancelHref: string;
-		/** The recipe id when it already has a saved screenshot; null otherwise. */
-		savedImageId?: string | null;
-		/** The id of the recipe being edited, so it is not reported as its own duplicate. */
+		/** Ids of the images already saved with the recipe, in order. */
+		savedImageIds?: string[];
+		/** The id of the recipe being edited: its saved images are loaded from it, and it is not reported as its own duplicate. */
 		ownId?: string;
-		/** Called with valid input, the ingredient source, and a new screenshot (or null). */
-		onsave: (input: RecipeInput, source: IngredientSource, image: File | null) => void;
+		/**
+		 * Called with valid input and the ingredient source, the images added in this form
+		 * (to upload), and the ids of the saved images to keep (the rest are removed).
+		 */
+		onsave: (
+			input: RecipeInput,
+			source: IngredientSource,
+			newImages: File[],
+			keptImageIds: string[]
+		) => void;
 	} = $props();
 
 	// The form edits its own copies of the starting values, read once on mount.
@@ -57,11 +66,11 @@
 			.sort()
 	]);
 
+	const tagNames = new TagNames();
+
 	$effect(() => {
 		tagNames.ensure(vocabulary);
 	});
-
-	const tagNames = new TagNames();
 
 	let newTag = $state('');
 	let tagError = $state<string | null>(null);
@@ -84,6 +93,7 @@
 			? input.tags.filter((t) => t !== tag)
 			: [...input.tags, tag];
 	}
+
 	// svelte-ignore state_referenced_locally
 	let text = $state(initial.ingredients);
 	/** Tags the user can see as suggestions: words in the recipe that point to a tag. */
@@ -105,11 +115,15 @@
 	let stepsField: HTMLTextAreaElement | undefined = $state();
 	let scanning = $state(false);
 	let scanError = $state<string | null>(null);
-	/** A screenshot chosen or pasted in this session. Replaces any saved one on save. */
-	let image = $state<File | null>(null);
-	/** The screenshot saved with the recipe, loaded for display. */
-	let savedBlob = $state<Blob | null>(null);
-	let previewUrl = $state<string | null>(null);
+
+	/** Saved images still on the recipe. Removing one here removes it on save. */
+	// svelte-ignore state_referenced_locally
+	let keptIds = $state<string[]>([...savedImageIds]);
+	/** Images added in this form. Uploaded on save. */
+	let newFiles = $state<File[]>([]);
+	/** Display addresses for the saved and new images. */
+	let savedUrls = $state<Record<string, string>>({});
+	let newUrls = $state<string[]>([]);
 
 	const styleColors = [
 		{ key: 'red', label: () => m.color_red() },
@@ -150,29 +164,43 @@
 		image: () => m.source_image()
 	};
 
-	// Saved screenshot: load it for display, unless a new one has been chosen.
+	// Saved images: load each one for display, once.
+	const loadedSaved = new SvelteSet<string>();
 	$effect(() => {
-		if (!savedImageId || image) return;
-		let cancelled = false;
-		loadImage(savedImageId).then((blob) => {
-			if (!cancelled) savedBlob = blob;
-		});
-		return () => {
-			cancelled = true;
-		};
+		if (!ownId) return;
+		for (const id of keptIds) {
+			if (loadedSaved.has(id)) continue;
+			loadedSaved.add(id);
+			loadImage(ownId, id).then((blob) => {
+				if (blob) savedUrls = { ...savedUrls, [id]: URL.createObjectURL(blob) };
+			});
+		}
 	});
 
-	// Preview of whichever screenshot applies: the new one, else the saved one.
+	// New images: a display address for each, released when the list changes.
 	$effect(() => {
-		const blob = image ?? savedBlob;
-		if (!blob) {
-			previewUrl = null;
-			return;
-		}
-		const url = URL.createObjectURL(blob);
-		previewUrl = url;
-		return () => URL.revokeObjectURL(url);
+		const urls = newFiles.map((file) => URL.createObjectURL(file));
+		newUrls = urls;
+		return () => urls.forEach((url) => URL.revokeObjectURL(url));
 	});
+
+	/** Everything shown in the Image tab, saved images first. */
+	const gallery = $derived([
+		...keptIds.map((id) => ({
+			key: `saved-${id}`,
+			src: savedUrls[id] ?? '',
+			saved: true,
+			id,
+			index: 0
+		})),
+		...newFiles.map((_, index) => ({
+			key: `new-${index}`,
+			src: newUrls[index] ?? '',
+			saved: false,
+			id: '',
+			index
+		}))
+	]);
 
 	/** The non-empty ingredient lines, as they will be saved. */
 	function currentLines(): string[] {
@@ -236,10 +264,11 @@
 			if (input.title.trim().length === 0) input.title = body.title;
 			if (input.steps.trim().length === 0) input.steps = body.steps.join('\n');
 			offerLines(body.ingredients, 'web');
-			// The recipe's picture, unless the user has already attached an image.
-			if (body.imageUrl && !image) {
+			// The recipe's picture, added as one more image.
+			if (body.imageUrl) {
 				const picture = await fetchPicture(body.imageUrl);
-				if (picture) image = new File([picture], 'picture', { type: picture.type });
+				if (picture)
+					newFiles = [...newFiles, new File([picture], 'picture', { type: picture.type })];
 			}
 		} catch {
 			importError = 'page_unreachable';
@@ -248,15 +277,15 @@
 		}
 	}
 
-	/** Chosen with the file picker. */
+	/** Chosen with the file picker; several may be chosen at once. */
 	function onFilePicked(event: Event) {
 		const fileInput = event.currentTarget as HTMLInputElement;
-		const file = fileInput.files?.[0];
-		if (file) attach(file);
+		const files = Array.from(fileInput.files ?? []);
+		if (files.length > 0) addImages(files);
 		fileInput.value = '';
 	}
 
-	/** An image on the clipboard (a Mac screenshot, for example) is attached like a picked file. */
+	/** An image on the clipboard (a Mac screenshot, for example) is added like a picked file. */
 	function onPaste(event: ClipboardEvent) {
 		const item = Array.from(event.clipboardData?.items ?? []).find(
 			(i) => i.kind === 'file' && i.type.startsWith('image/')
@@ -264,20 +293,19 @@
 		const file = item?.getAsFile();
 		if (!file) return; // plain text pastes behave as normal
 		event.preventDefault();
-		attach(file);
+		addImages([file]);
 	}
 
-	/** Makes the image the ingredient source and shows it. Its text is read only on request. */
-	function attach(file: File) {
-		image = file;
-		source = 'image';
+	/** Adds images to the gallery. Their text is read only when asked for. */
+	function addImages(files: File[]) {
+		newFiles = [...newFiles, ...files];
 		tab = 'image';
 		scanError = null;
 	}
 
-	function removeImage() {
-		image = null;
-		if (source === 'image') source = 'typed';
+	function removeGalleryItem(item: { saved: boolean; id: string; index: number }) {
+		if (item.saved) keptIds = keptIds.filter((id) => id !== item.id);
+		else newFiles = newFiles.filter((_, i) => i !== item.index);
 	}
 
 	/**
@@ -296,7 +324,7 @@
 				if (!type) continue;
 				const blob = await item.getType(type);
 				const extension = type === 'image/png' ? 'png' : 'jpg';
-				attach(new File([blob], `clipboard.${extension}`, { type }));
+				addImages([new File([blob], `clipboard.${extension}`, { type })]);
 				return;
 			}
 			scanError = 'no_image_on_clipboard';
@@ -305,15 +333,21 @@
 		}
 	}
 
-	/** Reads the text lines from the shown screenshot and offers them for the text box. */
-	async function readText() {
-		const blob = image ?? savedBlob;
+	/** The bytes of one gallery image, saved or new. */
+	async function blobOf(item: { saved: boolean; id: string; index: number }): Promise<Blob | null> {
+		if (!item.saved) return newFiles[item.index] ?? null;
+		return ownId ? loadImage(ownId, item.id) : null;
+	}
+
+	/** Reads the text lines from one image and offers them for the text box. */
+	async function readText(item: { saved: boolean; id: string; index: number }) {
+		const blob = await blobOf(item);
 		if (!blob) return;
 		scanError = null;
 		scanning = true;
 		try {
 			const body = new FormData();
-			body.append('image', blob, 'screenshot.png');
+			body.append('image', blob, 'image.png');
 			const res = await fetch('/api/recipes/ocr', { method: 'POST', body });
 			const data = await res.json().catch(() => null);
 			if (!res.ok) {
@@ -345,7 +379,7 @@
 		event.preventDefault();
 		errors = validateRecipeInput(input);
 		if (hasErrors(errors)) return;
-		onsave({ ...input, ingredients: currentLines().join('\n') }, source, image);
+		onsave({ ...input, ingredients: currentLines().join('\n') }, source, newFiles, keptIds);
 	}
 </script>
 
@@ -451,20 +485,31 @@
 			</div>
 		{:else}
 			<div role="tabpanel" id="panel-image" aria-labelledby="tab-image" class="tabpanel">
-				{#if previewUrl}
-					<img class="preview" src={previewUrl} alt={m.recipe_screenshot_alt()} />
-					<div class="image-actions">
-						<button type="button" class="file-button" onclick={readText} disabled={scanning}>
-							{scanning ? m.ocr_scanning() : m.image_read_text()}
-						</button>
-						{#if image}
-							<button type="button" class="link-button" onclick={removeImage}>
-								{m.image_remove()}
-							</button>
-						{/if}
-					</div>
-				{:else}
+				{#if gallery.length === 0}
 					<p class="meta">{m.image_empty()}</p>
+				{:else}
+					<div class="gallery">
+						{#each gallery as item (item.key)}
+							<figure class="gallery-item">
+								{#if item.src}
+									<img src={item.src} alt={m.recipe_screenshot_alt()} />
+								{/if}
+								<figcaption class="image-actions">
+									<button
+										type="button"
+										class="link-button"
+										disabled={scanning}
+										onclick={() => readText(item)}>{m.image_read_text()}</button
+									>
+									<button
+										type="button"
+										class="link-button danger"
+										onclick={() => removeGalleryItem(item)}>{m.image_remove()}</button
+									>
+								</figcaption>
+							</figure>
+						{/each}
+					</div>
 				{/if}
 
 				<div class="image-actions">
@@ -473,6 +518,7 @@
 						<input
 							type="file"
 							accept="image/png,image/jpeg"
+							multiple
 							disabled={scanning}
 							onchange={onFilePicked}
 						/>

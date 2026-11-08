@@ -15,7 +15,7 @@ const recipe = {
 describe('isRecipe', () => {
 	it('accepts a recipe, with or without the newer optional fields', () => {
 		expect(isRecipe(recipe)).toBe(true);
-		expect(isRecipe({ ...recipe, notes: 'x', hasImage: true, source: 'web' })).toBe(true);
+		expect(isRecipe({ ...recipe, notes: 'x', images: ['legacy'], source: 'web' })).toBe(true);
 	});
 
 	it('rejects malformed values', () => {
@@ -30,14 +30,14 @@ describe('normalizeRecipe', () => {
 		expect(normalizeRecipe(recipe as never)).toEqual({
 			...recipe,
 			notes: '',
-			hasImage: false,
+			images: [],
 			source: 'typed',
 			tags: []
 		});
 	});
 
 	it('infers an image source for a recipe with a screenshot and no source', () => {
-		expect(normalizeRecipe({ ...recipe, hasImage: true } as never).source).toBe('image');
+		expect(normalizeRecipe({ ...recipe, images: ['legacy'] } as never).source).toBe('image');
 	});
 });
 

@@ -41,7 +41,7 @@
 	"show_translation": "Показать перевод",
 	"recipe_edit": "Редактировать",
 	"recipe_edit_title": "Редактировать рецепт",
-	"ocr_label": "Выбрать файл скриншота",
+	"ocr_label": "Добавить файлы изображений",
 	"ocr_scanning": "Читаем скриншот…",
 	"error_image_invalid": "Загрузите изображение PNG или JPEG.",
 	"error_image_too_large": "Изображение слишком большое (лимит 5 МБ).",

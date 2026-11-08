@@ -817,3 +817,28 @@ button.tag.on,
 .search input {
 	width: 100%;
 }
+
+/* Several images: a grid of thumbnails in the form and on the recipe page */
+.gallery {
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 0.75rem;
+}
+
+.gallery-item {
+	margin: 0;
+	display: grid;
+	gap: 0.35rem;
+}
+
+.gallery-item img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border: 1px solid var(--border);
+	border-radius: var(--radius);
+}
+
+.gallery .preview {
+	max-width: none;
+}

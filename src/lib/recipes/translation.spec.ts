@@ -25,7 +25,7 @@ const recipe: Recipe = {
 	ingredients: ['water', 'salt'],
 	steps: ['**Boil** it'],
 	notes: 'legacy *note*',
-	hasImage: false,
+	images: [],
 	source: 'typed',
 
 	tags: [],

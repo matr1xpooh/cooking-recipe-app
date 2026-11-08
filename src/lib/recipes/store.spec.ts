@@ -10,7 +10,7 @@ const recipe: Recipe = {
 	ingredients: ['water'],
 	steps: ['Boil'],
 	notes: '',
-	hasImage: false,
+	images: [],
 	source: 'typed',
 
 	tags: [],

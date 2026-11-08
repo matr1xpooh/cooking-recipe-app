@@ -1,5 +1,5 @@
 import type { Recipe } from './recipe';
-import { fetchRecipes, getImage, postRecipe, putImage } from './recipe-api';
+import { fetchRecipes, postRecipe, uploadImage } from './recipe-api';
 import { isRecipe, normalizeRecipe } from './validate';
 
 /**
@@ -74,21 +74,21 @@ export async function migrateLegacyRecipes(): Promise<void> {
 
 	// Oldest first, so the newest ends up at the top, as before.
 	for (const recipe of [...missing].reverse()) {
-		if (recipe.hasImage) {
+		const images: string[] = [];
+		if (recipe.images.length > 0) {
 			const blob = await readLegacyImage(recipe.id);
-			if (blob) await putImage(recipe.id, blob);
+			if (blob) images.push(await uploadImage(recipe.id, blob));
 		}
-		await postRecipe(recipe);
+		await postRecipe({ ...recipe, images });
 	}
 
-	// Check the copy arrived before the browser copy is removed.
-	const checkIds = new Set((await fetchRecipes()).map((r) => r.id));
-	if (legacy.some((r) => !checkIds.has(r.id))) throw new Error('migration incomplete');
-	for (const recipe of legacy.filter((r) => r.hasImage)) {
-		if ((await getImage(recipe.id)) === null) {
-			const blob = await readLegacyImage(recipe.id);
-			if (blob) throw new Error('image migration incomplete');
-		}
+	// Check the copies arrived before the browser copy is removed.
+	const saved = new Map((await fetchRecipes()).map((r) => [r.id, r]));
+	for (const recipe of legacy) {
+		const copy = saved.get(recipe.id);
+		if (!copy) throw new Error('migration incomplete');
+		if (recipe.images.length > 0 && copy.images.length === 0)
+			throw new Error('image migration incomplete');
 	}
 	localStorage.removeItem(LEGACY_RECIPES_KEY);
 	await deleteLegacyImages();

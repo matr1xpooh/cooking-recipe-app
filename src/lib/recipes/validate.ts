@@ -23,6 +23,8 @@ export function isRecipe(value: unknown): value is Recipe {
 		typeof r.createdAt === 'string' &&
 		typeof r.archived === 'boolean' &&
 		(r.notes === undefined || typeof r.notes === 'string') &&
+		(r.images === undefined ||
+			(Array.isArray(r.images) && r.images.every((i) => typeof i === 'string'))) &&
 		(r.hasImage === undefined || typeof r.hasImage === 'boolean') &&
 		(r.source === undefined || isIngredientSource(r.source)) &&
 		(r.tags === undefined ||
@@ -44,11 +46,20 @@ function tagsOf(r: { tags?: unknown; category?: unknown }): Tag[] {
 	return isBuiltInTag(r.category) ? [r.category] : [];
 }
 
-export function normalizeRecipe(r: Recipe & { category?: unknown }): Recipe {
-	const hasImage = r.hasImage === true;
+/** Image ids from a stored recipe. A recipe with the old single screenshot gets it as image 'legacy'. */
+function imagesOf(r: { images?: unknown; hasImage?: unknown }): string[] {
+	if (Array.isArray(r.images))
+		return r.images.filter(
+			(i): i is string => typeof i === 'string' && /^[A-Za-z0-9-]{1,64}$/.test(i)
+		);
+	return r.hasImage === true ? ['legacy'] : [];
+}
+
+export function normalizeRecipe(r: Recipe & { category?: unknown; hasImage?: unknown }): Recipe {
+	const images = imagesOf(r);
 	const source: IngredientSource = isIngredientSource(r.source)
 		? r.source
-		: hasImage
+		: images.length > 0
 			? 'image'
 			: 'typed';
 	return {
@@ -59,7 +70,7 @@ export function normalizeRecipe(r: Recipe & { category?: unknown }): Recipe {
 		ingredients: r.ingredients,
 		steps: r.steps,
 		notes: r.notes ?? '',
-		hasImage,
+		images,
 		source,
 		tags: tagsOf(r),
 		createdAt: r.createdAt,

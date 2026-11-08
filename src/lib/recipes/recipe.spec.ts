@@ -90,7 +90,7 @@ describe('createRecipe', () => {
 			ingredients: ['flour', 'milk'],
 			steps: ['Mix', 'Cook'],
 			notes: '',
-			hasImage: false,
+			images: [],
 			source: 'typed',
 			tags: ['dessert'],
 			createdAt: '2026-11-07T10:00:00.000Z',
@@ -131,7 +131,8 @@ describe('applyEdit', () => {
 				steps: '**Brown** it',
 				tags: []
 			},
-			'web'
+			'web',
+			['img-1']
 		);
 		expect(edited).toEqual({
 			id: 'keep-me',
@@ -141,7 +142,7 @@ describe('applyEdit', () => {
 			ingredients: ['beef', 'onion'],
 			steps: ['**Brown** it'],
 			notes: 'legacy',
-			hasImage: false,
+			images: ['img-1'],
 			source: 'web',
 			tags: [],
 			createdAt: '2026-01-01T00:00:00.000Z',

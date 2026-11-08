@@ -31,22 +31,33 @@ export async function postRecipe(recipe: Recipe): Promise<void> {
 	if (!res.ok) throw new Error(`save failed: ${res.status}`);
 }
 
-/** Stores a screenshot's original bytes for a recipe. */
-export async function putImage(recipeId: string, file: Blob): Promise<void> {
-	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/image`, {
-		method: 'PUT',
+/** Stores one original image for a recipe. Returns the new image's id. */
+export async function uploadImage(recipeId: string, file: Blob): Promise<string> {
+	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/images`, {
+		method: 'POST',
 		headers: { 'content-type': file.type || 'application/octet-stream' },
 		body: file
 	});
 	if (!res.ok) throw new Error(`image save failed: ${res.status}`);
+	return (await res.json()).id;
 }
 
-/** The stored screenshot for a recipe, or null when there is none. */
-export async function getImage(recipeId: string): Promise<Blob | null> {
-	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/image`);
+/** One stored image of a recipe, or null when it is not there. */
+export async function fetchImage(recipeId: string, imageId: string): Promise<Blob | null> {
+	const res = await fetch(
+		`/api/recipes/${encodeURIComponent(recipeId)}/images/${encodeURIComponent(imageId)}`
+	);
 	if (res.status === 404) return null;
 	if (!res.ok) throw new Error(`image load failed: ${res.status}`);
 	return res.blob();
+}
+
+export async function deleteImage(recipeId: string, imageId: string): Promise<void> {
+	const res = await fetch(
+		`/api/recipes/${encodeURIComponent(recipeId)}/images/${encodeURIComponent(imageId)}`,
+		{ method: 'DELETE' }
+	);
+	if (!res.ok && res.status !== 404) throw new Error(`image delete failed: ${res.status}`);
 }
 
 export async function deleteRecipe(recipeId: string): Promise<void> {
