@@ -839,6 +839,15 @@ button.tag.on,
 	border-radius: var(--radius);
 }
 
-.gallery .preview {
-	max-width: none;
+.gallery img.preview {
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	max-height: 480px;
+	object-fit: contain;
+}
+
+/* On the recipe page the images stack, each at the width of the text */
+.gallery.stacked {
+	grid-template-columns: 1fr;
 }

@@ -269,7 +269,7 @@
 						</ul>
 					{/if}
 				{:else if imageUrls.length > 0}
-					<div class="gallery">
+					<div class="gallery stacked">
 						{#each imageUrls as url (url)}
 							<img class="preview" src={url} alt={m.recipe_screenshot_alt()} />
 						{/each}
