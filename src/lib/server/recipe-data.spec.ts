@@ -2,7 +2,14 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, readdir, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { deleteRecipe, listRecipes, readImage, saveImage, saveRecipe } from './recipe-data';
+import {
+	deleteRecipe,
+	findRecipeByUrl,
+	listRecipes,
+	readImage,
+	saveImage,
+	saveRecipe
+} from './recipe-data';
 import type { Recipe } from '#lib/recipes/recipe.js';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4]);
@@ -82,5 +89,18 @@ describe('recipe files on disk', () => {
 
 	it('reports when there is nothing to delete', async () => {
 		expect(await deleteRecipe('missing')).toBe(false);
+	});
+});
+
+describe('finding a recipe by its address', () => {
+	it('finds a saved recipe whose address is written differently', async () => {
+		await saveRecipe({ ...recipe, sourceUrl: 'https://www.youtube.com/watch?v=abc123' });
+		expect((await findRecipeByUrl('https://youtu.be/abc123'))?.id).toBe('abc-1');
+		expect(await findRecipeByUrl('https://youtu.be/other')).toBeUndefined();
+	});
+
+	it('ignores the recipe itself when checking an edit', async () => {
+		await saveRecipe({ ...recipe, sourceUrl: 'https://example.com/a' });
+		expect(await findRecipeByUrl('https://example.com/a', 'abc-1')).toBeUndefined();
 	});
 });

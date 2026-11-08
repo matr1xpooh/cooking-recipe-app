@@ -99,5 +99,6 @@
 	"recipe_field_start": "Hora d'inici (opcional)",
 	"recipe_start_hint": "Per a un vídeo: on comença la recepta, per exemple 4:30.",
 	"error_start_invalid": "Escriu una hora com 4:30 o 1:02:15.",
-	"recipe_starts_at": "Comença a {time}"
+	"recipe_starts_at": "Comença a {time}",
+	"error_duplicate": "Aquesta recepta ja està desada:"
 }

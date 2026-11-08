@@ -99,5 +99,6 @@
 	"recipe_field_start": "Hora de inicio (opcional)",
 	"recipe_start_hint": "Para un vídeo: dónde empieza la receta, por ejemplo 4:30.",
 	"error_start_invalid": "Escribe una hora como 4:30 o 1:02:15.",
-	"recipe_starts_at": "Empieza en {time}"
+	"recipe_starts_at": "Empieza en {time}",
+	"error_duplicate": "Esta receta ya está guardada:"
 }

@@ -10,6 +10,7 @@ import {
 	type ImportedRecipe
 } from '#lib/recipes/import.js';
 import { fetchPublicPage, ImportError, parseHttpUrl } from '#lib/server/recipe-import.js';
+import { findRecipeByUrl } from '#lib/server/recipe-data.js';
 
 /**
  * Recipe from schema.org data, or, for YouTube, from the video description
@@ -35,6 +36,14 @@ export const GET: RequestHandler = async ({ url }) => {
 	const target = url.searchParams.get('url') ?? '';
 	try {
 		const pageUrl = parseHttpUrl(target);
+		// Check before fetching: a page already saved is shown, not imported again.
+		const existing = await findRecipeByUrl(target);
+		if (existing) {
+			return json(
+				{ error: 'duplicate', existing: { id: existing.id, title: existing.title } },
+				{ status: 409 }
+			);
+		}
 		const html = await fetchPublicPage(target);
 		const recipe = recipeFromPage(pageUrl, html);
 		// Pictures: the recipe's own, else the page's og:image. YouTube's image is a video

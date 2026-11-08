@@ -16,6 +16,7 @@
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
+	import { resolve } from '$app/paths';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
@@ -96,6 +97,8 @@
 	let errors = $state<RecipeErrors>({});
 	let importing = $state(false);
 	let importError = $state<ImportErrorKey | null>(null);
+	/** The saved recipe with this page's address, when there is one. */
+	let duplicate = $state<{ id: string; title: string } | null>(null);
 	let stepsField: HTMLTextAreaElement | undefined = $state();
 	let scanning = $state(false);
 	let scanError = $state<string | null>(null);
@@ -203,6 +206,7 @@
 	/** Fills empty fields from the source page's recipe data. Typed values are kept. */
 	async function importFromUrl() {
 		importError = null;
+		duplicate = null;
 		const target = input.sourceUrl.trim();
 		if (target.length === 0) {
 			importError = 'url_invalid';
@@ -213,6 +217,10 @@
 		try {
 			const res = await fetch(`/api/recipes/import?url=${encodeURIComponent(target)}`);
 			const body = await res.json();
+			if (res.status === 409) {
+				duplicate = body.existing;
+				return;
+			}
 			if (!res.ok) {
 				importError = body.error ?? 'page_unreachable';
 				return;
@@ -377,6 +385,12 @@
 	</div>
 	{#if importError}
 		<p role="alert">{importErrorMessages[importError]()}</p>
+	{/if}
+	{#if duplicate}
+		<p role="alert">
+			{m.error_duplicate()}
+			<a href={resolve('/recipes/[id]', { id: duplicate.id })}>{duplicate.title}</a>
+		</p>
 	{/if}
 
 	<div class="ingredients-block">

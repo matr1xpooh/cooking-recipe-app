@@ -230,3 +230,28 @@ export function sourceHref(url: string, start: number | null): string {
 		return url;
 	}
 }
+
+/**
+ * A key for comparing recipe addresses. The same video or page gives the same key
+ * whether it is written as youtu.be or youtube.com, with or without www, a trailing
+ * slash, a start time or tracking parameters.
+ */
+export function normalizeSourceUrl(raw: string): string {
+	try {
+		const url = new URL(raw.trim());
+		const host = url.hostname.toLowerCase().replace(/^(www\.|m\.)/, '');
+		if (host === 'youtu.be') return `youtube:${url.pathname.slice(1)}`;
+		if (host.endsWith('youtube.com')) {
+			const id = url.searchParams.get('v');
+			if (id) return `youtube:${id}`;
+		}
+		const path = url.pathname.replace(/\/+$/, '') || '/';
+		const kept = [...url.searchParams]
+			.filter(([k]) => !k.startsWith('utm_'))
+			.sort(([a], [b]) => a.localeCompare(b));
+		const query = kept.length > 0 ? `?${new URLSearchParams(kept).toString()}` : '';
+		return `${host}${path}${query}`;
+	} catch {
+		return raw.trim();
+	}
+}

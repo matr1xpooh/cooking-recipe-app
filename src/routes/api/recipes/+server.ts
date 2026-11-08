@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { isRecipe } from '#lib/recipes/validate.js';
-import { isSafeId, listRecipes, saveRecipe } from '#lib/server/recipe-data.js';
+import { findRecipeByUrl, isSafeId, listRecipes, saveRecipe } from '#lib/server/recipe-data.js';
 
 /** GET /api/recipes -> all recipes, newest first */
 export const GET: RequestHandler = async () => json(await listRecipes());
@@ -11,6 +11,15 @@ export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.json().catch(() => null);
 	if (!isRecipe(body) || !isSafeId(body.id)) {
 		return json({ error: 'recipe_invalid' }, { status: 400 });
+	}
+	if (body.sourceUrl) {
+		const existing = await findRecipeByUrl(body.sourceUrl, body.id);
+		if (existing) {
+			return json(
+				{ error: 'duplicate', existing: { id: existing.id, title: existing.title } },
+				{ status: 409 }
+			);
+		}
 	}
 	await saveRecipe(body);
 	return json({ ok: true });

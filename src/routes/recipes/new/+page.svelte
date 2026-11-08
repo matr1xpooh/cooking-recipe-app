@@ -3,12 +3,14 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
+	import { DuplicateRecipeError } from '#lib/recipes/recipe-api.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RecipeForm from '#lib/recipes/RecipeForm.svelte';
 	import { saveImage } from '#lib/recipes/image-store.js';
 	import { createRecipe, type IngredientSource, type RecipeInput } from '#lib/recipes/recipe.js';
 
 	let saveError = $state<string | null>(null);
+	let duplicate = $state<{ id: string; title: string } | null>(null);
 
 	onMount(() => recipeStore.load());
 
@@ -20,7 +22,11 @@
 			await recipeStore.add(
 				createRecipe(input, { id, createdAt: new Date(), hasImage: image !== null, source })
 			);
-		} catch {
+		} catch (error) {
+			if (error instanceof DuplicateRecipeError) {
+				duplicate = error.existing;
+				return;
+			}
 			saveError = m.error_save_failed();
 			return;
 		}
@@ -36,6 +42,12 @@
 	<h1>{m.recipe_new_title()}</h1>
 	{#if saveError}
 		<p role="alert">{saveError}</p>
+	{/if}
+	{#if duplicate}
+		<p role="alert">
+			{m.error_duplicate()}
+			<a href={resolve('/recipes/[id]', { id: duplicate.id })}>{duplicate.title}</a>
+		</p>
 	{/if}
 	<RecipeForm
 		initial={{ title: '', sourceUrl: '', sourceStart: '', ingredients: '', steps: '', tags: [] }}

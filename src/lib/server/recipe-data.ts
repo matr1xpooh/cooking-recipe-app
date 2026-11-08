@@ -2,6 +2,7 @@ import { mkdir, readFile, readdir, rename, rm, writeFile } from 'node:fs/promise
 import path from 'node:path';
 import type { Recipe } from '#lib/recipes/recipe.js';
 import { isRecipe, normalizeRecipe } from '#lib/recipes/validate.js';
+import { normalizeSourceUrl } from '#lib/recipes/recipe.js';
 import { sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
 
 /**
@@ -123,4 +124,12 @@ export async function readImage(
 		}
 	}
 	return null;
+}
+
+/** The saved recipe with the same address as `url`, other than `exceptId`, if there is one. */
+export async function findRecipeByUrl(url: string, exceptId?: string): Promise<Recipe | undefined> {
+	const key = normalizeSourceUrl(url);
+	return (await listRecipes()).find(
+		(r) => r.id !== exceptId && r.sourceUrl !== null && normalizeSourceUrl(r.sourceUrl) === key
+	);
 }

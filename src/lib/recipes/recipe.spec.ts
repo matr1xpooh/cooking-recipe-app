@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	MAX_TAGS_PER_RECIPE,
+	normalizeSourceUrl,
 	formatStart,
 	parseStart,
 	sourceHref,
@@ -211,5 +212,25 @@ describe('video start time', () => {
 			'https://www.youtube.com/watch?v=abc'
 		);
 		expect(sourceHref('https://example.com/recipe', 83)).toBe('https://example.com/recipe');
+	});
+});
+
+describe('normalizeSourceUrl', () => {
+	it('treats different spellings of one video or page as the same', () => {
+		const key = normalizeSourceUrl('https://www.youtube.com/watch?v=abc123&t=10s');
+		expect(normalizeSourceUrl('https://youtu.be/abc123')).toBe(key);
+		expect(normalizeSourceUrl('https://m.youtube.com/watch?v=abc123')).toBe(key);
+		expect(normalizeSourceUrl('https://example.com/Recipe/')).toBe(
+			normalizeSourceUrl('https://EXAMPLE.com/Recipe?utm_source=x')
+		);
+	});
+
+	it('keeps different videos and pages apart', () => {
+		expect(normalizeSourceUrl('https://www.youtube.com/watch?v=abc')).not.toBe(
+			normalizeSourceUrl('https://www.youtube.com/watch?v=xyz')
+		);
+		expect(normalizeSourceUrl('https://example.com/a')).not.toBe(
+			normalizeSourceUrl('https://example.com/b')
+		);
 	});
 });

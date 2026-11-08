@@ -99,5 +99,6 @@
 	"recipe_field_start": "Время начала (необязательно)",
 	"recipe_start_hint": "Для видео: с какой минуты начинается рецепт, например 4:30.",
 	"error_start_invalid": "Укажите время, например 4:30 или 1:02:15.",
-	"recipe_starts_at": "Начинается с {time}"
+	"recipe_starts_at": "Начинается с {time}",
+	"error_duplicate": "Этот рецепт уже сохранён:"
 }

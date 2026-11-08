@@ -11,12 +11,23 @@ export async function fetchRecipes(): Promise<Recipe[]> {
 	return body.filter(isRecipe).map(normalizeRecipe);
 }
 
+/** Thrown when the address is already saved as another recipe. */
+export class DuplicateRecipeError extends Error {
+	constructor(readonly existing: { id: string; title: string }) {
+		super('duplicate');
+	}
+}
+
 export async function postRecipe(recipe: Recipe): Promise<void> {
 	const res = await fetch('/api/recipes', {
 		method: 'POST',
 		headers: { 'content-type': 'application/json' },
 		body: JSON.stringify(recipe)
 	});
+	if (res.status === 409) {
+		const body = await res.json();
+		throw new DuplicateRecipeError(body.existing);
+	}
 	if (!res.ok) throw new Error(`save failed: ${res.status}`);
 }
 
