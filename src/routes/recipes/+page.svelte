@@ -8,6 +8,7 @@
 	import { translateTitles } from '#lib/recipes/translate-client.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
+	import { matchesName } from '#lib/recipes/recipe.js';
 	import { TAGS, type Tag } from '#lib/recipes/recipe.js';
 	import { SvelteSet } from 'svelte/reactivity';
 
@@ -56,7 +57,16 @@
 			.map((tag) => ({ tag, count: inView.filter((r) => r.tags.includes(tag)).length }))
 	);
 
-	const visible = $derived(inView.filter((r) => [...filters].every((tag) => r.tags.includes(tag))));
+	let query = $state('');
+
+	/** Recipes matching the view, the selected tags and the name search. */
+	const visible = $derived(
+		inView.filter(
+			(r) =>
+				[...filters].every((tag) => r.tags.includes(tag)) &&
+				matchesName([r.title, titles[r.id] ?? ''], query)
+		)
+	);
 
 	function setView(next: 'recipes' | 'archive') {
 		view = next;
@@ -154,6 +164,15 @@
 		>
 	</div>
 
+	<div class="search">
+		<input
+			type="search"
+			bind:value={query}
+			placeholder={m.search_placeholder()}
+			aria-label={m.search_placeholder()}
+		/>
+	</div>
+
 	{#if counts.length > 0}
 		<div class="chips" role="group" aria-label={m.recipe_field_tags()}>
 			<button
@@ -213,7 +232,13 @@
 	{/if}
 
 	{#if visible.length === 0}
-		<p>{view === 'archive' ? m.archive_empty() : m.recipes_empty()}</p>
+		<p>
+			{#if query.trim().length > 0}
+				{m.search_none({ query })}
+			{:else}
+				{view === 'archive' ? m.archive_empty() : m.recipes_empty()}
+			{/if}
+		</p>
 	{:else}
 		<ul>
 			{#each visible as recipe (recipe.id)}

@@ -255,3 +255,18 @@ export function normalizeSourceUrl(raw: string): string {
 		return raw.trim();
 	}
 }
+
+/** Lowercase, without accents, for comparing names: "Crème" matches "creme". */
+export function foldText(text: string): string {
+	return text.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().trim();
+}
+
+/** True when every word of the query appears in one of the given names. */
+export function matchesName(names: string[], query: string): boolean {
+	const words = foldText(query)
+		.split(/\s+/)
+		.filter((w) => w.length > 0);
+	if (words.length === 0) return true;
+	const haystack = names.map(foldText).join(' ');
+	return words.every((word) => haystack.includes(word));
+}

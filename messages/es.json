@@ -104,5 +104,7 @@
 	"manage_tags": "Gestionar etiquetas",
 	"tags_none": "Todavía no hay etiquetas.",
 	"tags_untag_confirm": "{n} recetas dejarán de tener la etiqueta. ¿Eliminar \"{tag}\"?",
-	"tags_delete_label": "Eliminar etiqueta {tag}"
+	"tags_delete_label": "Eliminar etiqueta {tag}",
+	"search_placeholder": "Buscar por nombre",
+	"search_none": "Ninguna receta coincide con \"{query}\"."
 }

@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
 	MAX_TAGS_PER_RECIPE,
+	matchesName,
 	normalizeSourceUrl,
 	formatStart,
 	parseStart,
@@ -232,5 +233,18 @@ describe('normalizeSourceUrl', () => {
 		expect(normalizeSourceUrl('https://example.com/a')).not.toBe(
 			normalizeSourceUrl('https://example.com/b')
 		);
+	});
+});
+
+describe('name search', () => {
+	it('matches words in any order, ignoring case and accents', () => {
+		expect(matchesName(['Crème brûlée'], 'BRULEE')).toBe(true);
+		expect(matchesName(['Crème brûlée'], 'brûlée crème')).toBe(true);
+		expect(matchesName(['Crème brûlée'], 'tarte')).toBe(false);
+	});
+
+	it('matches either name, and an empty query matches everything', () => {
+		expect(matchesName(['Beef stew', 'Рагу из говядины'], 'говядин')).toBe(true);
+		expect(matchesName(['Soup'], '   ')).toBe(true);
 	});
 });

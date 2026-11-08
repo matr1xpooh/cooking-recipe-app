@@ -808,3 +808,12 @@ button.tag.on,
 	font-size: 0.8rem;
 	opacity: 0.8;
 }
+
+/* Name search on the recipe list */
+.search {
+	margin: 0.75rem 0 0;
+}
+
+.search input {
+	width: 100%;
+}

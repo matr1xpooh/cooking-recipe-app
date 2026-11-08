@@ -104,5 +104,7 @@
 	"manage_tags": "Gestiona les etiquetes",
 	"tags_none": "Encara no hi ha etiquetes.",
 	"tags_untag_confirm": "{n} receptes perdran l'etiqueta. Eliminar \"{tag}\"?",
-	"tags_delete_label": "Elimina l'etiqueta {tag}"
+	"tags_delete_label": "Elimina l'etiqueta {tag}",
+	"search_placeholder": "Cerca per nom",
+	"search_none": "Cap recepta coincideix amb \"{query}\"."
 }

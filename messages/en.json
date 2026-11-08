@@ -104,5 +104,7 @@
 	"manage_tags": "Manage tags",
 	"tags_none": "No tags yet.",
 	"tags_untag_confirm": "{n} recipes will be untagged. Delete \"{tag}\"?",
-	"tags_delete_label": "Delete tag {tag}"
+	"tags_delete_label": "Delete tag {tag}",
+	"search_placeholder": "Search by name",
+	"search_none": "No recipes match \"{query}\"."
 }
