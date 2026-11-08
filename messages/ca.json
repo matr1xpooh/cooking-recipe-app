@@ -102,10 +102,7 @@
 	"recipe_starts_at": "Comença a {time}",
 	"error_duplicate": "Aquesta recepta ja està desada:",
 	"manage_tags": "Gestiona les etiquetes",
-	"tags_manage_hint": "Reanomena una etiqueta per canviar-la a totes les receptes. Si el nom nou ja existeix, es combinen. Treure-la l'elimina de totes les receptes.",
 	"tags_none": "Encara no hi ha etiquetes.",
-	"tags_rename": "Reanomena",
-	"tags_rename_placeholder": "Nou nom",
-	"tags_remove_all": "Treu de totes",
-	"tags_confirm_remove": "Treure \"{tag}\" de {n} recepta(es)?"
+	"tags_untag_confirm": "{n} receptes perdran l'etiqueta. Eliminar \"{tag}\"?",
+	"tags_delete_label": "Elimina l'etiqueta {tag}"
 }

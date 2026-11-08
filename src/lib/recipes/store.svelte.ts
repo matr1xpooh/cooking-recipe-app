@@ -1,4 +1,4 @@
-import { normalizeTag, normalizeTags, type Recipe } from './recipe';
+import type { Recipe } from './recipe';
 import { deleteRecipe, fetchRecipes, postRecipe } from './recipe-api';
 import { migrateLegacyRecipes } from './legacy-local';
 
@@ -89,18 +89,6 @@ export class RecipeStore {
 			this.recipes = await this.api.list();
 			throw error;
 		}
-	}
-
-	/**
-	 * Renames a tag on every recipe that has it. Renaming to a tag that already exists
-	 * merges the two. Reloads from the server if a save is refused.
-	 */
-	async renameTag(from: string, to: string): Promise<void> {
-		const target = normalizeTag(to);
-		if (!target || target === from) return;
-		await this.changeTags(from, (tags) =>
-			normalizeTags(tags.map((t) => (t === from ? target : t)))
-		);
 	}
 
 	/** Removes a tag from every recipe that has it. */

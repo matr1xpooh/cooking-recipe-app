@@ -10,7 +10,6 @@
 
 	let error = $state<string | null>(null);
 	let busy = $state(false);
-	let newNames = $state<Record<string, string>>({});
 
 	/** Every tag in use, with how many recipes have it. Built-in tags come first. */
 	const tags = $derived(
@@ -27,27 +26,18 @@
 			})
 	);
 
-	async function run(action: () => Promise<void>) {
+	/** Asks how many recipes will lose the tag, then removes it from them all. */
+	async function remove(tag: string, count: number) {
+		if (count > 0 && !window.confirm(m.tags_untag_confirm({ n: count, tag }))) return;
 		busy = true;
 		error = null;
 		try {
-			await action();
+			await recipeStore.removeTag(tag);
 		} catch {
 			error = m.error_save_failed();
 		} finally {
 			busy = false;
 		}
-	}
-
-	function rename(tag: string) {
-		const to = newNames[tag] ?? '';
-		newNames = { ...newNames, [tag]: '' };
-		return run(() => recipeStore.renameTag(tag, to));
-	}
-
-	function remove(tag: string, count: number) {
-		if (!window.confirm(m.tags_confirm_remove({ tag, n: count }))) return;
-		return run(() => recipeStore.removeTag(tag));
 	}
 </script>
 
@@ -58,7 +48,6 @@
 <main>
 	<p class="back"><a href={resolve('/recipes')}>← {m.recipes_title()}</a></p>
 	<h1>{m.manage_tags()}</h1>
-	<p class="meta">{m.tags_manage_hint()}</p>
 
 	{#if error}
 		<p role="alert">{error}</p>
@@ -67,32 +56,20 @@
 	{#if tags.length === 0}
 		<p>{m.tags_none()}</p>
 	{:else}
-		<ul class="tag-manage">
+		<div class="tag-list">
 			{#each tags as { tag, count } (tag)}
-				<li>
-					<div class="tag-line">
-						<span class="tag on">{isBuiltInTag(tag) ? tagLabel(tag) : tag}</span>
-						<span class="meta">{count}</span>
-						<button
-							type="button"
-							class="link-button danger"
-							disabled={busy}
-							onclick={() => remove(tag, count)}>{m.tags_remove_all()}</button
-						>
-					</div>
-					<div class="tag-rename">
-						<input
-							type="text"
-							placeholder={m.tags_rename_placeholder()}
-							aria-label={m.tags_rename_placeholder()}
-							bind:value={newNames[tag]}
-						/>
-						<button type="button" class="link-button" disabled={busy} onclick={() => rename(tag)}
-							>{m.tags_rename()}</button
-						>
-					</div>
-				</li>
+				<span class="tag on">
+					{isBuiltInTag(tag) ? tagLabel(tag) : tag}
+					<span class="meta-inline">({count})</span>
+					<button
+						type="button"
+						class="tag-remove"
+						disabled={busy}
+						aria-label={m.tags_delete_label({ tag: isBuiltInTag(tag) ? tagLabel(tag) : tag })}
+						onclick={() => remove(tag, count)}>×</button
+					>
+				</span>
 			{/each}
-		</ul>
+		</div>
 	{/if}
 </main>

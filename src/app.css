@@ -766,7 +766,7 @@ button.tag.on,
 	line-height: 1;
 }
 
-/* Manage tags page */
+/* Manage tags page: one chip per tag, with a remove control */
 .tag-manage {
 	list-style: none;
 	padding: 0;
@@ -795,4 +795,16 @@ button.tag.on,
 .tag-rename input {
 	flex: 1;
 	min-width: 10rem;
+}
+
+.tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin: 1rem 0;
+}
+
+.meta-inline {
+	font-size: 0.8rem;
+	opacity: 0.8;
 }

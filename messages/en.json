@@ -102,10 +102,7 @@
 	"recipe_starts_at": "Starts at {time}",
 	"error_duplicate": "This recipe is already saved:",
 	"manage_tags": "Manage tags",
-	"tags_manage_hint": "Rename a tag to change it on every recipe. Renaming to a tag that already exists merges the two. Removing takes the tag off every recipe.",
 	"tags_none": "No tags yet.",
-	"tags_rename": "Rename",
-	"tags_rename_placeholder": "New name",
-	"tags_remove_all": "Remove from all",
-	"tags_confirm_remove": "Remove \"{tag}\" from {n} recipe(s)? The tag itself is kept only where other recipes use it."
+	"tags_untag_confirm": "{n} recipes will be untagged. Delete \"{tag}\"?",
+	"tags_delete_label": "Delete tag {tag}"
 }
