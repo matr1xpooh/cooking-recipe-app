@@ -12,6 +12,8 @@
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
+	import { fetchPicture } from '#lib/recipes/recipe-api.js';
+	import { CATEGORIES, categoryLabel } from '#lib/recipes/categories.js';
 
 	let {
 		initial,
@@ -169,6 +171,11 @@
 			if (input.title.trim().length === 0) input.title = body.title;
 			if (input.steps.trim().length === 0) input.steps = body.steps.join('\n');
 			offerLines(body.ingredients, 'web');
+			// The recipe's picture, unless the user has already attached an image.
+			if (body.imageUrl && !image) {
+				const picture = await fetchPicture(body.imageUrl);
+				if (picture) image = new File([picture], 'picture', { type: picture.type });
+			}
 		} catch {
 			importError = 'page_unreachable';
 		} finally {
@@ -278,6 +285,15 @@
 </script>
 
 <form onsubmit={submit} onpaste={onPaste} novalidate>
+	<label>
+		{m.recipe_field_category()}
+		<select bind:value={input.category}>
+			{#each CATEGORIES as category (category)}
+				<option value={category}>{categoryLabel(category)}</option>
+			{/each}
+		</select>
+	</label>
+
 	<label>
 		{m.recipe_field_title()}
 		<input type="text" bind:value={input.title} aria-invalid={errors.title ? 'true' : undefined} />

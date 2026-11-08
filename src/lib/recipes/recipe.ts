@@ -7,6 +7,24 @@ export function isIngredientSource(value: unknown): value is IngredientSource {
 	return typeof value === 'string' && (INGREDIENT_SOURCES as readonly string[]).includes(value);
 }
 
+/** Kind of food, for filtering the list. */
+export const CATEGORIES = [
+	'meat',
+	'poultry',
+	'fish',
+	'vegetarian',
+	'soup',
+	'dessert',
+	'baking',
+	'drinks',
+	'other'
+] as const;
+export type Category = (typeof CATEGORIES)[number];
+
+export function isCategory(value: unknown): value is Category {
+	return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value);
+}
+
 export interface Recipe {
 	id: string;
 	title: string;
@@ -24,6 +42,8 @@ export interface Recipe {
 	hasImage: boolean;
 	/** Where the ingredient list came from. */
 	source: IngredientSource;
+	/** Kind of food. Recipes saved before categories existed are 'other'. */
+	category: Category;
 	createdAt: string;
 	archived: boolean;
 }
@@ -34,6 +54,7 @@ export interface RecipeInput {
 	sourceUrl: string;
 	ingredients: string;
 	steps: string;
+	category: Category;
 }
 
 export type RecipeField = 'title' | 'sourceUrl';
@@ -85,6 +106,7 @@ export function applyEdit(recipe: Recipe, input: RecipeInput, source: Ingredient
 	return {
 		...recipe,
 		source,
+		category: input.category,
 		title: input.title.trim(),
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
 		ingredients: parseLines(input.ingredients),
@@ -95,7 +117,12 @@ export function applyEdit(recipe: Recipe, input: RecipeInput, source: Ingredient
 /** Builds a Recipe from valid input. Callers should run validateRecipeInput first. */
 export function createRecipe(
 	input: RecipeInput,
-	options: { id: string; createdAt: Date; hasImage?: boolean; source?: IngredientSource }
+	options: {
+		id: string;
+		createdAt: Date;
+		hasImage?: boolean;
+		source?: IngredientSource;
+	}
 ): Recipe {
 	const sourceUrl = input.sourceUrl.trim();
 	return {
@@ -107,6 +134,7 @@ export function createRecipe(
 		notes: '',
 		hasImage: options.hasImage ?? false,
 		source: options.source ?? 'typed',
+		category: input.category,
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};

@@ -11,6 +11,8 @@ const recipe: Recipe = {
 	notes: '',
 	hasImage: false,
 	source: 'typed',
+
+	category: 'other',
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };
@@ -28,6 +30,11 @@ function fakeApi(
 			const i = server.findIndex((x) => x.id === r.id);
 			if (i >= 0) server[i] = r;
 			else server.unshift(r);
+		},
+		remove: async (id) => {
+			if (options.failSave) throw new Error('down');
+			const i = server.findIndex((x) => x.id === id);
+			if (i >= 0) server.splice(i, 1);
 		},
 		migrate: async () => {
 			if (options.failMigrate) throw new Error('down');
@@ -92,6 +99,44 @@ describe('RecipeStore.add and update', () => {
 		const store = new RecipeStore(api);
 		await store.load();
 		await store.update({ ...recipe, id: 'missing', title: 'x' });
+		expect(store.recipes.map((r) => r.id)).toEqual(['1']);
+	});
+});
+
+describe('RecipeStore archive and delete', () => {
+	const other: Recipe = { ...recipe, id: '2', title: 'Stew' };
+
+	it('archives several recipes and saves each', async () => {
+		const { api, server } = fakeApi([recipe, other]);
+		const store = new RecipeStore(api);
+		await store.load();
+		await store.setArchived(['1', '2'], true);
+		expect(store.recipes.every((r) => r.archived)).toBe(true);
+		expect(server.every((r) => r.archived)).toBe(true);
+	});
+
+	it('restores archived recipes', async () => {
+		const { api } = fakeApi([{ ...recipe, archived: true }]);
+		const store = new RecipeStore(api);
+		await store.load();
+		await store.setArchived(['1'], false);
+		expect(store.recipes[0].archived).toBe(false);
+	});
+
+	it('deletes several recipes', async () => {
+		const { api, server } = fakeApi([recipe, other]);
+		const store = new RecipeStore(api);
+		await store.load();
+		await store.remove(['1', '2']);
+		expect(store.recipes).toEqual([]);
+		expect(server).toEqual([]);
+	});
+
+	it('reloads from the server when a delete is refused', async () => {
+		const { api } = fakeApi([recipe], { failSave: true });
+		const store = new RecipeStore(api);
+		await store.load();
+		await expect(store.remove(['1'])).rejects.toThrow('down');
 		expect(store.recipes.map((r) => r.id)).toEqual(['1']);
 	});
 });

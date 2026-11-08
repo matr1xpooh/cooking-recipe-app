@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
+	pageImage,
 	extractRecipe,
 	extractYouTubeDescription,
 	isYouTubeUrl,
@@ -218,5 +219,29 @@ describe('extractRecipe with raw control characters', () => {
 			ingredients: ['10 oz. beef'],
 			steps: ['Stir.']
 		});
+	});
+});
+
+describe('picture URLs', () => {
+	it('reads the image from the recipe data, in any of its shapes', () => {
+		const html = (image: string) =>
+			`<script type="application/ld+json">${JSON.stringify({ '@type': 'Recipe', name: 'X', recipeIngredient: ['a'], image })}</script>`;
+		expect(extractRecipe(html('https://e.com/a.jpg'))?.image).toBe('https://e.com/a.jpg');
+		expect(extractRecipe(html('/relative.png'))?.image).toBe('/relative.png');
+		expect(
+			extractRecipe(
+				`<script type="application/ld+json">${JSON.stringify({ '@type': 'Recipe', name: 'X', recipeIngredient: ['a'], image: { url: 'https://e.com/o.jpg' } })}</script>`
+			)?.image
+		).toBe('https://e.com/o.jpg');
+	});
+
+	it('falls back to og:image in either attribute order', () => {
+		expect(pageImage('<meta property="og:image" content="https://e.com/p.jpg">')).toBe(
+			'https://e.com/p.jpg'
+		);
+		expect(pageImage('<meta content="https://e.com/q.jpg" property="og:image">')).toBe(
+			'https://e.com/q.jpg'
+		);
+		expect(pageImage('<title>none</title>')).toBeUndefined();
 	});
 });

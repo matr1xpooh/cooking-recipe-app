@@ -30,7 +30,8 @@ describe('normalizeRecipe', () => {
 			...recipe,
 			notes: '',
 			hasImage: false,
-			source: 'typed'
+			source: 'typed',
+			category: 'other'
 		});
 	});
 

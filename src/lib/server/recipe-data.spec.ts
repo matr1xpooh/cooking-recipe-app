@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtemp, readdir, readFile, rm, writeFile, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { listRecipes, readImage, saveImage, saveRecipe } from './recipe-data';
+import { deleteRecipe, listRecipes, readImage, saveImage, saveRecipe } from './recipe-data';
 import type { Recipe } from '#lib/recipes/recipe.js';
 
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 1, 2, 3, 4]);
@@ -16,6 +16,8 @@ const recipe: Recipe = {
 	notes: '',
 	hasImage: false,
 	source: 'typed',
+
+	category: 'other',
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };
@@ -67,5 +69,17 @@ describe('recipe files on disk', () => {
 
 	it('returns null for a recipe with no screenshot', async () => {
 		expect(await readImage('nothing')).toBeNull();
+	});
+
+	it('deletes a recipe and its screenshot', async () => {
+		await saveRecipe(recipe);
+		await saveImage('abc-1', PNG, 'image/png');
+		expect(await deleteRecipe('abc-1')).toBe(true);
+		expect(await listRecipes()).toEqual([]);
+		expect(await readImage('abc-1')).toBeNull();
+	});
+
+	it('reports when there is nothing to delete', async () => {
+		expect(await deleteRecipe('missing')).toBe(false);
 	});
 });

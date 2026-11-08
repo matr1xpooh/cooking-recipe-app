@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
@@ -11,9 +12,11 @@
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
+	import { categoryLabel } from '#lib/recipes/categories.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
+	let actionError = $state<string | null>(null);
 	let translated = $state<{ fields: RecipeFields; failed: boolean } | null>(null);
 	let translating = $state(false);
 	let showOriginal = $state(false);
@@ -62,6 +65,27 @@
 		};
 	});
 
+	async function toggleArchive() {
+		if (!recipe) return;
+		actionError = null;
+		try {
+			await recipeStore.setArchived([recipe.id], !recipe.archived);
+		} catch {
+			actionError = m.error_save_failed();
+		}
+	}
+
+	async function deleteThis() {
+		if (!recipe || !window.confirm(m.delete_confirm({ n: 1 }))) return;
+		actionError = null;
+		try {
+			await recipeStore.remove([recipe.id]);
+			goto(resolve('/recipes'));
+		} catch {
+			actionError = m.error_save_failed();
+		}
+	}
+
 	const sourceLabels: Record<IngredientSource, () => string> = {
 		typed: () => m.source_typed(),
 		web: () => m.source_web(),
@@ -83,6 +107,7 @@
 	{#if recipe && shown}
 		<article>
 			<h1>{shown.title}</h1>
+			<p class="meta">{categoryLabel(recipe.category)}</p>
 			<p class="recipe-actions">
 				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
 				{#if recipe.sourceUrl}
@@ -93,7 +118,20 @@
 						>{m.recipe_open_source()}</a
 					>
 				{/if}
+				<span aria-hidden="true">·</span>
+				<button type="button" class="link-button" onclick={toggleArchive}>
+					{recipe.archived ? m.restore_action() : m.archive_action()}
+				</button>
+				{#if recipe.archived}
+					<span aria-hidden="true">·</span>
+					<button type="button" class="link-button danger" onclick={deleteThis}>
+						{m.delete_action()}
+					</button>
+				{/if}
 			</p>
+			{#if actionError}
+				<p role="alert">{actionError}</p>
+			{/if}
 
 			{#if translating}
 				<p class="meta">{m.translating()}</p>

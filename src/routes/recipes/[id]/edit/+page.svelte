@@ -53,7 +53,8 @@
 					title: recipe.title,
 					sourceUrl: recipe.sourceUrl ?? '',
 					ingredients: recipe.ingredients.join('\n'),
-					steps: recipe.steps.join('\n')
+					steps: recipe.steps.join('\n'),
+					category: recipe.category
 				}}
 				initialSource={recipe.source}
 				submitLabel={m.recipe_save()}

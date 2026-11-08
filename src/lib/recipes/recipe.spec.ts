@@ -9,7 +9,13 @@ import {
 	validateRecipeInput
 } from './recipe';
 
-const valid = { title: 'Pancakes', sourceUrl: '', ingredients: '', steps: '' };
+const valid = {
+	title: 'Pancakes',
+	sourceUrl: '',
+	ingredients: '',
+	steps: '',
+	category: 'other' as const
+};
 
 describe('parseLines', () => {
 	it('trims lines and drops empty ones', () => {
@@ -58,7 +64,8 @@ describe('createRecipe', () => {
 				title: '  Pancakes ',
 				sourceUrl: ' https://example.com/p ',
 				ingredients: 'flour\n milk ',
-				steps: 'Mix\n\nCook'
+				steps: 'Mix\n\nCook',
+				category: 'dessert'
 			},
 			{
 				id: 'abc',
@@ -74,6 +81,7 @@ describe('createRecipe', () => {
 			notes: '',
 			hasImage: false,
 			source: 'typed',
+			category: 'dessert',
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});
@@ -90,14 +98,26 @@ describe('createRecipe', () => {
 
 describe('applyEdit', () => {
 	const original = createRecipe(
-		{ title: 'Soup', sourceUrl: 'https://example.com/soup', ingredients: 'water', steps: 'Boil' },
+		{
+			title: 'Soup',
+			sourceUrl: 'https://example.com/soup',
+			ingredients: 'water',
+			steps: 'Boil',
+			category: 'other' as const
+		},
 		{ id: 'keep-me', createdAt: new Date('2026-01-01T00:00:00Z') }
 	);
 
 	it('replaces editable fields and keeps identity, date, notes and archive state', () => {
 		const edited = applyEdit(
 			{ ...original, notes: 'legacy', archived: true },
-			{ title: '  Stew ', sourceUrl: '', ingredients: 'beef\n\nonion', steps: '**Brown** it' },
+			{
+				title: '  Stew ',
+				sourceUrl: '',
+				ingredients: 'beef\n\nonion',
+				steps: '**Brown** it',
+				category: 'other' as const
+			},
 			'web'
 		);
 		expect(edited).toEqual({
@@ -109,6 +129,7 @@ describe('applyEdit', () => {
 			notes: 'legacy',
 			hasImage: false,
 			source: 'web',
+			category: 'other',
 			createdAt: '2026-01-01T00:00:00.000Z',
 			archived: true
 		});

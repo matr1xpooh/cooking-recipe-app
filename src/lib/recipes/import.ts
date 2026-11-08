@@ -11,6 +11,8 @@ export interface ImportedRecipe {
 	title: string;
 	ingredients: string[];
 	steps: string[];
+	/** The recipe's picture, as written on the page (may be relative). */
+	image?: string;
 }
 
 type Obj = Record<string, unknown>;
@@ -64,6 +66,25 @@ function instructions(value: unknown): string[] {
 	return typeof text === 'string' && cleanText(text) ? [cleanText(text)] : [];
 }
 
+/** A picture URL from schema.org: a string, an object with url, or a list of either. */
+function imageUrlOf(value: unknown): string | undefined {
+	const list = Array.isArray(value) ? value : [value];
+	for (const item of list) {
+		if (typeof item === 'string' && item.trim().length > 0) return item.trim();
+		if (isObj(item) && typeof item.url === 'string' && item.url.trim().length > 0) {
+			return item.url.trim();
+		}
+	}
+	return undefined;
+}
+
+/** The page's og:image, when it has one. Either attribute order is accepted. */
+export function pageImage(html: string): string | undefined {
+	const first = html.match(/<meta[^>]+property=["']og:image["'][^>]*content=["']([^"']+)["']/i);
+	const second = html.match(/<meta[^>]+content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
+	return (first?.[1] ?? second?.[1])?.trim() || undefined;
+}
+
 /** Removes HTML tags and collapses whitespace. */
 function cleanText(text: string): string {
 	return text
@@ -93,6 +114,8 @@ export function extractRecipe(html: string): ImportedRecipe | null {
 			ingredients: stringList(node.recipeIngredient),
 			steps: instructions(node.recipeInstructions)
 		};
+		const image = imageUrlOf(node.image);
+		if (image) recipe.image = image;
 		if (recipe.ingredients.length > 0 || recipe.steps.length > 0) return recipe;
 	}
 	return null;

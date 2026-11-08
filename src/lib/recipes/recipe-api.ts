@@ -37,3 +37,21 @@ export async function getImage(recipeId: string): Promise<Blob | null> {
 	if (!res.ok) throw new Error(`image load failed: ${res.status}`);
 	return res.blob();
 }
+
+export async function deleteRecipe(recipeId: string): Promise<void> {
+	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}`, { method: 'DELETE' });
+	if (!res.ok && res.status !== 404) throw new Error(`delete failed: ${res.status}`);
+}
+
+/**
+ * A picture from the web, fetched by the server. Returns null when the picture
+ * can't be fetched, since a recipe does not need one.
+ */
+export async function fetchPicture(pageImageUrl: string): Promise<Blob | null> {
+	try {
+		const res = await fetch(`/api/recipes/import-image?url=${encodeURIComponent(pageImageUrl)}`);
+		return res.ok ? await res.blob() : null;
+	} catch {
+		return null;
+	}
+}

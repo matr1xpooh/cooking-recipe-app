@@ -1,4 +1,5 @@
 import { lookup } from 'node:dns/promises';
+import { MAX_IMAGE_BYTES, sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
 import { isIP } from 'node:net';
 import type { ImportErrorKey } from '#lib/recipes/import.js';
 
@@ -92,8 +93,8 @@ async function assertPublicHost(hostname: string): Promise<void> {
 	if (addresses.some(isPrivateAddress)) throw new ImportError('url_not_allowed');
 }
 
-async function readLimited(res: Response): Promise<string> {
-	if (!res.body) return '';
+async function readLimited(res: Response, maxBytes: number): Promise<Uint8Array> {
+	if (!res.body) return new Uint8Array();
 	const reader = res.body.getReader();
 	const chunks: Uint8Array[] = [];
 	let total = 0;
@@ -101,20 +102,24 @@ async function readLimited(res: Response): Promise<string> {
 		const { done, value } = await reader.read();
 		if (done) break;
 		total += value.byteLength;
-		if (total > MAX_BYTES) {
+		if (total > maxBytes) {
 			await reader.cancel();
 			throw new ImportError('page_too_large');
 		}
 		chunks.push(value);
 	}
-	return new TextDecoder().decode(Buffer.concat(chunks));
+	return new Uint8Array(Buffer.concat(chunks));
 }
 
 /**
- * Fetches a public web page's HTML. Each redirect target is checked against
- * the address rules, so a redirect cannot reach a private host.
+ * Fetches a public URL's bytes. Each redirect target is checked against the address
+ * rules, so a redirect cannot reach a private host.
  */
-export async function fetchPublicPage(raw: string): Promise<string> {
+async function fetchPublic(
+	raw: string,
+	accept: string,
+	maxBytes: number
+): Promise<{ bytes: Uint8Array; contentType: string | null }> {
 	let url = parseHttpUrl(raw);
 
 	for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
@@ -125,10 +130,7 @@ export async function fetchPublicPage(raw: string): Promise<string> {
 			res = await fetch(url, {
 				redirect: 'manual',
 				signal: AbortSignal.timeout(TIMEOUT_MS),
-				headers: {
-					accept: 'text/html,application/xhtml+xml',
-					'user-agent': 'cooking-recipe-app (recipe import)'
-				}
+				headers: { accept, 'user-agent': 'cooking-recipe-app (recipe import)' }
 			});
 		} catch {
 			throw new ImportError('page_unreachable');
@@ -144,8 +146,30 @@ export async function fetchPublicPage(raw: string): Promise<string> {
 			await res.body?.cancel();
 			throw new ImportError('page_unreachable');
 		}
-		return readLimited(res);
+		return {
+			bytes: await readLimited(res, maxBytes),
+			contentType: res.headers.get('content-type')
+		};
 	}
 
 	throw new ImportError('page_unreachable');
+}
+
+/** Fetches a public web page's HTML. */
+export async function fetchPublicPage(raw: string): Promise<string> {
+	const { bytes } = await fetchPublic(raw, 'text/html,application/xhtml+xml', MAX_BYTES);
+	return new TextDecoder().decode(bytes);
+}
+
+/**
+ * Fetches a recipe's picture. Only PNG and JPEG are accepted, identified by their
+ * bytes, since the stored screenshot format supports nothing else.
+ */
+export async function fetchPublicImage(
+	raw: string
+): Promise<{ bytes: Uint8Array; type: ImageType }> {
+	const { bytes } = await fetchPublic(raw, 'image/png,image/jpeg', MAX_IMAGE_BYTES);
+	const type = sniffImageType(bytes);
+	if (type === null) throw new ImportError('page_unreachable');
+	return { bytes, type };
 }

@@ -76,6 +76,21 @@ export function saveRecipe(recipe: Recipe): Promise<void> {
 	});
 }
 
+/** Removes the recipe and its screenshot. Returns false when no such recipe exists. */
+export function deleteRecipe(id: string): Promise<boolean> {
+	return serial(async () => {
+		const all = await readAll();
+		const remaining = all.filter((r) => r.id !== id);
+		if (remaining.length === all.length) return false;
+		await writeAll(remaining);
+		const dir = path.join(dataDir(), 'images');
+		for (const ext of ['png', 'jpg']) {
+			await rm(path.join(dir, `${id}.${ext}`), { force: true });
+		}
+		return true;
+	});
+}
+
 const IMAGE_EXTENSIONS: Record<ImageType, string> = { 'image/png': 'png', 'image/jpeg': 'jpg' };
 
 /** Stores the screenshot's original bytes, replacing any earlier one for the recipe. */

@@ -4,6 +4,7 @@ import {
 	extractRecipe,
 	extractYouTubeDescription,
 	isYouTubeUrl,
+	pageImage,
 	pageTitle,
 	parseDescription,
 	type ImportedRecipe
@@ -36,10 +37,14 @@ export const GET: RequestHandler = async ({ url }) => {
 		const pageUrl = parseHttpUrl(target);
 		const html = await fetchPublicPage(target);
 		const recipe = recipeFromPage(pageUrl, html);
+		// Pictures: the recipe's own, else the page's og:image. YouTube's image is a video
+		// thumbnail, so it is not used.
+		const picture = recipe.image ?? (isYouTubeUrl(pageUrl) ? undefined : pageImage(html));
 		return json({
 			title: recipe.title || pageTitle(html),
 			ingredients: recipe.ingredients,
-			steps: recipe.steps
+			steps: recipe.steps,
+			imageUrl: picture ? new URL(picture, pageUrl).toString() : null
 		});
 	} catch (error) {
 		if (error instanceof ImportError) {

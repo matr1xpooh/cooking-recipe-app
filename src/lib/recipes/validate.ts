@@ -1,4 +1,4 @@
-import { isIngredientSource, type IngredientSource, type Recipe } from './recipe';
+import { isCategory, isIngredientSource, type IngredientSource, type Recipe } from './recipe';
 
 /** Checks a value has the shape of a stored recipe. Optional fields may be missing. */
 export function isRecipe(value: unknown): value is Recipe {
@@ -16,7 +16,8 @@ export function isRecipe(value: unknown): value is Recipe {
 		typeof r.archived === 'boolean' &&
 		(r.notes === undefined || typeof r.notes === 'string') &&
 		(r.hasImage === undefined || typeof r.hasImage === 'boolean') &&
-		(r.source === undefined || isIngredientSource(r.source))
+		(r.source === undefined || isIngredientSource(r.source)) &&
+		(r.category === undefined || isCategory(r.category))
 	);
 }
 
@@ -40,6 +41,7 @@ export function normalizeRecipe(r: Recipe): Recipe {
 		notes: r.notes ?? '',
 		hasImage,
 		source,
+		category: isCategory(r.category) ? r.category : 'other',
 		createdAt: r.createdAt,
 		archived: r.archived
 	};

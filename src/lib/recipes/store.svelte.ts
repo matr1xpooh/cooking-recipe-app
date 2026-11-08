@@ -1,5 +1,5 @@
 import type { Recipe } from './recipe';
-import { fetchRecipes, postRecipe } from './recipe-api';
+import { deleteRecipe, fetchRecipes, postRecipe } from './recipe-api';
 import { migrateLegacyRecipes } from './legacy-local';
 
 /** The subset of the Web Storage API the translation cache uses. */
@@ -12,12 +12,14 @@ export interface KeyValueStorage {
 export interface RecipeApi {
 	list(): Promise<Recipe[]>;
 	save(recipe: Recipe): Promise<void>;
+	remove(id: string): Promise<void>;
 	migrate(): Promise<void>;
 }
 
 const serverApi: RecipeApi = {
 	list: fetchRecipes,
 	save: postRecipe,
+	remove: deleteRecipe,
 	migrate: migrateLegacyRecipes
 };
 
@@ -53,6 +55,38 @@ export class RecipeStore {
 			await this.api.save(recipe);
 		} catch (error) {
 			this.recipes = previous;
+			throw error;
+		}
+	}
+
+	/**
+	 * Archives or restores several recipes, one save each. If the server refuses one,
+	 * the list is reloaded from the server, so the screen matches what was saved.
+	 */
+	async setArchived(ids: string[], archived: boolean): Promise<void> {
+		try {
+			for (const id of ids) {
+				const current = this.recipes.find((r) => r.id === id);
+				if (!current || current.archived === archived) continue;
+				const next = { ...current, archived };
+				await this.api.save(next);
+				this.recipes = this.recipes.map((r) => (r.id === id ? next : r));
+			}
+		} catch (error) {
+			this.recipes = await this.api.list();
+			throw error;
+		}
+	}
+
+	/** Permanently deletes recipes, with their screenshots. Reloads from the server on failure. */
+	async remove(ids: string[]): Promise<void> {
+		try {
+			for (const id of ids) {
+				await this.api.remove(id);
+				this.recipes = this.recipes.filter((r) => r.id !== id);
+			}
+		} catch (error) {
+			this.recipes = await this.api.list();
 			throw error;
 		}
 	}
