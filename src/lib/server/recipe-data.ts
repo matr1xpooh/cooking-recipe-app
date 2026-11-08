@@ -133,3 +133,21 @@ export async function findRecipeByUrl(url: string, exceptId?: string): Promise<R
 		(r) => r.id !== exceptId && r.sourceUrl !== null && normalizeSourceUrl(r.sourceUrl) === key
 	);
 }
+
+/**
+ * A saved recipe that is the same dish as `recipe`: same address, same start time and
+ * same title. One video can hold several dishes, so the address alone is not enough.
+ */
+export async function findSameRecipe(recipe: Recipe): Promise<Recipe | undefined> {
+	if (!recipe.sourceUrl) return undefined;
+	const key = normalizeSourceUrl(recipe.sourceUrl);
+	const title = recipe.title.trim().toLowerCase();
+	return (await listRecipes()).find(
+		(r) =>
+			r.id !== recipe.id &&
+			r.sourceUrl !== null &&
+			normalizeSourceUrl(r.sourceUrl) === key &&
+			(r.sourceStart ?? null) === (recipe.sourceStart ?? null) &&
+			r.title.trim().toLowerCase() === title
+	);
+}

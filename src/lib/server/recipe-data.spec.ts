@@ -5,6 +5,7 @@ import path from 'node:path';
 import {
 	deleteRecipe,
 	findRecipeByUrl,
+	findSameRecipe,
 	listRecipes,
 	readImage,
 	saveImage,
@@ -102,5 +103,27 @@ describe('finding a recipe by its address', () => {
 	it('ignores the recipe itself when checking an edit', async () => {
 		await saveRecipe({ ...recipe, sourceUrl: 'https://example.com/a' });
 		expect(await findRecipeByUrl('https://example.com/a', 'abc-1')).toBeUndefined();
+	});
+});
+
+describe('same dish', () => {
+	it('allows several dishes from one video, but not the same dish twice', async () => {
+		const video = 'https://www.youtube.com/watch?v=vid123';
+		await saveRecipe({ ...recipe, sourceUrl: video, title: 'Dish A' });
+		expect(
+			await findSameRecipe({ ...recipe, id: 'other', sourceUrl: video, title: 'Dish B' })
+		).toBeUndefined();
+		expect(
+			(await findSameRecipe({ ...recipe, id: 'other', sourceUrl: video, title: 'dish a' }))?.id
+		).toBe('abc-1');
+		expect(
+			await findSameRecipe({
+				...recipe,
+				id: 'other',
+				sourceUrl: video,
+				title: 'Dish A',
+				sourceStart: 90
+			})
+		).toBeUndefined();
 	});
 });
