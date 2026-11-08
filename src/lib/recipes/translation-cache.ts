@@ -69,7 +69,11 @@ export class TranslationCache {
 }
 
 /** Cache key for one recipe's translations into one language. */
-export function cacheKey(recipeId: string, language: string, kind: 'detail' | 'title'): string {
+export function cacheKey(
+	recipeId: string,
+	language: string,
+	kind: 'detail' | 'title' | 'tag'
+): string {
 	return `${recipeId}|${language}|${kind}`;
 }
 

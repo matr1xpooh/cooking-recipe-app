@@ -12,12 +12,18 @@
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
-	import { tagLabel } from '#lib/recipes/tags.js';
+	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { MAX_TAGS_PER_RECIPE, normalizeTag } from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
+	const tagNames = new TagNames();
+
+	$effect(() => {
+		tagNames.ensure(recipe?.tags ?? []);
+	});
+
 	let newTag = $state('');
 	let tagLimitHit = $state(false);
 	let translated = $state<{ fields: RecipeFields; failed: boolean } | null>(null);
@@ -141,11 +147,11 @@
 				<div class="tag-list">
 					{#each recipe.tags as tag (tag)}
 						<span class="tag on">
-							{tagLabel(tag)}
+							{tagNames.label(tag)}
 							<button
 								type="button"
 								class="tag-remove"
-								aria-label={m.tag_remove({ tag: tagLabel(tag) })}
+								aria-label={m.tag_remove({ tag: tagNames.label(tag) })}
 								onclick={() => removeTag(tag)}>×</button
 							>
 						</span>

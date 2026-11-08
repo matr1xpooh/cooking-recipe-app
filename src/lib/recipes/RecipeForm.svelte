@@ -17,8 +17,8 @@
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
-	import { tagLabel } from '#lib/recipes/tags.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
+	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { suggestTags } from '#lib/recipes/tag-suggest.js';
 
 	let {
@@ -52,6 +52,12 @@
 			.filter((tag) => !(TAGS as readonly string[]).includes(tag))
 			.sort()
 	]);
+
+	$effect(() => {
+		tagNames.ensure(vocabulary);
+	});
+
+	const tagNames = new TagNames();
 
 	let newTag = $state('');
 	let tagError = $state<string | null>(null);
@@ -490,7 +496,7 @@
 					class:on
 					class:suggested={!on && suggested.includes(tag)}
 					aria-pressed={on}
-					onclick={() => toggleTag(tag)}>{tagLabel(tag)}</button
+					onclick={() => toggleTag(tag)}>{tagNames.label(tag)}</button
 				>
 			{/each}
 		</div>

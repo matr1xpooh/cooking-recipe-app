@@ -89,3 +89,39 @@ export async function translateTitles(
 	}
 	return result;
 }
+
+/**
+ * Translates typed tags into `target`, in batches, keeping each result in the cache.
+ * Returns the translation by tag. Tags that fail are left out and shown as typed.
+ */
+export async function translateTags(
+	tags: string[],
+	target: string,
+	cache: TranslationCache,
+	fetchFn: FetchFn = fetch
+): Promise<Record<string, string>> {
+	const result: Record<string, string> = {};
+	const pending: string[] = [];
+
+	for (const tag of tags) {
+		const cached = cache.get(
+			cacheKey(`tag:${tag}`, target, 'tag'),
+			hashItems([{ text: tag, styled: false }])
+		);
+		if (cached) result[tag] = cached[0];
+		else pending.push(tag);
+	}
+
+	for (let start = 0; start < pending.length; start += BATCH_SIZE) {
+		const batch = pending.slice(start, start + BATCH_SIZE);
+		const items = batch.map((text) => ({ text, styled: false }));
+		const translated = await postItems(items, target, fetchFn);
+		if (!translated) continue;
+		translated.forEach((t, i) => {
+			if (t.failed) return;
+			result[batch[i]] = t.text;
+			cache.set(cacheKey(`tag:${batch[i]}`, target, 'tag'), hashItems([items[i]]), [t.text]);
+		});
+	}
+	return result;
+}

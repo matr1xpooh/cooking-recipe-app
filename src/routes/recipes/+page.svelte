@@ -7,7 +7,7 @@
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import { translateTitles } from '#lib/recipes/translate-client.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
-	import { tagLabel } from '#lib/recipes/tags.js';
+	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { TAGS, type Tag } from '#lib/recipes/recipe.js';
 	import { SvelteSet } from 'svelte/reactivity';
 
@@ -24,6 +24,12 @@
 		translateTitles(list, locale, translationCache).then((map) => {
 			titles = map;
 		});
+	});
+
+	const tagNames = new TagNames();
+
+	$effect(() => {
+		tagNames.ensure(recipeStore.recipes.flatMap((r) => r.tags));
 	});
 
 	let view = $state<'recipes' | 'archive'>('recipes');
@@ -162,7 +168,7 @@
 					class="chip"
 					class:active={filters.has(tag)}
 					aria-pressed={filters.has(tag)}
-					onclick={() => toggleFilter(tag)}>{tagLabel(tag)} ({count})</button
+					onclick={() => toggleFilter(tag)}>{tagNames.label(tag)} ({count})</button
 				>
 			{/each}
 		</div>
@@ -223,7 +229,7 @@
 					<a class="card-link" href={resolve('/recipes/[id]', { id: recipe.id })}>
 						<strong>{titles[recipe.id] ?? recipe.title}</strong>
 					</a>
-					<span class="meta">{recipe.tags.map(tagLabel).join(', ')}</span>
+					<span class="meta">{recipe.tags.map((t) => tagNames.label(t)).join(', ')}</span>
 				</li>
 			{/each}
 		</ul>
