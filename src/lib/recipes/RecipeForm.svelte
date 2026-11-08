@@ -28,6 +28,7 @@
 		submitLabel,
 		cancelHref,
 		savedImageId = null,
+		ownId,
 		onsave
 	}: {
 		/** Starting values. Read once when the form mounts. */
@@ -38,6 +39,8 @@
 		cancelHref: string;
 		/** The recipe id when it already has a saved screenshot; null otherwise. */
 		savedImageId?: string | null;
+		/** The id of the recipe being edited, so it is not reported as its own duplicate. */
+		ownId?: string;
 		/** Called with valid input, the ingredient source, and a new screenshot (or null). */
 		onsave: (input: RecipeInput, source: IngredientSource, image: File | null) => void;
 	} = $props();
@@ -215,7 +218,12 @@
 
 		importing = true;
 		try {
-			const res = await fetch(`/api/recipes/import?url=${encodeURIComponent(target)}`);
+			const query = [
+				`url=${encodeURIComponent(target)}`,
+				`start=${encodeURIComponent(input.sourceStart.trim())}`
+			];
+			if (ownId) query.push(`exceptId=${encodeURIComponent(ownId)}`);
+			const res = await fetch(`/api/recipes/import?${query.join('&')}`);
 			const body = await res.json();
 			if (res.status === 409) {
 				duplicate = body.existing;

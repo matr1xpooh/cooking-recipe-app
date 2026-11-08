@@ -78,6 +78,7 @@
 				submitLabel={m.recipe_save()}
 				cancelHref={resolve('/recipes/[id]', { id: recipe.id })}
 				savedImageId={recipe.hasImage ? recipe.id : null}
+				ownId={recipe.id}
 				onsave={save}
 			/>
 		{/key}

@@ -126,11 +126,23 @@ export async function readImage(
 	return null;
 }
 
-/** The saved recipe with the same address as `url`, other than `exceptId`, if there is one. */
-export async function findRecipeByUrl(url: string, exceptId?: string): Promise<Recipe | undefined> {
+/**
+ * The saved recipe with the same address as `url`, other than `exceptId`. When a start
+ * time is given, only a recipe with that start time counts: one video can hold several
+ * dishes, each with its own start.
+ */
+export async function findRecipeByUrl(
+	url: string,
+	exceptId?: string,
+	start?: number | null
+): Promise<Recipe | undefined> {
 	const key = normalizeSourceUrl(url);
 	return (await listRecipes()).find(
-		(r) => r.id !== exceptId && r.sourceUrl !== null && normalizeSourceUrl(r.sourceUrl) === key
+		(r) =>
+			r.id !== exceptId &&
+			r.sourceUrl !== null &&
+			normalizeSourceUrl(r.sourceUrl) === key &&
+			(start === undefined || (r.sourceStart ?? null) === start)
 	);
 }
 

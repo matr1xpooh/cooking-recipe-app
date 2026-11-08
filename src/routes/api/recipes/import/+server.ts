@@ -11,6 +11,7 @@ import {
 } from '#lib/recipes/import.js';
 import { fetchPublicPage, ImportError, parseHttpUrl } from '#lib/server/recipe-import.js';
 import { findRecipeByUrl } from '#lib/server/recipe-data.js';
+import { parseStart } from '#lib/recipes/recipe.js';
 
 /**
  * Recipe from schema.org data, or, for YouTube, from the video description
@@ -37,7 +38,12 @@ export const GET: RequestHandler = async ({ url }) => {
 	try {
 		const pageUrl = parseHttpUrl(target);
 		// Check before fetching: a page already saved is shown, not imported again.
-		const existing = await findRecipeByUrl(target);
+		const start = parseStart(url.searchParams.get('start') ?? '');
+		const existing = await findRecipeByUrl(
+			target,
+			url.searchParams.get('exceptId') ?? undefined,
+			start === undefined ? null : start
+		);
 		if (existing) {
 			return json(
 				{ error: 'duplicate', existing: { id: existing.id, title: existing.title } },
