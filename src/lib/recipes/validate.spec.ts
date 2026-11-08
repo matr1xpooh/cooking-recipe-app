@@ -31,11 +31,25 @@ describe('normalizeRecipe', () => {
 			notes: '',
 			hasImage: false,
 			source: 'typed',
-			category: 'other'
+			tags: []
 		});
 	});
 
 	it('infers an image source for a recipe with a screenshot and no source', () => {
 		expect(normalizeRecipe({ ...recipe, hasImage: true } as never).source).toBe('image');
+	});
+});
+
+describe('tags from the old single category', () => {
+	it('keeps a category as the only tag, and drops "other"', () => {
+		expect(normalizeRecipe({ ...recipe, category: 'meat' } as never).tags).toEqual(['meat']);
+		expect(normalizeRecipe({ ...recipe, category: 'other' } as never).tags).toEqual([]);
+	});
+
+	it('keeps tags when they are present', () => {
+		expect(normalizeRecipe({ ...recipe, tags: ['fish', 'soup'] } as never).tags).toEqual([
+			'fish',
+			'soup'
+		]);
 	});
 });

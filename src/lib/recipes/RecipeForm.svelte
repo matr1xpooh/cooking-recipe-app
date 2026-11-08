@@ -4,6 +4,8 @@
 	import {
 		hasErrors,
 		mergeIngredientLines,
+		TAGS,
+		type Tag,
 		validateRecipeInput,
 		type IngredientSource,
 		type RecipeErrorKey,
@@ -13,7 +15,8 @@
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
-	import { CATEGORIES, categoryLabel } from '#lib/recipes/categories.js';
+	import { tagLabel } from '#lib/recipes/tags.js';
+	import { suggestTags } from '#lib/recipes/tag-suggest.js';
 
 	let {
 		initial,
@@ -38,8 +41,20 @@
 	// The form edits its own copies of the starting values, read once on mount.
 	// svelte-ignore state_referenced_locally
 	let input = $state<RecipeInput>({ ...initial });
+
+	function toggleTag(tag: Tag) {
+		input.tags = input.tags.includes(tag)
+			? input.tags.filter((t) => t !== tag)
+			: [...input.tags, tag];
+	}
 	// svelte-ignore state_referenced_locally
 	let text = $state(initial.ingredients);
+	/** Tags the user can see as suggestions: words in the recipe that point to a tag. */
+	const suggested = $derived(
+		suggestTags([input.title, text, input.steps].join('\n')).filter(
+			(tag) => !input.tags.includes(tag)
+		)
+	);
 	// svelte-ignore state_referenced_locally
 	let source = $state<IngredientSource>(initialSource);
 	let tab = $state<'text' | 'image'>('text');
@@ -286,15 +301,6 @@
 
 <form onsubmit={submit} onpaste={onPaste} novalidate>
 	<label>
-		{m.recipe_field_category()}
-		<select bind:value={input.category}>
-			{#each CATEGORIES as category (category)}
-				<option value={category}>{categoryLabel(category)}</option>
-			{/each}
-		</select>
-	</label>
-
-	<label>
 		{m.recipe_field_title()}
 		<input type="text" bind:value={input.title} aria-invalid={errors.title ? 'true' : undefined} />
 	</label>
@@ -444,6 +450,24 @@
 			bind:value={input.steps}></textarea>
 		<small>{m.steps_hint()}</small>
 	</div>
+
+	<fieldset class="tags-field">
+		<legend>{m.recipe_field_tags()}</legend>
+		<p class="meta">{m.tags_hint()}</p>
+		<div class="tag-chips">
+			{#each TAGS as tag (tag)}
+				{@const on = input.tags.includes(tag)}
+				<button
+					type="button"
+					class="tag"
+					class:on
+					class:suggested={!on && suggested.includes(tag)}
+					aria-pressed={on}
+					onclick={() => toggleTag(tag)}>{tagLabel(tag)}</button
+				>
+			{/each}
+		</div>
+	</fieldset>
 
 	<div>
 		<button type="submit">{submitLabel}</button>

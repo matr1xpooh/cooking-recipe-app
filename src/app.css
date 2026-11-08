@@ -447,16 +447,6 @@ summary {
 	justify-content: flex-end;
 }
 
-.language-switch {
-	min-height: 40px;
-	padding: 0 0.6rem;
-	font: inherit;
-	color: var(--text);
-	background: var(--surface);
-	border: 1px solid var(--border);
-	border-radius: 8px;
-}
-
 /* Translation status row on the detail page */
 .translation-bar {
 	display: flex;
@@ -645,4 +635,101 @@ input.select {
 
 button.link-button.danger {
 	color: var(--danger);
+}
+
+/* Tags: toggle chips in the form, plain tags on the recipe page */
+fieldset.tags-field {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0;
+	padding: 0;
+	border: none;
+}
+
+fieldset.tags-field legend {
+	padding: 0;
+	margin-bottom: 0.35rem;
+	font-weight: 600;
+}
+
+fieldset.tags-field .meta {
+	margin: 0;
+}
+
+.tag-chips,
+.tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0;
+}
+
+button.tag {
+	min-height: 40px;
+	padding: 0 0.9rem;
+	font: inherit;
+	font-size: 0.95rem;
+	color: var(--text);
+	background: var(--surface);
+	border: 1px solid var(--border);
+	border-radius: 999px;
+	cursor: pointer;
+}
+
+/* Suggested from the recipe's words, not chosen yet */
+button.tag.suggested {
+	border: 1px dashed var(--accent);
+	color: var(--accent);
+}
+
+button.tag.on,
+.tag-list .tag {
+	color: var(--accent-text);
+	background: var(--accent);
+	border: 1px solid var(--accent);
+}
+
+.tag-list .tag {
+	display: inline-flex;
+	align-items: center;
+	min-height: 28px;
+	padding: 0 0.7rem;
+	font-size: 0.85rem;
+	border-radius: 999px;
+}
+
+/* Language links in the header; the current one is shown in bold, not as a link */
+.language-links {
+	display: flex;
+	gap: 0.35rem;
+	align-items: center;
+}
+
+.language-links .lang {
+	display: inline-flex;
+	align-items: center;
+	min-width: 44px;
+	min-height: 40px;
+	justify-content: center;
+	padding: 0 0.5rem;
+	border-radius: 999px;
+	font-weight: 600;
+	font-size: 0.9rem;
+}
+
+.language-links a.lang {
+	color: var(--accent);
+	text-decoration: none;
+	border: 1px solid var(--border);
+	background: var(--surface);
+}
+
+.language-links a.lang:hover {
+	border-color: var(--accent);
+}
+
+.language-links .lang[aria-current='true'] {
+	color: var(--accent-text);
+	background: var(--accent);
+	border: 1px solid var(--accent);
 }

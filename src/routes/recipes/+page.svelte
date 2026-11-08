@@ -7,8 +7,8 @@
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import { translateTitles } from '#lib/recipes/translate-client.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
-	import { CATEGORIES, categoryLabel } from '#lib/recipes/categories.js';
-	import type { Category } from '#lib/recipes/recipe.js';
+	import { tagLabel } from '#lib/recipes/tags.js';
+	import { TAGS, type Tag } from '#lib/recipes/recipe.js';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	onMount(() => recipeStore.load());
@@ -27,28 +27,41 @@
 	});
 
 	let view = $state<'recipes' | 'archive'>('recipes');
-	let filter = $state<Category | 'all'>('all');
+	/** Tags to filter by. A recipe must have all of them to be listed. */
+	const filters = new SvelteSet<Tag>();
+	/** Checkboxes only appear in selection mode. */
+	let selecting = $state(false);
 	const selected = new SvelteSet<string>();
 	let busy = $state(false);
 	let actionError = $state<string | null>(null);
 
 	const inView = $derived(recipeStore.recipes.filter((r) => r.archived === (view === 'archive')));
 
-	/** Categories present in the current view, with how many recipes each has. */
+	/** Tags used in the current view, with how many recipes in it have each. */
 	const counts = $derived(
-		CATEGORIES.map((c) => ({
-			category: c,
-			count: inView.filter((r) => r.category === c).length
-		})).filter((c) => c.count > 0)
+		TAGS.map((tag) => ({ tag, count: inView.filter((r) => r.tags.includes(tag)).length })).filter(
+			(t) => t.count > 0
+		)
 	);
 
-	const visible = $derived(inView.filter((r) => filter === 'all' || r.category === filter));
+	const visible = $derived(inView.filter((r) => [...filters].every((tag) => r.tags.includes(tag))));
 
 	function setView(next: 'recipes' | 'archive') {
 		view = next;
-		filter = 'all';
+		filters.clear();
+		selecting = false;
 		selected.clear();
 		actionError = null;
+	}
+
+	function toggleFilter(tag: Tag) {
+		if (filters.has(tag)) filters.delete(tag);
+		else filters.add(tag);
+	}
+
+	function toggleSelecting() {
+		selecting = !selecting;
+		if (!selecting) selected.clear();
 	}
 
 	function toggle(id: string) {
@@ -59,6 +72,10 @@
 	function selectAllVisible() {
 		selected.clear();
 		for (const r of visible) selected.add(r.id);
+	}
+
+	function deselectAll() {
+		selected.clear();
 	}
 
 	async function run(action: () => Promise<void>) {
@@ -125,19 +142,21 @@
 	</div>
 
 	{#if counts.length > 0}
-		<div class="chips" role="group" aria-label={m.recipe_field_category()}>
+		<div class="chips" role="group" aria-label={m.recipe_field_tags()}>
 			<button
 				type="button"
 				class="chip"
-				class:active={filter === 'all'}
-				onclick={() => (filter = 'all')}>{m.category_all()} ({inView.length})</button
+				class:active={filters.size === 0}
+				aria-pressed={filters.size === 0}
+				onclick={() => filters.clear()}>{m.category_all()} ({inView.length})</button
 			>
-			{#each counts as { category, count } (category)}
+			{#each counts as { tag, count } (tag)}
 				<button
 					type="button"
 					class="chip"
-					class:active={filter === category}
-					onclick={() => (filter = category)}>{categoryLabel(category)} ({count})</button
+					class:active={filters.has(tag)}
+					aria-pressed={filters.has(tag)}
+					onclick={() => toggleFilter(tag)}>{tagLabel(tag)} ({count})</button
 				>
 			{/each}
 		</div>
@@ -149,20 +168,28 @@
 
 	{#if visible.length > 0}
 		<div class="bulk-bar">
-			<button type="button" class="link-button" onclick={selectAllVisible}>{m.select_all()}</button>
-			{#if selected.size > 0}
-				<span>{m.selected_count({ n: selected.size })}</span>
-				{#if view === 'recipes'}
-					<button type="button" class="chip" disabled={busy} onclick={archiveSelected}
-						>{m.archive_action()}</button
-					>
-				{:else}
-					<button type="button" class="chip" disabled={busy} onclick={restoreSelected}
-						>{m.restore_action()}</button
-					>
-					<button type="button" class="chip danger" disabled={busy} onclick={deleteSelected}
-						>{m.delete_action()}</button
-					>
+			<button type="button" class="chip" aria-pressed={selecting} onclick={toggleSelecting}>
+				{selecting ? m.select_done() : m.select_mode()}
+			</button>
+			{#if selecting}
+				<button type="button" class="link-button" onclick={selectAllVisible}
+					>{m.select_all()}</button
+				>
+				<button type="button" class="link-button" onclick={deselectAll}>{m.deselect_all()}</button>
+				{#if selected.size > 0}
+					<span>{m.selected_count({ n: selected.size })}</span>
+					{#if view === 'recipes'}
+						<button type="button" class="chip" disabled={busy} onclick={archiveSelected}
+							>{m.archive_action()}</button
+						>
+					{:else}
+						<button type="button" class="chip" disabled={busy} onclick={restoreSelected}
+							>{m.restore_action()}</button
+						>
+						<button type="button" class="chip danger" disabled={busy} onclick={deleteSelected}
+							>{m.delete_action()}</button
+						>
+					{/if}
 				{/if}
 			{/if}
 		</div>
@@ -177,18 +204,20 @@
 	{:else}
 		<ul>
 			{#each visible as recipe (recipe.id)}
-				<li class="recipe-row">
-					<input
-						type="checkbox"
-						class="select"
-						checked={selected.has(recipe.id)}
-						onchange={() => toggle(recipe.id)}
-						aria-label={recipe.title}
-					/>
+				<li class="recipe-row" class:selecting>
+					{#if selecting}
+						<input
+							type="checkbox"
+							class="select"
+							checked={selected.has(recipe.id)}
+							onchange={() => toggle(recipe.id)}
+							aria-label={recipe.title}
+						/>
+					{/if}
 					<a class="card-link" href={resolve('/recipes/[id]', { id: recipe.id })}>
 						<strong>{titles[recipe.id] ?? recipe.title}</strong>
 					</a>
-					<span class="meta">{categoryLabel(recipe.category)}</span>
+					<span class="meta">{recipe.tags.map(tagLabel).join(', ')}</span>
 				</li>
 			{/each}
 		</ul>

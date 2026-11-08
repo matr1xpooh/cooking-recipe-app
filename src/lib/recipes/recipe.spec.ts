@@ -14,7 +14,7 @@ const valid = {
 	sourceUrl: '',
 	ingredients: '',
 	steps: '',
-	category: 'other' as const
+	tags: []
 };
 
 describe('parseLines', () => {
@@ -65,7 +65,7 @@ describe('createRecipe', () => {
 				sourceUrl: ' https://example.com/p ',
 				ingredients: 'flour\n milk ',
 				steps: 'Mix\n\nCook',
-				category: 'dessert'
+				tags: ['dessert']
 			},
 			{
 				id: 'abc',
@@ -81,7 +81,7 @@ describe('createRecipe', () => {
 			notes: '',
 			hasImage: false,
 			source: 'typed',
-			category: 'dessert',
+			tags: ['dessert'],
 			createdAt: '2026-11-07T10:00:00.000Z',
 			archived: false
 		});
@@ -103,7 +103,7 @@ describe('applyEdit', () => {
 			sourceUrl: 'https://example.com/soup',
 			ingredients: 'water',
 			steps: 'Boil',
-			category: 'other' as const
+			tags: []
 		},
 		{ id: 'keep-me', createdAt: new Date('2026-01-01T00:00:00Z') }
 	);
@@ -116,7 +116,7 @@ describe('applyEdit', () => {
 				sourceUrl: '',
 				ingredients: 'beef\n\nonion',
 				steps: '**Brown** it',
-				category: 'other' as const
+				tags: []
 			},
 			'web'
 		);
@@ -129,7 +129,7 @@ describe('applyEdit', () => {
 			notes: 'legacy',
 			hasImage: false,
 			source: 'web',
-			category: 'other',
+			tags: [],
 			createdAt: '2026-01-01T00:00:00.000Z',
 			archived: true
 		});

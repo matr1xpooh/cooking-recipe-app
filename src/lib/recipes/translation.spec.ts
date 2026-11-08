@@ -27,7 +27,7 @@ const recipe: Recipe = {
 	hasImage: false,
 	source: 'typed',
 
-	category: 'other',
+	tags: [],
 	createdAt: '2026-11-07T10:00:00.000Z',
 	archived: false
 };

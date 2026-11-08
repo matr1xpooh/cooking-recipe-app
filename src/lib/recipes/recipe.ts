@@ -7,8 +7,8 @@ export function isIngredientSource(value: unknown): value is IngredientSource {
 	return typeof value === 'string' && (INGREDIENT_SOURCES as readonly string[]).includes(value);
 }
 
-/** Kind of food, for filtering the list. */
-export const CATEGORIES = [
+/** Tags describe a recipe's kind of food. A recipe can have several. */
+export const TAGS = [
 	'meat',
 	'poultry',
 	'fish',
@@ -16,13 +16,12 @@ export const CATEGORIES = [
 	'soup',
 	'dessert',
 	'baking',
-	'drinks',
-	'other'
+	'drinks'
 ] as const;
-export type Category = (typeof CATEGORIES)[number];
+export type Tag = (typeof TAGS)[number];
 
-export function isCategory(value: unknown): value is Category {
-	return typeof value === 'string' && (CATEGORIES as readonly string[]).includes(value);
+export function isTag(value: unknown): value is Tag {
+	return typeof value === 'string' && (TAGS as readonly string[]).includes(value);
 }
 
 export interface Recipe {
@@ -42,8 +41,8 @@ export interface Recipe {
 	hasImage: boolean;
 	/** Where the ingredient list came from. */
 	source: IngredientSource;
-	/** Kind of food. Recipes saved before categories existed are 'other'. */
-	category: Category;
+	/** Tags for the kind of food. Empty when none apply. */
+	tags: Tag[];
 	createdAt: string;
 	archived: boolean;
 }
@@ -54,7 +53,7 @@ export interface RecipeInput {
 	sourceUrl: string;
 	ingredients: string;
 	steps: string;
-	category: Category;
+	tags: Tag[];
 }
 
 export type RecipeField = 'title' | 'sourceUrl';
@@ -106,7 +105,7 @@ export function applyEdit(recipe: Recipe, input: RecipeInput, source: Ingredient
 	return {
 		...recipe,
 		source,
-		category: input.category,
+		tags: input.tags,
 		title: input.title.trim(),
 		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
 		ingredients: parseLines(input.ingredients),
@@ -134,7 +133,7 @@ export function createRecipe(
 		notes: '',
 		hasImage: options.hasImage ?? false,
 		source: options.source ?? 'typed',
-		category: input.category,
+		tags: input.tags,
 		createdAt: options.createdAt.toISOString(),
 		archived: false
 	};

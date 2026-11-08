@@ -38,7 +38,7 @@
 		<p role="alert">{saveError}</p>
 	{/if}
 	<RecipeForm
-		initial={{ title: '', sourceUrl: '', ingredients: '', steps: '', category: 'other' }}
+		initial={{ title: '', sourceUrl: '', ingredients: '', steps: '', tags: [] }}
 		submitLabel={m.recipe_save()}
 		cancelHref={resolve('/recipes')}
 		onsave={save}

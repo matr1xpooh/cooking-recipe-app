@@ -12,7 +12,7 @@
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
-	import { categoryLabel } from '#lib/recipes/categories.js';
+	import { tagLabel } from '#lib/recipes/tags.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
@@ -107,7 +107,13 @@
 	{#if recipe && shown}
 		<article>
 			<h1>{shown.title}</h1>
-			<p class="meta">{categoryLabel(recipe.category)}</p>
+			{#if recipe.tags.length > 0}
+				<p class="tag-list">
+					{#each recipe.tags as tag (tag)}
+						<span class="tag on">{tagLabel(tag)}</span>
+					{/each}
+				</p>
+			{/if}
 			<p class="recipe-actions">
 				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
 				{#if recipe.sourceUrl}
