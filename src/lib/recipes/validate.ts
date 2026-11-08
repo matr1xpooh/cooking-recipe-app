@@ -1,4 +1,11 @@
-import { isIngredientSource, isTag, type IngredientSource, type Recipe, type Tag } from './recipe';
+import {
+	isBuiltInTag,
+	isIngredientSource,
+	normalizeTags,
+	type IngredientSource,
+	type Recipe,
+	type Tag
+} from './recipe';
 
 /** Checks a value has the shape of a stored recipe. Optional fields may be missing. */
 export function isRecipe(value: unknown): value is Recipe {
@@ -17,7 +24,8 @@ export function isRecipe(value: unknown): value is Recipe {
 		(r.notes === undefined || typeof r.notes === 'string') &&
 		(r.hasImage === undefined || typeof r.hasImage === 'boolean') &&
 		(r.source === undefined || isIngredientSource(r.source)) &&
-		(r.tags === undefined || (Array.isArray(r.tags) && r.tags.every(isTag))) &&
+		(r.tags === undefined ||
+			(Array.isArray(r.tags) && r.tags.every((t) => typeof t === 'string'))) &&
 		(r.category === undefined || typeof r.category === 'string')
 	);
 }
@@ -31,8 +39,8 @@ export function isRecipe(value: unknown): value is Recipe {
  * their only tag, and 'other' becomes no tags.
  */
 function tagsOf(r: { tags?: unknown; category?: unknown }): Tag[] {
-	if (Array.isArray(r.tags)) return r.tags.filter(isTag);
-	return isTag(r.category) ? [r.category] : [];
+	if (Array.isArray(r.tags)) return normalizeTags(r.tags);
+	return isBuiltInTag(r.category) ? [r.category] : [];
 }
 
 export function normalizeRecipe(r: Recipe & { category?: unknown }): Recipe {

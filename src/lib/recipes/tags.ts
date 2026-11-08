@@ -1,9 +1,10 @@
 import { m } from '#lib/paraglide/messages.js';
-import { TAGS, type Tag } from './recipe';
+import { TAGS, isBuiltInTag, type Tag } from './recipe';
 
-/** The translated name of a tag. */
+/** The name shown for a tag: translated for built-in tags, as typed otherwise. */
 export function tagLabel(tag: Tag): string {
-	const labels: Record<Tag, () => string> = {
+	if (!isBuiltInTag(tag)) return tag;
+	const labels: Record<(typeof TAGS)[number], () => string> = {
 		meat: () => m.category_meat(),
 		poultry: () => m.category_poultry(),
 		fish: () => m.category_fish(),

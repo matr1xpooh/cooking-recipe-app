@@ -91,5 +91,9 @@
 	"tags_hint": "Нажмите, чтобы выбрать. Пунктирные теги предложены по словам в рецепте.",
 	"select_mode": "Выбрать",
 	"select_done": "Готово",
-	"deselect_all": "Снять выбор"
+	"deselect_all": "Снять выбор",
+	"tags_add_placeholder": "Введите тег и нажмите Enter",
+	"tags_add_button": "Добавить тег",
+	"tags_limit": "У рецепта может быть до {n} тегов.",
+	"tag_remove": "Удалить {tag}"
 }

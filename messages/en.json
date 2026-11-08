@@ -91,5 +91,9 @@
 	"tags_hint": "Tap to choose. Dashed tags are suggested from the recipe's words.",
 	"select_mode": "Select",
 	"select_done": "Done",
-	"deselect_all": "Deselect all"
+	"deselect_all": "Deselect all",
+	"tags_add_placeholder": "Type a tag, then Enter",
+	"tags_add_button": "Add tag",
+	"tags_limit": "A recipe can have up to {n} tags.",
+	"tag_remove": "Remove {tag}"
 }

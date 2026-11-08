@@ -733,3 +733,35 @@ button.tag.on,
 	background: var(--accent);
 	border: 1px solid var(--accent);
 }
+
+/* Typed tags: a text box beside the tag chips */
+.tag-add {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	align-items: center;
+}
+
+.tag-add input {
+	flex: 1;
+	min-width: 12rem;
+}
+
+/* Tags on the recipe page: editable chips */
+.recipe-tags {
+	display: grid;
+	gap: 0.5rem;
+	margin: 0 0 1rem;
+}
+
+.recipe-tags .tag-remove {
+	margin-left: 0.35rem;
+	padding: 0 0.2rem;
+	font: inherit;
+	color: inherit;
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 1rem;
+	line-height: 1;
+}

@@ -91,5 +91,9 @@
 	"tags_hint": "Toca para elegir. Las etiquetas punteadas se sugieren según las palabras de la receta.",
 	"select_mode": "Seleccionar",
 	"select_done": "Listo",
-	"deselect_all": "Deseleccionar todas"
+	"deselect_all": "Deseleccionar todas",
+	"tags_add_placeholder": "Escribe una etiqueta y pulsa Intro",
+	"tags_add_button": "Añadir etiqueta",
+	"tags_limit": "Una receta puede tener hasta {n} etiquetas.",
+	"tag_remove": "Quitar {tag}"
 }

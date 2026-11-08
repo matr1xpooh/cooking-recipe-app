@@ -4,8 +4,10 @@
 	import {
 		hasErrors,
 		mergeIngredientLines,
+		MAX_TAGS_PER_RECIPE,
 		TAGS,
 		type Tag,
+		normalizeTag,
 		validateRecipeInput,
 		type IngredientSource,
 		type RecipeErrorKey,
@@ -16,6 +18,7 @@
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
 	import { tagLabel } from '#lib/recipes/tags.js';
+	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import { suggestTags } from '#lib/recipes/tag-suggest.js';
 
 	let {
@@ -42,6 +45,30 @@
 	// svelte-ignore state_referenced_locally
 	let input = $state<RecipeInput>({ ...initial });
 
+	/** Built-in tags, then every custom tag already used on any recipe. */
+	const vocabulary = $derived([
+		...TAGS,
+		...[...new Set([...recipeStore.recipes.flatMap((r) => r.tags), ...input.tags])]
+			.filter((tag) => !(TAGS as readonly string[]).includes(tag))
+			.sort()
+	]);
+
+	let newTag = $state('');
+	let tagError = $state<string | null>(null);
+
+	/** Adds the typed tag to this recipe. It then appears for every recipe. */
+	function addTypedTag() {
+		const tag = normalizeTag(newTag);
+		newTag = '';
+		tagError = null;
+		if (!tag || input.tags.includes(tag)) return;
+		if (input.tags.length >= MAX_TAGS_PER_RECIPE) {
+			tagError = 'tags_limit';
+			return;
+		}
+		input.tags = [...input.tags, tag];
+	}
+
 	function toggleTag(tag: Tag) {
 		input.tags = input.tags.includes(tag)
 			? input.tags.filter((t) => t !== tag)
@@ -50,7 +77,7 @@
 	// svelte-ignore state_referenced_locally
 	let text = $state(initial.ingredients);
 	/** Tags the user can see as suggestions: words in the recipe that point to a tag. */
-	const suggested = $derived(
+	const suggested = $derived<Tag[]>(
 		suggestTags([input.title, text, input.steps].join('\n')).filter(
 			(tag) => !input.tags.includes(tag)
 		)
@@ -455,7 +482,7 @@
 		<legend>{m.recipe_field_tags()}</legend>
 		<p class="meta">{m.tags_hint()}</p>
 		<div class="tag-chips">
-			{#each TAGS as tag (tag)}
+			{#each vocabulary as tag (tag)}
 				{@const on = input.tags.includes(tag)}
 				<button
 					type="button"
@@ -467,6 +494,24 @@
 				>
 			{/each}
 		</div>
+		<div class="tag-add">
+			<input
+				type="text"
+				bind:value={newTag}
+				placeholder={m.tags_add_placeholder()}
+				aria-label={m.tags_add_placeholder()}
+				onkeydown={(event) => {
+					if (event.key === 'Enter' || event.key === ',') {
+						event.preventDefault();
+						addTypedTag();
+					}
+				}}
+			/>
+			<button type="button" class="link-button" onclick={addTypedTag}>{m.tags_add_button()}</button>
+		</div>
+		{#if tagError}
+			<p role="alert">{m.tags_limit({ n: MAX_TAGS_PER_RECIPE })}</p>
+		{/if}
 	</fieldset>
 
 	<div>

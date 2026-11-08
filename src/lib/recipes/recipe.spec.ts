@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
+	MAX_TAGS_PER_RECIPE,
+	normalizeTag,
+	normalizeTags,
 	applyEdit,
 	mergeIngredientLines,
 	createRecipe,
@@ -147,5 +150,26 @@ describe('mergeIngredientLines', () => {
 
 	it('keeps current lines even when they are blank-padded', () => {
 		expect(mergeIngredientLines(['  salt  '], ['pepper'])).toEqual(['salt', 'pepper']);
+	});
+});
+
+describe('typed tags', () => {
+	it('cleans a typed tag: trimmed, lowercase, single spaces', () => {
+		expect(normalizeTag('  Quick   Lunch ')).toBe('quick lunch');
+	});
+
+	it('rejects empty and overlong tags', () => {
+		expect(normalizeTag('   ')).toBeNull();
+		expect(normalizeTag('x'.repeat(31))).toBeNull();
+	});
+
+	it('removes duplicates and keeps at most ten tags', () => {
+		expect(normalizeTags(['Lunch', 'lunch', ' lunch ', 'quick'])).toEqual(['lunch', 'quick']);
+		const many = Array.from({ length: 15 }, (_, i) => `tag${i}`);
+		expect(normalizeTags(many)).toHaveLength(MAX_TAGS_PER_RECIPE);
+	});
+
+	it('ignores non-text values', () => {
+		expect(normalizeTags(['soup', 42, null, 'stew'])).toEqual(['soup', 'stew']);
 	});
 });

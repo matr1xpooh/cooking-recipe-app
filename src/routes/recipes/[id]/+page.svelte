@@ -13,10 +13,13 @@
 	import { fieldsOf, type RecipeFields } from '#lib/recipes/translation-fields.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { tagLabel } from '#lib/recipes/tags.js';
+	import { MAX_TAGS_PER_RECIPE, normalizeTag } from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
+	let newTag = $state('');
+	let tagLimitHit = $state(false);
 	let translated = $state<{ fields: RecipeFields; failed: boolean } | null>(null);
 	let translating = $state(false);
 	let showOriginal = $state(false);
@@ -65,6 +68,33 @@
 		};
 	});
 
+	/** Saves a new tag list for this recipe. Changes show at once and are undone if saving fails. */
+	async function saveTags(tags: string[]) {
+		if (!recipe) return;
+		actionError = null;
+		try {
+			await recipeStore.update({ ...recipe, tags });
+		} catch {
+			actionError = m.error_save_failed();
+		}
+	}
+
+	function removeTag(tag: string) {
+		if (recipe) saveTags(recipe.tags.filter((t) => t !== tag));
+	}
+
+	function addTag() {
+		const tag = normalizeTag(newTag);
+		newTag = '';
+		tagLimitHit = false;
+		if (!recipe || !tag || recipe.tags.includes(tag)) return;
+		if (recipe.tags.length >= MAX_TAGS_PER_RECIPE) {
+			tagLimitHit = true;
+			return;
+		}
+		saveTags([...recipe.tags, tag]);
+	}
+
 	async function toggleArchive() {
 		if (!recipe) return;
 		actionError = null;
@@ -107,13 +137,39 @@
 	{#if recipe && shown}
 		<article>
 			<h1>{shown.title}</h1>
-			{#if recipe.tags.length > 0}
-				<p class="tag-list">
+			<section class="recipe-tags" aria-label={m.recipe_field_tags()}>
+				<div class="tag-list">
 					{#each recipe.tags as tag (tag)}
-						<span class="tag on">{tagLabel(tag)}</span>
+						<span class="tag on">
+							{tagLabel(tag)}
+							<button
+								type="button"
+								class="tag-remove"
+								aria-label={m.tag_remove({ tag: tagLabel(tag) })}
+								onclick={() => removeTag(tag)}>×</button
+							>
+						</span>
 					{/each}
-				</p>
-			{/if}
+				</div>
+				<div class="tag-add">
+					<input
+						type="text"
+						bind:value={newTag}
+						placeholder={m.tags_add_placeholder()}
+						aria-label={m.tags_add_placeholder()}
+						onkeydown={(event) => {
+							if (event.key === 'Enter' || event.key === ',') {
+								event.preventDefault();
+								addTag();
+							}
+						}}
+					/>
+					<button type="button" class="link-button" onclick={addTag}>{m.tags_add_button()}</button>
+				</div>
+				{#if tagLimitHit}
+					<p role="alert">{m.tags_limit({ n: MAX_TAGS_PER_RECIPE })}</p>
+				{/if}
+			</section>
 			<p class="recipe-actions">
 				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
 				{#if recipe.sourceUrl}

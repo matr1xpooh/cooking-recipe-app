@@ -7,7 +7,10 @@ export function isIngredientSource(value: unknown): value is IngredientSource {
 	return typeof value === 'string' && (INGREDIENT_SOURCES as readonly string[]).includes(value);
 }
 
-/** Tags describe a recipe's kind of food. A recipe can have several. */
+/**
+ * Built-in tags: the starting choices for the kind of food. Users can also type their
+ * own; a tag typed on one recipe is shared with all of them.
+ */
 export const TAGS = [
 	'meat',
 	'poultry',
@@ -18,10 +21,35 @@ export const TAGS = [
 	'baking',
 	'drinks'
 ] as const;
-export type Tag = (typeof TAGS)[number];
+export type BuiltInTag = (typeof TAGS)[number];
 
-export function isTag(value: unknown): value is Tag {
+export function isBuiltInTag(value: unknown): value is BuiltInTag {
 	return typeof value === 'string' && (TAGS as readonly string[]).includes(value);
+}
+
+/** A tag is any short lowercase word or phrase, built-in or typed. */
+export type Tag = string;
+
+export const MAX_TAGS_PER_RECIPE = 10;
+export const MAX_TAG_LENGTH = 30;
+
+/** Cleans a typed tag: trimmed, lowercase, single spaces. Null when nothing usable is left. */
+export function normalizeTag(raw: string): Tag | null {
+	const tag = raw.trim().replace(/\s+/g, ' ').toLowerCase();
+	if (tag.length === 0 || tag.length > MAX_TAG_LENGTH) return null;
+	return tag;
+}
+
+/** Cleans a list of tags: each normalised, no duplicates, at most MAX_TAGS_PER_RECIPE. */
+export function normalizeTags(values: readonly unknown[]): Tag[] {
+	const result: Tag[] = [];
+	for (const value of values) {
+		if (typeof value !== 'string') continue;
+		const tag = normalizeTag(value);
+		if (tag && !result.includes(tag)) result.push(tag);
+		if (result.length === MAX_TAGS_PER_RECIPE) break;
+	}
+	return result;
 }
 
 export interface Recipe {

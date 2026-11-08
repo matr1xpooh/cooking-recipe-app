@@ -1,4 +1,4 @@
-import type { Tag } from './recipe';
+import type { BuiltInTag as Tag } from './recipe';
 
 /**
  * Words that suggest a tag. A word ending in '*' matches as a stem (for Russian,

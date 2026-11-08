@@ -91,5 +91,9 @@
 	"tags_hint": "Toca per triar. Les etiquetes amb guions se suggereixen segons les paraules de la recepta.",
 	"select_mode": "Seleccionar",
 	"select_done": "Fet",
-	"deselect_all": "Desselecciona-ho tot"
+	"deselect_all": "Desselecciona-ho tot",
+	"tags_add_placeholder": "Escriu una etiqueta i prem Intro",
+	"tags_add_button": "Afegeix etiqueta",
+	"tags_limit": "Una recepta pot tenir fins a {n} etiquetes.",
+	"tag_remove": "Treu {tag}"
 }

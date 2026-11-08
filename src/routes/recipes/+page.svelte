@@ -39,9 +39,15 @@
 
 	/** Tags used in the current view, with how many recipes in it have each. */
 	const counts = $derived(
-		TAGS.map((tag) => ({ tag, count: inView.filter((r) => r.tags.includes(tag)).length })).filter(
-			(t) => t.count > 0
-		)
+		[...new Set(inView.flatMap((r) => r.tags))]
+			.sort((a, b) => {
+				const rank = (t: string) => (TAGS as readonly string[]).indexOf(t);
+				const ra = rank(a);
+				const rb = rank(b);
+				if (ra >= 0 || rb >= 0) return (ra < 0 ? 99 : ra) - (rb < 0 ? 99 : rb);
+				return a.localeCompare(b);
+			})
+			.map((tag) => ({ tag, count: inView.filter((r) => r.tags.includes(tag)).length }))
 	);
 
 	const visible = $derived(inView.filter((r) => [...filters].every((tag) => r.tags.includes(tag))));
