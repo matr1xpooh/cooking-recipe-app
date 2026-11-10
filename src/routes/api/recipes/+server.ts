@@ -1,10 +1,11 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { isRecipe } from '#lib/recipes/validate.js';
-import { findSameRecipe, isSafeId, listRecipes, saveRecipe } from '#lib/server/recipe-data.js';
+import { isSafeId } from '#lib/server/recipe-data.js';
+import { getStore } from '#lib/server/store.js';
 
 /** GET /api/recipes -> all recipes, newest first */
-export const GET: RequestHandler = async () => json(await listRecipes());
+export const GET: RequestHandler = async () => json(await getStore().listRecipes());
 
 /** POST /api/recipes  body: a recipe -> adds it, or replaces the one with the same id */
 export const POST: RequestHandler = async ({ request }) => {
@@ -13,7 +14,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		return json({ error: 'recipe_invalid' }, { status: 400 });
 	}
 	if (body.sourceUrl) {
-		const existing = await findSameRecipe(body);
+		const existing = await getStore().findSameRecipe(body);
 		if (existing) {
 			return json(
 				{ error: 'duplicate', existing: { id: existing.id, title: existing.title } },
@@ -21,6 +22,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			);
 		}
 	}
-	await saveRecipe(body);
+	await getStore().saveRecipe(body);
 	return json({ ok: true });
 };
