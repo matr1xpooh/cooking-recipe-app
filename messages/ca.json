@@ -111,5 +111,8 @@
 	"translation_save": "Desa la traducció",
 	"translation_reset": "Usa la traducció automàtica",
 	"translation_stale": "El text original ha canviat des que es va desar aquesta traducció. Revisa-la.",
-	"translation_edited_note": "Traducció editada"
+	"translation_edited_note": "Traducció editada",
+	"signin_title": "Inicia la sessió",
+	"signin_button": "Inicia la sessió",
+	"signin_failed": "No s'ha pogut iniciar la sessió. Torna-ho a provar."
 }

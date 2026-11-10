@@ -111,5 +111,8 @@
 	"translation_save": "Сохранить перевод",
 	"translation_reset": "Вернуть машинный перевод",
 	"translation_stale": "Исходный текст изменился после сохранения этого перевода. Проверьте его.",
-	"translation_edited_note": "Перевод отредактирован"
+	"translation_edited_note": "Перевод отредактирован",
+	"signin_title": "Вход",
+	"signin_button": "Войти",
+	"signin_failed": "Не удалось войти. Попробуйте ещё раз."
 }

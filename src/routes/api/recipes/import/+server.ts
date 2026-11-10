@@ -11,6 +11,7 @@ import {
 } from '#lib/recipes/import.js';
 import { fetchPublicPage, ImportError, parseHttpUrl } from '#lib/server/recipe-import.js';
 import { getStore } from '#lib/server/store.js';
+import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 import { parseStart } from '#lib/recipes/recipe.js';
 
 /**
@@ -33,7 +34,10 @@ function recipeFromPage(url: URL, html: string): ImportedRecipe {
 }
 
 /** GET /api/recipes/import?url=… — fetches a page and returns the recipe it describes. */
-export const GET: RequestHandler = async ({ url }) => {
+export const GET: RequestHandler = async ({ url, locals }) => {
+	if (!takeToken(`import:${locals.user?.sub ?? 'anon'}`, LIMITS.import)) {
+		return json({ error: 'rate_limited' }, { status: 429 });
+	}
 	const target = url.searchParams.get('url') ?? '';
 	try {
 		const pageUrl = parseHttpUrl(target);

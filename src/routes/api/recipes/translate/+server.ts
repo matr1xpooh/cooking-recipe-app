@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { isLanguage } from '#lib/recipes/languages.js';
 import { translateItems, TranslateError, type TranslateItem } from '#lib/server/translate.js';
+import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 
 function parseItems(value: unknown): TranslateItem[] | null {
 	if (!Array.isArray(value)) return null;
@@ -16,7 +17,10 @@ function parseItems(value: unknown): TranslateItem[] | null {
 }
 
 /** POST /api/recipes/translate  body: { target, items: [{ text, styled }] } -> { items: [{ text, failed }] } */
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!takeToken(`translate:${locals.user?.sub ?? 'anon'}`, LIMITS.translate)) {
+		return json({ error: 'rate_limited' }, { status: 429 });
+	}
 	const body = await request.json().catch(() => null);
 	const items = parseItems(body?.items);
 	if (!items || !isLanguage(body?.target)) {

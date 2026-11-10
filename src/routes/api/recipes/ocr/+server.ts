@@ -2,9 +2,13 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { MAX_IMAGE_BYTES, parseIngredientLines, sniffImageType } from '#lib/recipes/screenshot.js';
 import { detectLines, OcrError } from '#lib/server/ocr.js';
+import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 
 /** POST /api/recipes/ocr  multipart field "image" (PNG or JPEG) -> { ingredients: string[] } */
-export const POST: RequestHandler = async ({ request }) => {
+export const POST: RequestHandler = async ({ request, locals }) => {
+	if (!takeToken(`ocr:${locals.user?.sub ?? 'anon'}`, LIMITS.ocr)) {
+		return json({ error: 'rate_limited' }, { status: 429 });
+	}
 	let file: FormDataEntryValue | null;
 	try {
 		file = (await request.formData()).get('image');
