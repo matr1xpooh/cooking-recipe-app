@@ -114,5 +114,12 @@
 	"translation_edited_note": "Traducción editada",
 	"signin_title": "Iniciar sesión",
 	"signin_button": "Iniciar sesión",
-	"signin_failed": "No se pudo iniciar sesión. Inténtalo de nuevo."
+	"signin_failed": "No se pudo iniciar sesión. Inténtalo de nuevo.",
+	"install_title": "Instalar en el teléfono",
+	"install_intro": "Añade Recetas a la pantalla de inicio. Se abre a pantalla completa, como una app.",
+	"install_address": "Abre esta dirección en tu teléfono:",
+	"install_ios_title": "iPhone",
+	"install_ios_steps": "Abre la dirección en Safari. Toca Compartir y, después, Añadir a pantalla de inicio.",
+	"install_android_title": "Android",
+	"install_android_steps": "Abre la dirección en Chrome. Abre el menú y, después, Instalar aplicación."
 }

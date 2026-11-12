@@ -114,5 +114,12 @@
 	"translation_edited_note": "Edited translation",
 	"signin_title": "Sign in",
 	"signin_button": "Sign in",
-	"signin_failed": "Sign-in failed. Try again."
+	"signin_failed": "Sign-in failed. Try again.",
+	"install_title": "Install on your phone",
+	"install_intro": "Add Recipes to your home screen. It opens full-screen, like an app.",
+	"install_address": "Open this address on your phone:",
+	"install_ios_title": "iPhone",
+	"install_ios_steps": "Open the address in Safari. Tap Share, then Add to Home Screen.",
+	"install_android_title": "Android",
+	"install_android_steps": "Open the address in Chrome. Open the menu, then Install app."
 }

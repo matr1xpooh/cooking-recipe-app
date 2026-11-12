@@ -114,5 +114,12 @@
 	"translation_edited_note": "Traducció editada",
 	"signin_title": "Inicia la sessió",
 	"signin_button": "Inicia la sessió",
-	"signin_failed": "No s'ha pogut iniciar la sessió. Torna-ho a provar."
+	"signin_failed": "No s'ha pogut iniciar la sessió. Torna-ho a provar.",
+	"install_title": "Instal·la-la al mòbil",
+	"install_intro": "Afegeix Receptes a la pantalla d'inici. S'obre a pantalla completa, com una app.",
+	"install_address": "Obre aquesta adreça al mòbil:",
+	"install_ios_title": "iPhone",
+	"install_ios_steps": "Obre l'adreça a Safari. Toca Compartir i, després, Afegeix a la pantalla d'inici.",
+	"install_android_title": "Android",
+	"install_android_steps": "Obre l'adreça a Chrome. Obre el menú i, després, Instal·la l'aplicació."
 }

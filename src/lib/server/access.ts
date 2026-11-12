@@ -4,8 +4,8 @@
  */
 
 const PUBLIC_PATHS = ['/signin', '/auth/login', '/auth/callback', '/auth/logout'];
-const PUBLIC_PREFIXES = ['/_app/'];
-const PUBLIC_FILES = ['/robots.txt', '/favicon.svg', '/manifest.webmanifest', '/sw.js'];
+const PUBLIC_PREFIXES = ['/_app/', '/icons/'];
+const PUBLIC_FILES = ['/robots.txt', '/favicon.svg', '/manifest.webmanifest', '/service-worker.js'];
 
 export type Access = 'allow' | 'unauthorized' | 'sign-in';
 

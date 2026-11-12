@@ -34,7 +34,8 @@ describe('decideAccess', () => {
 			'/auth/callback',
 			'/auth/logout',
 			'/manifest.webmanifest',
-			'/sw.js',
+			'/service-worker.js',
+			'/icons/icon-192.png',
 			'/robots.txt',
 			'/_app/immutable/entry.js'
 		]) {

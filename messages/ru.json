@@ -114,5 +114,12 @@
 	"translation_edited_note": "Перевод отредактирован",
 	"signin_title": "Вход",
 	"signin_button": "Войти",
-	"signin_failed": "Не удалось войти. Попробуйте ещё раз."
+	"signin_failed": "Не удалось войти. Попробуйте ещё раз.",
+	"install_title": "Установка на телефон",
+	"install_intro": "Добавьте «Рецепты» на главный экран. Приложение откроется на весь экран, как обычная программа.",
+	"install_address": "Откройте этот адрес на телефоне:",
+	"install_ios_title": "iPhone",
+	"install_ios_steps": "Откройте адрес в Safari. Нажмите «Поделиться», затем «На экран «Домой»».",
+	"install_android_title": "Android",
+	"install_android_steps": "Откройте адрес в Chrome. Откройте меню и выберите «Установить приложение»."
 }

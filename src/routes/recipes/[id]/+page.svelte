@@ -26,6 +26,7 @@
 		sourceHref
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
+	import { keepScreenAwake } from '#lib/wake-lock.js';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
@@ -51,6 +52,8 @@
 	onMount(() => {
 		recipeStore.load();
 		loaded = true;
+		// A recipe is read while cooking: keep the phone's screen on.
+		return keepScreenAwake();
 	});
 
 	const recipe = $derived(recipeStore.recipes.find((r) => r.id === page.params.id));
