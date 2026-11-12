@@ -20,6 +20,9 @@ const DATA = 'recipes-data-v1';
 const SHELL_URLS = [...immutable, ...assets].map((entry) => `/${entry.path}`);
 const SHELL_SET = new Set(SHELL_URLS);
 
+/** A network request that takes longer than this counts as offline. */
+const NETWORK_TIMEOUT_MS = 5000;
+
 sw.addEventListener('install', (event) => {
 	event.waitUntil(
 		caches
@@ -63,10 +66,23 @@ sw.addEventListener('fetch', (event) => {
 	}
 });
 
+/** Fetches with a time limit, so a stalled connection is treated as offline. */
+function fetchWithLimit(request: Request): Promise<Response> {
+	return fetch(request, { signal: AbortSignal.timeout(NETWORK_TIMEOUT_MS) });
+}
+
+/**
+ * Looks in the cache by URL only. The Vary header is ignored: shell files are named by
+ * content hash, so they cannot change, and matching on Origin missed cached scripts.
+ */
+async function cacheMatch(request: Request, name: string): Promise<Response | undefined> {
+	return caches.match(request, { cacheName: name, ignoreVary: true });
+}
+
 async function cacheFirst(request: Request, name: string): Promise<Response> {
-	const hit = await caches.match(request, { cacheName: name });
+	const hit = await cacheMatch(request, name);
 	if (hit) return hit;
-	const response = await fetch(request);
+	const response = await fetchWithLimit(request);
 	if (response.ok) {
 		const cache = await caches.open(name);
 		void cache.put(request, response.clone());
@@ -75,18 +91,20 @@ async function cacheFirst(request: Request, name: string): Promise<Response> {
 }
 
 async function networkFirst(request: Request): Promise<Response> {
-	const cache = await caches.open(DATA);
 	try {
-		const response = await fetch(request);
+		const response = await fetchWithLimit(request);
 		if (response.status === 401) {
 			// Signed out: forget the recipes this device kept.
 			await caches.delete(DATA);
 			return response;
 		}
-		if (response.ok) void cache.put(request, response.clone());
+		if (response.ok) {
+			const cache = await caches.open(DATA);
+			void cache.put(request, response.clone());
+		}
 		return response;
 	} catch {
-		const hit = await cache.match(request);
+		const hit = await cacheMatch(request, DATA);
 		if (hit) return hit;
 		return new Response(JSON.stringify({ error: 'offline' }), {
 			status: 503,
@@ -96,13 +114,19 @@ async function networkFirst(request: Request): Promise<Response> {
 }
 
 async function navigate(request: Request): Promise<Response> {
-	const cache = await caches.open(DATA);
 	try {
-		const response = await fetch(request);
+		const response = await fetchWithLimit(request);
 		const isPage = response.headers.get('content-type')?.includes('text/html') ?? false;
-		if (response.ok && !response.redirected && isPage) void cache.put(request, response.clone());
+		if (response.ok && !response.redirected && isPage) {
+			const cache = await caches.open(DATA);
+			void cache.put(request, response.clone());
+		}
 		return response;
 	} catch {
-		return (await cache.match(request)) ?? (await cache.match('/recipes')) ?? Response.error();
+		return (
+			(await cacheMatch(request, DATA)) ??
+			(await cacheMatch(new Request('/recipes'), DATA)) ??
+			Response.error()
+		);
 	}
 }

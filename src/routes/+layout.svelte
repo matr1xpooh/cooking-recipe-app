@@ -10,7 +10,7 @@
 
 	// Offline reading: the service worker is registered in production builds only.
 	onMount(() => {
-		if (!dev && 'serviceWorker' in navigator) {
+		if (!dev && navigator.onLine && 'serviceWorker' in navigator) {
 			navigator.serviceWorker.register('/service-worker.js').catch(() => {});
 		}
 	});
