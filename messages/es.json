@@ -121,5 +121,6 @@
 	"install_ios_title": "iPhone",
 	"install_ios_steps": "Abre la dirección en Safari. Toca Compartir y, después, Añadir a pantalla de inicio.",
 	"install_android_title": "Android",
-	"install_android_steps": "Abre la dirección en Chrome. Abre el menú y, después, Instalar aplicación."
+	"install_android_steps": "Abre la dirección en Chrome. Abre el menú y, después, Instalar aplicación.",
+	"sign_out": "Cerrar sesión"
 }

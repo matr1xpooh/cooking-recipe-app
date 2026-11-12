@@ -121,5 +121,6 @@
 	"install_ios_title": "iPhone",
 	"install_ios_steps": "Откройте адрес в Safari. Нажмите «Поделиться», затем «На экран «Домой»».",
 	"install_android_title": "Android",
-	"install_android_steps": "Откройте адрес в Chrome. Откройте меню и выберите «Установить приложение»."
+	"install_android_steps": "Откройте адрес в Chrome. Откройте меню и выберите «Установить приложение».",
+	"sign_out": "Выйти"
 }

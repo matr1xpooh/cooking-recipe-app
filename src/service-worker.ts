@@ -4,6 +4,7 @@
 /// <reference lib="webworker" />
 import { assets, immutable } from '$app/manifest';
 import { version } from '$app/env';
+import { RECIPE_CACHE } from './lib/recipes/offline-cache';
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
@@ -15,7 +16,7 @@ const sw = self as unknown as ServiceWorkerGlobalScope;
  */
 
 const SHELL = `shell-${version}`;
-const DATA = 'recipes-data-v1';
+const DATA = RECIPE_CACHE;
 // Each entry is { path } relative to the app root; the cache needs absolute URLs.
 const SHELL_URLS = [...immutable, ...assets].map((entry) => `/${entry.path}`);
 const SHELL_SET = new Set(SHELL_URLS);
