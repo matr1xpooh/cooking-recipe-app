@@ -141,6 +141,26 @@ export async function translateItems(
 	return results;
 }
 
+/**
+ * Translates with automatic language detection. Short text can be detected as a language
+ * Translate does not support (for example "cv" for Russian). Cyrillic text is Russian here,
+ * so that case is retried with Russian as the source; anything else is left to fail.
+ */
+async function translateWithFallback(
+	call: TranslateCall,
+	input: Omit<TranslateCallInput, 'SourceLanguageCode'>
+): Promise<string> {
+	try {
+		return await call({ ...input, SourceLanguageCode: 'auto' });
+	} catch (error) {
+		const unsupported = error instanceof Error && error.name === 'UnsupportedLanguagePairException';
+		if (unsupported && /\p{Script=Cyrillic}/u.test(input.Text)) {
+			return call({ ...input, SourceLanguageCode: 'ru' });
+		}
+		throw error;
+	}
+}
+
 async function translateOne(
 	item: TranslateItem,
 	target: Language,
@@ -149,18 +169,16 @@ async function translateOne(
 	if (item.text.trim().length === 0) return { text: item.text, failed: false };
 	try {
 		if (item.styled) {
-			const translated = await call({
+			const translated = await translateWithFallback(call, {
 				Text: notesToHtml(item.text),
 				ContentType: 'text/html',
-				SourceLanguageCode: 'auto',
 				TargetLanguageCode: target
 			});
 			return { text: htmlToNotes(translated), failed: false };
 		}
-		const translated = await call({
+		const translated = await translateWithFallback(call, {
 			Text: item.text,
 			ContentType: 'text/plain',
-			SourceLanguageCode: 'auto',
 			TargetLanguageCode: target
 		});
 		return { text: translated, failed: false };
