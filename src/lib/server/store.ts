@@ -7,13 +7,16 @@ import { S3Client } from '@aws-sdk/client-s3';
 import * as files from './recipe-data';
 import * as overrides from './translation-overrides';
 import type { TranslationOverride } from './translation-overrides';
+import * as state from './state-file';
+import type { TranslationCacheStore } from './translate';
 import { createAwsStore } from './aws-store';
 
 /**
- * Everything the server persists: recipes, their original images, and hand-edited
- * translations. Routes depend on this interface only; `getStore()` picks the backend.
+ * Everything the server persists: recipes, their original images, hand-edited
+ * translations, machine translations (cached) and each user's language. Routes depend
+ * on this interface only; `getStore()` picks the backend.
  */
-export interface RecipeStore {
+export interface RecipeStore extends TranslationCacheStore {
 	listRecipes(): Promise<Recipe[]>;
 	/** Adds the recipe at the top, or replaces the one with the same id in place. */
 	saveRecipe(recipe: Recipe): Promise<void>;
@@ -36,6 +39,8 @@ export interface RecipeStore {
 	setOverride(recipeId: string, language: Language, override: TranslationOverride): Promise<void>;
 	deleteOverride(recipeId: string, language: Language): Promise<void>;
 	removeOverridesFor(recipeId: string): Promise<void>;
+	getUserLanguage(userSub: string): Promise<Language | undefined>;
+	setUserLanguage(userSub: string, language: Language): Promise<void>;
 }
 
 /** The local-disk backend, used in development. Data lives under RECIPE_DATA_DIR or ./data. */
@@ -52,7 +57,11 @@ export const fileStore: RecipeStore = {
 	getOverride: overrides.getOverride,
 	setOverride: overrides.setOverride,
 	deleteOverride: overrides.deleteOverride,
-	removeOverridesFor: overrides.removeOverridesFor
+	removeOverridesFor: overrides.removeOverridesFor,
+	getCachedTranslation: state.getCachedTranslation,
+	setCachedTranslation: state.setCachedTranslation,
+	getUserLanguage: state.getUserLanguage,
+	setUserLanguage: state.setUserLanguage
 };
 
 let awsSingleton: RecipeStore | undefined;

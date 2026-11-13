@@ -15,7 +15,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { randomUUID } from 'node:crypto';
 import type { Recipe } from '#lib/recipes/recipe.js';
-import type { Language } from '#lib/recipes/languages.js';
+import { isLanguage, type Language } from '#lib/recipes/languages.js';
 import { isRecipe, normalizeRecipe } from '#lib/recipes/validate.js';
 import { sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
 import type { RecipeStore } from './store';
@@ -27,6 +27,8 @@ import { matchByUrl, matchSame } from './recipe-match';
  * images in a private S3 bucket. Item layout (pk / sk):
  *   RECIPE#<id>  / META        recipe JSON in `data`; gsi1pk = RECIPES, gsi1sk = createdAt
  *   RECIPE#<id>  / TRANS#<lang> edited translation JSON in `data`
+ *   CACHE#<key>  / TEXT         one machine translation, text in `data`
+ *   USER#<sub>   / PROFILE      the user's language, in `language`
  * Images: <recipe id>/<image id>.png or .jpg in the bucket.
  * Written against the AWS SDK clients passed in, so tests can use a fake.
  */
@@ -223,6 +225,39 @@ export function createAwsStore(config: AwsStoreConfig): RecipeStore {
 				}
 				startKey = page.LastEvaluatedKey;
 			} while (startKey);
+		},
+
+		async getCachedTranslation(key) {
+			const res = await dynamo.send(
+				new GetCommand({ TableName: table, Key: { pk: `CACHE#${key}`, sk: 'TEXT' } })
+			);
+			return typeof res.Item?.data === 'string' ? res.Item.data : undefined;
+		},
+
+		async setCachedTranslation(key, text) {
+			await dynamo.send(
+				new PutCommand({
+					TableName: table,
+					Item: { pk: `CACHE#${key}`, sk: 'TEXT', data: text }
+				})
+			);
+		},
+
+		async getUserLanguage(userSub) {
+			const res = await dynamo.send(
+				new GetCommand({ TableName: table, Key: { pk: `USER#${userSub}`, sk: 'PROFILE' } })
+			);
+			const language = res.Item?.language;
+			return isLanguage(language) ? language : undefined;
+		},
+
+		async setUserLanguage(userSub, language) {
+			await dynamo.send(
+				new PutCommand({
+					TableName: table,
+					Item: { pk: `USER#${userSub}`, sk: 'PROFILE', language }
+				})
+			);
 		}
 	};
 }

@@ -205,4 +205,34 @@ export function describeStoreContract(name: string, create: () => Promise<Contra
 			}
 		});
 	});
+
+	describe(`${name}: machine translation cache`, () => {
+		it('returns a cached translation by key and misses unknown keys', async () => {
+			const { store, cleanup } = await create();
+			try {
+				expect(await store.getCachedTranslation('tr:k1')).toBeUndefined();
+				await store.setCachedTranslation('tr:k1', 'Sopa');
+				expect(await store.getCachedTranslation('tr:k1')).toBe('Sopa');
+				expect(await store.getCachedTranslation('tr:k2')).toBeUndefined();
+			} finally {
+				await cleanup();
+			}
+		});
+	});
+
+	describe(`${name}: user language`, () => {
+		it('remembers each user language separately and starts unset', async () => {
+			const { store, cleanup } = await create();
+			try {
+				expect(await store.getUserLanguage('user-a')).toBeUndefined();
+				await store.setUserLanguage('user-a', 'ru');
+				await store.setUserLanguage('user-b', 'es');
+				await store.setUserLanguage('user-a', 'ca');
+				expect(await store.getUserLanguage('user-a')).toBe('ca');
+				expect(await store.getUserLanguage('user-b')).toBe('es');
+			} finally {
+				await cleanup();
+			}
+		});
+	});
 }
