@@ -65,7 +65,7 @@
 	"tab_image": "Imagen",
 	"image_read_text": "Leer texto de la imagen",
 	"image_empty": "Aún no hay imagen. Elige un archivo o pega una captura.",
-	"ingredients_hint": "Un ingrediente por línea.",
+	"ingredients_hint": "Un ingrediente por línea. Empieza una línea con # para hacer un encabezado, por ejemplo: # Para la salsa.",
 	"error_save_failed": "No se pudo guardar la receta. Comprueba que el servidor de la app está en marcha e inténtalo de nuevo.",
 	"error_load_failed": "No se pudieron cargar tus recetas. Comprueba que el servidor de la app está en marcha.",
 	"category_meat": "Carne",

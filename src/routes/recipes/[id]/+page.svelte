@@ -17,7 +17,7 @@
 		saveOverride,
 		type EditedTranslation
 	} from '#lib/recipes/recipe-api.js';
-	import type { IngredientSource } from '#lib/recipes/recipe.js';
+	import type { IngredientSource, Recipe } from '#lib/recipes/recipe.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import {
 		MAX_TAGS_PER_RECIPE,
@@ -27,6 +27,7 @@
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { keepScreenAwake } from '#lib/wake-lock.js';
+	import { groupIngredients, restoreHeadings } from '#lib/recipes/ingredient-lines.js';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
@@ -155,12 +156,17 @@
 			? showOriginal
 				? fieldsOf(recipe)
 				: override
-					? override.fields
+					? withHeadings(override.fields, recipe)
 					: translated
-						? translated.fields
+						? withHeadings(translated.fields, recipe)
 						: fieldsOf(recipe)
 			: null
 	);
+
+	/** A translation keeps the heading markers of the original ingredient list. */
+	function withHeadings(fields: RecipeFields, source: Recipe): RecipeFields {
+		return { ...fields, ingredients: restoreHeadings(fields.ingredients, source.ingredients) };
+	}
 
 	/** The original text changed after the edited translation was saved. */
 	const translationStale = $derived(
@@ -394,13 +400,18 @@
 							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
 					</p>
-					{#if shown.ingredients.length > 0}
-						<ul class="plain">
-							{#each shown.ingredients as item, i (i)}
-								<li>{item}</li>
-							{/each}
-						</ul>
-					{/if}
+					{#each groupIngredients(shown.ingredients) as group, g (g)}
+						{#if group.heading !== null}
+							<h3 class="ingredient-heading">{group.heading}</h3>
+						{/if}
+						{#if group.items.length > 0}
+							<ul class="plain">
+								{#each group.items as item, i (i)}
+									<li>{item}</li>
+								{/each}
+							</ul>
+						{/if}
+					{/each}
 				{:else if imageUrls.length > 0}
 					<div class="gallery stacked">
 						{#each imageUrls as url (url)}

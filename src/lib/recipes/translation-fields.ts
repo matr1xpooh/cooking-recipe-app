@@ -1,4 +1,5 @@
 import type { Recipe } from './recipe';
+import { HEADING_MARKER, headingText, isHeading } from './ingredient-lines';
 import type { TranslateItem } from './translation-types';
 
 /** The parts of a recipe that get translated. Title and ingredients are plain text; steps and notes are styled. */
@@ -22,7 +23,8 @@ export function fieldsOf(recipe: Recipe): RecipeFields {
 export function toItems(fields: RecipeFields): TranslateItem[] {
 	return [
 		{ text: fields.title, styled: false },
-		...fields.ingredients.map((text) => ({ text, styled: false })),
+		// The heading marker is not translated; fromTexts puts it back.
+		...fields.ingredients.map((text) => ({ text: headingText(text), styled: false })),
 		...fields.steps.map((text) => ({ text, styled: true })),
 		{ text: fields.notes, styled: true }
 	];
@@ -33,7 +35,9 @@ export function fromTexts(shape: RecipeFields, texts: string[]): RecipeFields {
 	let i = 0;
 	const next = () => texts[i++] ?? '';
 	const title = next();
-	const ingredients = shape.ingredients.map(() => next());
+	const ingredients = shape.ingredients.map((line) =>
+		isHeading(line) ? HEADING_MARKER + next() : next()
+	);
 	const steps = shape.steps.map(() => next());
 	const notes = next();
 	return { title, ingredients, steps, notes };

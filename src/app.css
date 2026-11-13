@@ -339,6 +339,17 @@ article ul.plain {
 	list-style: disc;
 }
 
+/* A heading over a group of ingredients: no bullet, bold, a little space above */
+article h3.ingredient-heading {
+	font-size: 1rem;
+	font-weight: 700;
+	margin: 1rem 0 0.25rem;
+}
+
+article h3.ingredient-heading:first-child {
+	margin-top: 0.25rem;
+}
+
 article ol {
 	list-style: decimal;
 }

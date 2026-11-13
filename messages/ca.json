@@ -65,7 +65,7 @@
 	"tab_image": "Imatge",
 	"image_read_text": "Llegeix el text de la imatge",
 	"image_empty": "Encara no hi ha imatge. Tria un fitxer o enganxa una captura.",
-	"ingredients_hint": "Un ingredient per línia.",
+	"ingredients_hint": "Un ingredient per línia. Comença una línia amb # per fer un encapçalament, per exemple: # Per a la salsa.",
 	"error_save_failed": "No s'ha pogut desar la recepta. Comprova que el servidor de l'app està en marxa i torna-ho a provar.",
 	"error_load_failed": "No s'han pogut carregar les teves receptes. Comprova que el servidor de l'app està en marxa.",
 	"category_meat": "Carn",
