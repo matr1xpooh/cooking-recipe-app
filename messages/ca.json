@@ -101,7 +101,7 @@
 	"recipe_starts_at": "Comença a {time}",
 	"error_duplicate": "Aquesta recepta ja està desada:",
 	"manage_tags": "Gestiona les etiquetes",
-	"tags_none": "Encara no hi ha etiquetes.",
+	"tags_none": "Cap recepta té totes aquestes etiquetes.",
 	"tags_untag_confirm": "{n} receptes perdran l'etiqueta. Eliminar \"{tag}\"?",
 	"tags_delete_label": "Elimina l'etiqueta {tag}",
 	"search_placeholder": "Cerca per nom",

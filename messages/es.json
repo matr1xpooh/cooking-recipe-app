@@ -101,7 +101,7 @@
 	"recipe_starts_at": "Empieza en {time}",
 	"error_duplicate": "Esta receta ya está guardada:",
 	"manage_tags": "Gestionar etiquetas",
-	"tags_none": "Todavía no hay etiquetas.",
+	"tags_none": "Ninguna receta tiene todas estas etiquetas.",
 	"tags_untag_confirm": "{n} recetas dejarán de tener la etiqueta. ¿Eliminar \"{tag}\"?",
 	"tags_delete_label": "Eliminar etiqueta {tag}",
 	"search_placeholder": "Buscar por nombre",

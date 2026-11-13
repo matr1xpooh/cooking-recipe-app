@@ -101,7 +101,7 @@
 	"recipe_starts_at": "Starts at {time}",
 	"error_duplicate": "This recipe is already saved:",
 	"manage_tags": "Manage tags",
-	"tags_none": "No tags yet.",
+	"tags_none": "No recipes have all these tags.",
 	"tags_untag_confirm": "{n} recipes will be untagged. Delete \"{tag}\"?",
 	"tags_delete_label": "Delete tag {tag}",
 	"search_placeholder": "Search by name",

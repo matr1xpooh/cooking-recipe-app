@@ -645,11 +645,25 @@ button.tab.active {
 }
 
 /* Category chips and bulk actions on the recipe list */
+/* On a phone the tags are one scrolling row, so the recipe list starts near the top */
 .chips {
 	display: flex;
-	flex-wrap: wrap;
+	flex-wrap: nowrap;
 	gap: 0.4rem;
 	margin: 0.75rem 0;
+	overflow-x: auto;
+	padding-bottom: 0.25rem;
+}
+
+.chips > * {
+	flex-shrink: 0;
+}
+
+@media (min-width: 40rem) {
+	.chips {
+		flex-wrap: wrap;
+		overflow-x: visible;
+	}
 }
 
 button.chip {
@@ -673,6 +687,24 @@ button.chip.active {
 button.chip:disabled {
 	opacity: 0.6;
 	cursor: wait;
+}
+
+/* A tapped chip keeps its colours. Without these, the generic button hover style hid the label on touch screens. */
+button.chip:hover:not(:disabled),
+button.chip:focus-visible,
+button.chip:active {
+	color: var(--text);
+	background: var(--surface);
+	border-color: var(--control-border);
+}
+
+button.chip.active,
+button.chip.active:hover:not(:disabled),
+button.chip.active:focus-visible,
+button.chip.active:active {
+	color: var(--accent-text);
+	background: var(--accent);
+	border-color: var(--accent);
 }
 
 button.chip.danger {

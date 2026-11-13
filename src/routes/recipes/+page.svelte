@@ -264,6 +264,8 @@
 		<p>
 			{#if query.trim().length > 0}
 				{m.search_none({ query })}
+			{:else if filters.size > 0}
+				{m.tags_none()}
 			{:else}
 				{view === 'archive' ? m.archive_empty() : m.recipes_empty()}
 			{/if}
