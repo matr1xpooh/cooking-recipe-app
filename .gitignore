@@ -30,3 +30,4 @@ project.inlang/cache/
 
 # SST local state and platform components
 /.sst
+/sst-env.d.ts

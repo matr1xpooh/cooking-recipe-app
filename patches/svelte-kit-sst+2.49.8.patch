@@ -1,0 +1,19 @@
+diff --git a/node_modules/svelte-kit-sst/dist/handler/index.js b/node_modules/svelte-kit-sst/dist/handler/index.js
+index 976dc30..16ff46d 100644
+--- a/node_modules/svelte-kit-sst/dist/handler/index.js
++++ b/node_modules/svelte-kit-sst/dist/handler/index.js
+@@ -1,6 +1,5 @@
+ import fs from "node:fs";
+ import path from "node:path";
+-import { installPolyfills } from "@sveltejs/kit/node/polyfills";
+ // @ts-ignore
+ import { Server } from "../index.js";
+ // @ts-ignore
+@@ -10,7 +9,6 @@ import prerenderedFiles from "./prerendered-file-list.js";
+ import { convertFrom, convertTo } from "./event-mapper.js";
+ import { debug } from "./logger.js";
+ import { isBinaryContentType } from "./binary.js";
+-installPolyfills();
+ const app = new Server(manifest);
+ await app.init({ env: process.env });
+ export async function handler(event) {
