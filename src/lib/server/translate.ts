@@ -164,7 +164,12 @@ async function translateOne(
 			TargetLanguageCode: target
 		});
 		return { text: translated, failed: false };
-	} catch {
+	} catch (error) {
+		// Logs the error's name and message only, never the text being translated.
+		console.error(
+			'translate item failed:',
+			error instanceof Error ? `${error.name}: ${error.message}` : 'unknown error'
+		);
 		return { text: item.text, failed: true };
 	}
 }
