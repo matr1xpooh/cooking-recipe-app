@@ -17,6 +17,7 @@
 	--note-green: #15803d;
 	--note-blue: #1d4ed8;
 	--note-purple: #7e22ce;
+	--control-border: #8a7d74;
 	color-scheme: light dark;
 }
 
@@ -37,6 +38,7 @@
 		--note-green: #4ade80;
 		--note-blue: #60a5fa;
 		--note-purple: #c084fc;
+		--control-border: #8c7f77;
 	}
 }
 
@@ -138,7 +140,7 @@ main ul {
 
 main li {
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 	padding: 0.9rem 1rem;
 	display: grid;
@@ -160,7 +162,7 @@ form {
 	display: grid;
 	gap: 1rem;
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 	padding: 1.25rem;
 }
@@ -180,7 +182,7 @@ textarea {
 	font-weight: 400;
 	color: var(--text);
 	background: var(--bg);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: 8px;
 }
 
@@ -287,7 +289,8 @@ main li {
 	width: 4rem;
 	height: 4rem;
 	object-fit: cover;
-	border: 1px solid var(--border);
+	object-position: top center;
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 }
 
@@ -393,7 +396,7 @@ article ol li {
 .notes {
 	white-space: pre-wrap;
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 	padding: 0.9rem 1rem;
 	margin: 0;
@@ -445,11 +448,11 @@ form > .styled-field {
 }
 
 .toolbar button {
-	min-height: 40px;
+	min-height: 44px;
 	padding: 0 0.8rem;
 	background: var(--bg);
 	color: var(--text);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	font-size: 0.9rem;
 }
 
@@ -512,7 +515,7 @@ summary {
 }
 
 .translation-bar button {
-	min-height: 40px;
+	min-height: 44px;
 	padding: 0 0.9rem;
 	font: inherit;
 	font-weight: 600;
@@ -609,7 +612,7 @@ button.tab.active {
 	display: block;
 	max-width: 100%;
 	height: auto;
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 }
 
@@ -629,13 +632,13 @@ button.tab.active {
 }
 
 button.chip {
-	min-height: 40px;
+	min-height: 44px;
 	padding: 0 0.85rem;
 	font: inherit;
 	font-size: 0.95rem;
 	color: var(--text);
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: 999px;
 	cursor: pointer;
 }
@@ -720,13 +723,13 @@ fieldset.tags-field .meta {
 }
 
 button.tag {
-	min-height: 40px;
+	min-height: 44px;
 	padding: 0 0.9rem;
 	font: inherit;
 	font-size: 0.95rem;
 	color: var(--text);
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: 999px;
 	cursor: pointer;
 }
@@ -764,7 +767,7 @@ button.tag.on,
 	display: inline-flex;
 	align-items: center;
 	min-width: 44px;
-	min-height: 40px;
+	min-height: 44px;
 	justify-content: center;
 	padding: 0 0.5rem;
 	border-radius: 999px;
@@ -775,7 +778,7 @@ button.tag.on,
 .language-links a.lang {
 	color: var(--accent);
 	text-decoration: none;
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	background: var(--surface);
 }
 
@@ -810,7 +813,9 @@ button.tag.on,
 }
 
 .recipe-tags .tag-remove {
-	margin-left: 0.35rem;
+	min-width: 44px;
+	min-height: 44px;
+	margin: -0.5rem -0.6rem -0.5rem 0.1rem;
 	padding: 0 0.2rem;
 	font: inherit;
 	color: inherit;
@@ -835,7 +840,7 @@ button.tag.on,
 	gap: 0.4rem;
 	padding: 0.75rem;
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 }
 
@@ -890,7 +895,7 @@ button.tag.on,
 	display: block;
 	width: 100%;
 	height: auto;
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 }
 
@@ -919,7 +924,7 @@ button.tag.on,
 	gap: 0.75rem;
 	padding: 1rem;
 	background: var(--surface);
-	border: 1px solid var(--border);
+	border: 1px solid var(--control-border);
 	border-radius: var(--radius);
 }
 
@@ -984,4 +989,14 @@ li.note-only {
 	.translation-columns {
 		grid-template-columns: 1fr 1fr;
 	}
+}
+
+/* Tap targets: links and the cancel link in forms are at least 44px tall */
+.recipe-actions a,
+.back a,
+form > div:last-of-type a,
+.link-button {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
 }
