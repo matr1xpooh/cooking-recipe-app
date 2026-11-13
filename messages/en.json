@@ -133,5 +133,8 @@
 	"filters_toggle": "Filters",
 	"view_active": "Active",
 	"add_recipe_short": "+ Recipe",
-	"tags_short": "Tags"
+	"tags_short": "Tags",
+	"text_size_label": "Text size",
+	"text_size_smaller": "Smaller text",
+	"text_size_larger": "Larger text"
 }

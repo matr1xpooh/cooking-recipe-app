@@ -9,6 +9,7 @@
 	import { dev } from '$app/env';
 	import favicon from '#lib/assets/favicon.svg';
 	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
+	import TextSizeControl from '#lib/TextSizeControl.svelte';
 	import { page } from '$app/state';
 	import SignOutButton from '#lib/SignOutButton.svelte';
 	import { localeChange } from '#lib/locale-change.svelte.js';
@@ -38,6 +39,7 @@
 	{#if !ownHeader}
 		<header class="site-header">
 			<LanguageSwitcher />
+			<TextSizeControl />
 			{#if data.showSignOut}
 				<SignOutButton />
 			{/if}

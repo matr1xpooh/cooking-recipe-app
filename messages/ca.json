@@ -133,5 +133,8 @@
 	"filters_toggle": "Filtres",
 	"view_active": "Actives",
 	"add_recipe_short": "+ Recepta",
-	"tags_short": "Etiquetes"
+	"tags_short": "Etiquetes",
+	"text_size_label": "Mida del text",
+	"text_size_smaller": "Text més petit",
+	"text_size_larger": "Text més gran"
 }

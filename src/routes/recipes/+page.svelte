@@ -14,6 +14,7 @@
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { SvelteSet } from 'svelte/reactivity';
 	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
+	import TextSizeControl from '#lib/TextSizeControl.svelte';
 	import SignOutButton from '#lib/SignOutButton.svelte';
 
 	onMount(() => recipeStore.load());
@@ -168,6 +169,7 @@
 		<h1>{m.recipes_title()}</h1>
 		<div class="list-tools">
 			<LanguageSwitcher />
+			<TextSizeControl />
 		</div>
 		<div class="list-links">
 			{#if page.data.signedIn}

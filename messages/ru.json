@@ -133,5 +133,8 @@
 	"filters_toggle": "Фильтры",
 	"view_active": "Активные",
 	"add_recipe_short": "+ Рецепт",
-	"tags_short": "Теги"
+	"tags_short": "Теги",
+	"text_size_label": "Размер текста",
+	"text_size_smaller": "Мельче текст",
+	"text_size_larger": "Крупнее текст"
 }
