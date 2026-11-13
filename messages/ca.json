@@ -41,7 +41,6 @@
 	"show_translation": "Mostra la traducció",
 	"recipe_edit": "Edita",
 	"recipe_edit_title": "Edita la recepta",
-	"ocr_label": "Afegeix fitxers d'imatge",
 	"ocr_scanning": "Llegint la captura…",
 	"error_image_invalid": "Puja una imatge PNG o JPEG.",
 	"error_image_too_large": "La imatge és massa gran (límit de 5 MB).",
@@ -123,5 +122,7 @@
 	"install_android_title": "Android",
 	"install_android_steps": "Obre l'adreça a Chrome. Obre el menú i, després, Instal·la l'aplicació.",
 	"sign_out": "Tanca la sessió",
-	"install_qr_caption": "Escaneja-ho amb la càmera del mòbil per obrir l'app."
+	"install_qr_caption": "Escaneja-ho amb la càmera del mòbil per obrir l'app.",
+	"photo_take": "Fes una foto",
+	"photo_library": "Tria una foto"
 }

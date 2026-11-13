@@ -41,7 +41,6 @@
 	"show_translation": "Show translation",
 	"recipe_edit": "Edit",
 	"recipe_edit_title": "Edit recipe",
-	"ocr_label": "Add image files",
 	"ocr_scanning": "Reading screenshot…",
 	"error_image_invalid": "Please upload a PNG or JPEG image.",
 	"error_image_too_large": "That image is too large (5 MB limit).",
@@ -123,5 +122,7 @@
 	"install_android_title": "Android",
 	"install_android_steps": "Open the address in Chrome. Open the menu, then Install app.",
 	"sign_out": "Sign out",
-	"install_qr_caption": "Scan with your phone camera to open the app."
+	"install_qr_caption": "Scan with your phone camera to open the app.",
+	"photo_take": "Take photo",
+	"photo_library": "Choose photo"
 }

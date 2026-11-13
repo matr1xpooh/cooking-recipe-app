@@ -41,7 +41,6 @@
 	"show_translation": "Mostrar traducción",
 	"recipe_edit": "Editar",
 	"recipe_edit_title": "Editar receta",
-	"ocr_label": "Añadir archivos de imagen",
 	"ocr_scanning": "Leyendo la captura…",
 	"error_image_invalid": "Sube una imagen PNG o JPEG.",
 	"error_image_too_large": "La imagen es demasiado grande (límite de 5 MB).",
@@ -123,5 +122,7 @@
 	"install_android_title": "Android",
 	"install_android_steps": "Abre la dirección en Chrome. Abre el menú y, después, Instalar aplicación.",
 	"sign_out": "Cerrar sesión",
-	"install_qr_caption": "Escanéalo con la cámara del teléfono para abrir la app."
+	"install_qr_caption": "Escanéalo con la cámara del teléfono para abrir la app.",
+	"photo_take": "Hacer una foto",
+	"photo_library": "Elegir una foto"
 }

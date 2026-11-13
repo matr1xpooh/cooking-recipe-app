@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
@@ -10,9 +10,33 @@
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { matchesName } from '#lib/recipes/recipe.js';
 	import { TAGS, type Tag } from '#lib/recipes/recipe.js';
+	import { loadImage } from '#lib/recipes/image-store.js';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	onMount(() => recipeStore.load());
+
+	/** Each card shows the recipe's first photo. Loaded once per recipe, released when the page closes. */
+	let thumbs = $state<Record<string, string>>({});
+	const thumbRequested = new SvelteSet<string>();
+	const thumbUrls: string[] = [];
+
+	$effect(() => {
+		for (const recipe of visible) {
+			const first = recipe.images[0];
+			if (!first || thumbRequested.has(recipe.id)) continue;
+			thumbRequested.add(recipe.id);
+			loadImage(recipe.id, first)
+				.then((blob) => {
+					if (!blob) return;
+					const url = URL.createObjectURL(blob);
+					thumbUrls.push(url);
+					thumbs = { ...thumbs, [recipe.id]: url };
+				})
+				.catch(() => {});
+		}
+	});
+
+	onDestroy(() => thumbUrls.forEach((url) => URL.revokeObjectURL(url)));
 
 	// The site language is set by a page reload, so it is read once per page view.
 	const locale = getLocale();
@@ -253,6 +277,9 @@
 						/>
 					{/if}
 					<a class="card-link" href={resolve('/recipes/[id]', { id: recipe.id })}>
+						{#if thumbs[recipe.id]}
+							<img class="thumb" src={thumbs[recipe.id]} alt="" />
+						{/if}
 						<strong>{titles[recipe.id] ?? recipe.title}</strong>
 					</a>
 					<span class="meta">{recipe.tags.map((t) => tagNames.label(t)).join(', ')}</span>

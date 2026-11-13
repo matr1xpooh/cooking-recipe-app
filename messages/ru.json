@@ -41,7 +41,6 @@
 	"show_translation": "Показать перевод",
 	"recipe_edit": "Редактировать",
 	"recipe_edit_title": "Редактировать рецепт",
-	"ocr_label": "Добавить файлы изображений",
 	"ocr_scanning": "Читаем скриншот…",
 	"error_image_invalid": "Загрузите изображение PNG или JPEG.",
 	"error_image_too_large": "Изображение слишком большое (лимит 5 МБ).",
@@ -123,5 +122,7 @@
 	"install_android_title": "Android",
 	"install_android_steps": "Откройте адрес в Chrome. Откройте меню и выберите «Установить приложение».",
 	"sign_out": "Выйти",
-	"install_qr_caption": "Отсканируйте камерой телефона, чтобы открыть приложение."
+	"install_qr_caption": "Отсканируйте камерой телефона, чтобы открыть приложение.",
+	"photo_take": "Сфотографировать",
+	"photo_library": "Выбрать фото"
 }

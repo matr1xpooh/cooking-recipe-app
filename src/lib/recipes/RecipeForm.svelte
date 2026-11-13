@@ -16,6 +16,7 @@
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
+	import { MAX_IMAGE_BYTES } from '#lib/recipes/screenshot.js';
 	import { resolve } from '$app/paths';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
@@ -296,11 +297,21 @@
 		addImages([file]);
 	}
 
-	/** Adds images to the gallery. Their text is read only when asked for. */
+	/**
+	 * Adds images to the gallery. Their text is read only when asked for. Files that are
+	 * too large or not PNG or JPEG are refused here, before any upload; the server checks again.
+	 */
 	function addImages(files: File[]) {
-		newFiles = [...newFiles, ...files];
+		const accepted: File[] = [];
+		let refused: 'image_too_large' | 'image_invalid' | null = null;
+		for (const file of files) {
+			if (file.size > MAX_IMAGE_BYTES) refused = 'image_too_large';
+			else if (file.type !== 'image/png' && file.type !== 'image/jpeg') refused = 'image_invalid';
+			else accepted.push(file);
+		}
+		newFiles = [...newFiles, ...accepted];
 		tab = 'image';
-		scanError = null;
+		scanError = refused;
 	}
 
 	function removeGalleryItem(item: { saved: boolean; id: string; index: number }) {
@@ -514,7 +525,18 @@
 
 				<div class="image-actions">
 					<label class="file-button" class:busy={scanning}>
-						{m.ocr_label()}
+						{m.photo_take()}
+						<!-- capture opens the camera on a phone; the size and type are checked on pick. -->
+						<input
+							type="file"
+							accept="image/*"
+							capture="environment"
+							disabled={scanning}
+							onchange={onFilePicked}
+						/>
+					</label>
+					<label class="file-button" class:busy={scanning}>
+						{m.photo_library()}
 						<input
 							type="file"
 							accept="image/png,image/jpeg"
