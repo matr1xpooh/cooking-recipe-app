@@ -614,18 +614,6 @@ summary {
 	margin: 0 0 1rem;
 }
 
-.translation-bar button {
-	min-height: 44px;
-	padding: 0 0.9rem;
-	font: inherit;
-	font-weight: 600;
-	color: var(--accent);
-	background: transparent;
-	border: 1px solid var(--accent);
-	border-radius: 999px;
-	cursor: pointer;
-}
-
 .recipe-actions {
 	display: flex;
 	flex-wrap: wrap;
@@ -823,6 +811,16 @@ input.select {
 	font-size: 0.85rem;
 }
 
+/* Actions on a recipe are text links, like Edit and Open source */
+button.link-button {
+	padding: 0;
+	border: 0;
+	border-radius: 0;
+	background: none;
+	font-weight: 500;
+	text-decoration: underline;
+}
+
 button.link-button.danger {
 	color: var(--danger);
 }
@@ -932,9 +930,11 @@ button.tag.on,
 	align-items: center;
 }
 
+/* A short box for a new tag, on the same row as its button */
 .tag-add input {
-	flex: 1;
-	min-width: 12rem;
+	flex: 0 1 11rem;
+	width: 11rem;
+	min-width: 0;
 }
 
 /* Tags on the recipe page: editable chips */

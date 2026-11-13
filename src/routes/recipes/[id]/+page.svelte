@@ -315,7 +315,11 @@
 					{#if translated.failed}
 						<span role="status">{m.translation_failed()}</span>
 					{:else}
-						<button type="button" onclick={() => (showOriginal = !showOriginal)}>
+						<button
+							type="button"
+							class="link-button"
+							onclick={() => (showOriginal = !showOriginal)}
+						>
 							{showOriginal ? m.show_translation() : m.show_original()}
 						</button>
 					{/if}
