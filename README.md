@@ -65,14 +65,16 @@ AWS credentials for Textract and Translate come from the standard AWS credential
 
 ## Scripts
 
-| Command           | What it does                             |
-| ----------------- | ---------------------------------------- |
-| `npm run dev`     | Development server.                      |
-| `npm run build`   | Production build.                        |
-| `npm run preview` | Serves the production build locally.     |
-| `npm run check`   | Type check (svelte-check).               |
-| `npm run lint`    | Prettier and ESLint.                     |
-| `npm test`        | Unit tests (server and client projects). |
+| Command                            | What it does                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------------ |
+| `npm run dev`                      | Development server.                                                                  |
+| `npm run build`                    | Production build.                                                                    |
+| `npm run preview`                  | Serves the production build locally.                                                 |
+| `npm run check`                    | Type check (svelte-check).                                                           |
+| `npm run lint`                     | Prettier and ESLint.                                                                 |
+| `npm test`                         | Unit tests (server and client projects).                                             |
+| `npm run migrate:aws -- --dry-run` | Reads the local data folder and reports what would be copied to AWS. Writes nothing. |
+| `npm run migrate:aws`              | Copies the local data folder into the AWS store. Safe to run again.                  |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 
@@ -98,7 +100,27 @@ data/                    local recipe data (git-ignored)
 
 ### Storage
 
-All persistence goes through the `RecipeStore` interface in `src/lib/server/store.ts`. Routes never touch the files directly. The only backend today is the local file store in `./data`: `recipes.json`, `translations.json` and `images/`. Back this folder up; it is not in git.
+All persistence goes through the `RecipeStore` interface in `src/lib/server/store.ts`. Routes never touch the files directly. Two backends:
+
+- **File store** (`STORE=file`, the default, local development): `recipes.json`, `translations.json`, `state.json` and `images/` under `./data`. Back this folder up; it is not in git.
+- **AWS store** (`STORE=aws`, deployed): one DynamoDB table for recipes, edited translations, cached machine translations and each user's language, and a private S3 bucket for the original photos. Key layout is in `src/lib/server/aws-store.ts`.
+
+A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs a signed-in user and that the AWS store never reads the local folder.
+
+## Deploying
+
+The deployment uses SST v3 in `eu-west-1` (Ireland). It creates the table, the photo bucket, a Cognito user pool with no self sign-up, a sign-in domain, the SvelteKit site on CloudFront and a monthly cost alarm. Nothing deploys unless you run it.
+
+1. Sign in to AWS on your machine (`aws login` or your usual profile). Set `BUDGET_EMAIL` to the address the cost alarm should email.
+2. Set the session secret once per stage: `npx sst secret set SessionSecret <at least 32 random characters>`.
+3. First deploy: `npx sst deploy --stage production`. It prints the site URL.
+4. Second deploy, so the sign-in client accepts the site's address: `APP_ORIGIN=<that URL> npx sst deploy --stage production`. (The first deploy cannot know the address, so the sign-in callback is a placeholder until this step.)
+5. Create each user in the Cognito console (User pools → Users → Create user). Users cannot sign themselves up.
+6. Copy the local data into AWS, first as a dry run: `TABLE_NAME=<table> BUCKET_NAME=<bucket> npm run migrate:aws -- --dry-run`, then without `--dry-run`. The table and bucket names are printed by the deploy as outputs. Once it reports success, run it again to confirm nothing changes.
+
+The Cognito hosted sign-in domain defaults to `recipes-<stage>`. Set `COGNITO_DOMAIN_PREFIX` before the first deploy if that name is taken.
+
+Not yet set up: a custom domain (add the commented `domain` block in `sst.config.ts` and set `APP_ORIGIN` to match).
 
 ### Security notes
 
@@ -111,13 +133,13 @@ All persistence goes through the `RecipeStore` interface in `src/lib/server/stor
 
 ## Status
 
-| Phase | Scope                                                                                                                                        | State                                                                                                       |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| 1     | Storage interface                                                                                                                            | Done                                                                                                        |
-| 2     | Cognito sign-in, rate limits                                                                                                                 | Done; the real Cognito round trip is untested until a user pool exists                                      |
-| 3     | PWA: manifest, icons, install page, wake lock, offline reading, sign-out                                                                     | Done; icons are placeholders                                                                                |
-| 4     | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown |
-| 5     | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm, per-user language setting                                                    | Not started                                                                                                 |
-| 6     | Browser tests for the main flows                                                                                                             | Not started                                                                                                 |
+| Phase | Scope                                                                                                                                        | State                                                                                                                                                                   |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Storage interface                                                                                                                            | Done                                                                                                                                                                    |
+| 2     | Cognito sign-in, rate limits                                                                                                                 | Done; the real Cognito round trip is untested until a user pool exists                                                                                                  |
+| 3     | PWA: manifest, icons, install page, wake lock, offline reading, sign-out                                                                     | Done; icons are placeholders                                                                                                                                            |
+| 4     | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown                                                             |
+| 5     | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm, per-user language setting                                                    | Code done and tested (not deployed): storage, translation cache, per-user language, `sst.config.ts`, budget alarm, migration, guard test. Deploying is the owner's step |
+| 6     | Browser tests for the main flows                                                                                                             | Not started                                                                                                                                                             |
 
 The domain is not chosen yet. The first deployment will use the default CloudFront address.
