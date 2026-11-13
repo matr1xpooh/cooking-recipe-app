@@ -81,7 +81,9 @@ export default $config({
 			// "*" as the resource, so this is the narrowest grant they allow.
 			permissions: [
 				{ actions: ['textract:DetectDocumentText'], resources: ['*'] },
-				{ actions: ['translate:TranslateText'], resources: ['*'] }
+				// Translate detects each text's language with Comprehend when the source is "auto".
+				{ actions: ['translate:TranslateText'], resources: ['*'] },
+				{ actions: ['comprehend:DetectDominantLanguage'], resources: ['*'] }
 			],
 			environment: {
 				STORE: 'aws',
