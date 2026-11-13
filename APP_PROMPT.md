@@ -9,8 +9,9 @@ A personal recipe book for a small group of known users (household, family, frie
 ## 2. Users and access
 
 - 1–10 known users. No public sign-up.
-- Every page and API route requires a signed-in user.
-- Sign-in uses Cognito's hosted sign-in (managed login) with the authorization code flow and PKCE. The session is a signed, httpOnly cookie that lasts 8 hours.
+- Recipes can be read by anyone with the link: the list, a recipe, its photos and its edited translations (GET only). Everything else needs a signed-in user: pages redirect to sign-in, API routes answer 401.
+- Machine translation is for signed-in users only, so translation spend stays with the household.
+- Sign-in uses Cognito's hosted sign-in (managed login) with the authorization code flow and PKCE. The session is a signed, httpOnly cookie that lasts 8 hours. Sign-in is by password for now; passkeys and an authenticator code are planned but blocked (see section 7).
 - All users share one recipe collection.
 
 ## 3. Functionality
@@ -77,15 +78,15 @@ A personal recipe book for a small group of known users (household, family, frie
 - Storage:
   - Recipes, tags, and translation cache: DynamoDB (one table, on-demand billing).
   - Images: private S3 bucket; served through the app or short-lived signed URLs.
-- The Lambda's IAM role grants Textract `DetectDocumentText`, Translate `TranslateText`, and access to the table and bucket — nothing else. No AWS keys in code or environment files.
+- The Lambda's IAM role grants Textract `DetectDocumentText`, Translate `TranslateText`, Comprehend `DetectDominantLanguage` (Translate's automatic language detection uses it), and access to the table and bucket — nothing else. No AWS keys in code or environment files.
 - Authentication: Amazon Cognito user pool with admin-created users, enforced in `hooks.server.ts`.
-- Budget alarm in AWS Budgets at $10/month.
+- AWS Budgets at $10/month: an email at 80% of actual spend and at a forecast of 100%. A budget action at 80% of actual spend attaches a deny-all policy (`StopAppPolicy`) to the server's role, so the app can no longer reach its table, photos, Translate or Textract. Budgets updates spend only a few times a day, so the stop can come hours late.
 
 ### 4.3 Storage abstraction
 
-- All persistence goes through one interface, `RecipeStore` in `src/lib/server/store.ts`. Routes depend on the interface only. Implementations: local filesystem (development, wraps `src/lib/server/recipe-data.ts` and `translation-overrides.ts`) and DynamoDB + S3 (deployed, not yet written), selected by the `STORE` environment variable.
-- A one-off script migrates `data/recipes.json`, `data/translations.json`, and `data/images/**` into DynamoDB and S3.
-- The machine-translation cache moves to the server (keyed by a hash of the original text) with the DynamoDB backend. Until then it lives in the browser.
+- All persistence goes through one interface, `RecipeStore` in `src/lib/server/store.ts`. Routes depend on the interface only. Implementations: local filesystem (development, wraps `src/lib/server/recipe-data.ts` and `translation-overrides.ts`) and DynamoDB + S3 (deployed), selected by the `STORE` environment variable.
+- A one-off script (`scripts/migrate-to-aws.ts`) migrates `data/recipes.json`, `data/translations.json`, and `data/images/**` into DynamoDB and S3. Run for production on 2026-11-13: 46 recipes, their photos and 2 edited translations.
+- The machine-translation cache is on the server, in DynamoDB, keyed by a hash of the original text and the target language. A translation is only made once for everyone.
 
 ### 4.4 Distribution
 
@@ -99,7 +100,7 @@ A personal recipe book for a small group of known users (household, family, frie
 
 ## 6. Screens
 
-1. **Recipe list** — search box, tag filter chips, archived toggle, cards with photo, title, tags.
+1. **Recipe list** — title, with sign-out (or the sign-in icon for visitors) at the top right; language switch and text size; text links to add a recipe and manage tags; Active and Archived tabs; search; tag filters folded behind a Filters button, with Select beside it; cards with photo, title, tags.
 2. **Recipe page** — gallery, title, source link (with start time), ingredients, steps, inline notes, tags, language switch, edit.
 3. **New / edit recipe** — import from URL, import from photo, then the editable form.
 4. **Translation edit** — original and translation side by side, out-of-date flag, reset.
@@ -110,22 +111,28 @@ A personal recipe book for a small group of known users (household, family, frie
 
 See [README.md](README.md) for how to run the app and the current phase table.
 
-| Phase | Scope                                                                                                                                              | State                                                                                               |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| 1     | Storage interface (`RecipeStore`)                                                                                                                  | Done                                                                                                |
-| 2     | Cognito sign-in, per-user rate limits                                                                                                              | Done. The real Cognito round trip is untested until a user pool exists                              |
-| 3     | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out                                                                   | Done. Icons are placeholders                                                                        |
-| 4     | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; translated text still loads from the service on first view |
-| 5     | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm, per-user language setting, server-side translation cache                            | Not started                                                                                         |
-| 6     | Browser tests for the main flows                                                                                                                   | Not started                                                                                         |
+| Phase | Scope                                                                                                                                              | State                                                                                                         |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1     | Storage interface (`RecipeStore`)                                                                                                                  | Done                                                                                                          |
+| 2     | Cognito sign-in, per-user rate limits                                                                                                              | Done. Sign-in works on the deployed site                                                                      |
+| 3     | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out                                                                   | Done. Icons are placeholders                                                                                  |
+| 4     | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; translated text still loads from the service on first view           |
+| 5     | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting, server-side translation cache                   | Deployed to production (eu-west-1) and migrated on 2026-11-13. The per-user language setting is not built yet |
+| 6     | Browser tests for the main flows                                                                                                                   | Not started                                                                                                   |
 
 Decisions made along the way:
 
 - Rate limits are per user, in memory, per server instance. They are a safety net; the AWS Budget alarm is the real cost cap.
 - Local development bypasses sign-in only with `AUTH=off`. There is no default bypass, so a deployed server never runs without sign-in by accident.
-- Per-user language preference waits for the DynamoDB store (phase 5). Until then the language is a cookie.
+- The per-user language preference is not built yet. Until then the language is a cookie.
 - Notes stay in the same list as the items they belong to: a line starting with "> " is a note on the line above it ("> - " for a bullet), and a line starting with "# " is a heading. No schema change was needed.
 - Links in notes accept only http and https addresses. Link text is plain (no nested styling).
-- Language change re-renders the page in place. The language is still a cookie until the per-user setting in phase 5.
-- Archive stays as two tabs (active and archived) rather than a toggle, unless the user asks for a toggle.
+- Language change re-renders the page in place.
+- The archive is two tabs: Active and Archived.
+- Machine translation is for signed-in users only (2026-11-13). Signed-out visitors see the original text.
+- Passkeys and authenticator codes are blocked for now. Cognito will not require an authenticator code while the passkey setting is "single factor", and a passkey on `*.cloudfront.net` cannot be used on the Cognito sign-in domain. Both need a custom domain shared by the app and the sign-in page. The two settings were tried on 2026-11-13 and reverted.
+- Text size: an A− / A+ control on the list header steps the root font size from 50% to 150%, saved per device (issue #20).
+- Sign-out is an icon (a door with an arrow) at the top right of the list. Visitors see a sign-in icon there.
+- Short Cyrillic text that Translate cannot detect is retried with Russian as the source language.
+- Deploys need `APP_ORIGIN` (the site address) and `BUDGET_EMAIL` set; see the README.
 - Repository hygiene: the README is kept current with each phase. Untracked folders such as `Claude outputs/` are not committed.
