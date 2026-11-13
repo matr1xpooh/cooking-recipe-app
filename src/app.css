@@ -138,9 +138,12 @@ main > p {
 
 .list-tools {
 	display: flex;
+	flex-basis: 100%;
+	flex-wrap: wrap;
 	align-items: center;
 	gap: 0.5rem;
-	flex-shrink: 0;
+	min-width: 0;
+	max-width: 100%;
 }
 
 .list-tools .language-links {
@@ -160,12 +163,12 @@ main > p {
 	gap: 1rem;
 }
 
-.list-links .sign-out-slot,
-.list-links .icon-link {
+.list-header > .sign-out-slot,
+.list-header > .icon-link {
 	margin-left: auto;
 }
 
-main > header .list-links a.icon-link {
+main > header > a.icon-link {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
@@ -178,7 +181,7 @@ main > header .list-links a.icon-link {
 	text-decoration: none;
 }
 
-main > header .list-links a.icon-link:hover {
+main > header > a.icon-link:hover {
 	background: none;
 	color: var(--accent-hover);
 }
