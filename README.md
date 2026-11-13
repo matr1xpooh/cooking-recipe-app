@@ -10,7 +10,7 @@ The product brief is in [APP_PROMPT.md](APP_PROMPT.md). It is the standing spec 
 - **Duplicates:** a recipe with the same source link, start time and title as an existing one is rejected, and the existing recipe is shown.
 - **Import from a web page or video description:** title, ingredients, steps and a picture are filled in. Credit, hashtag and sign-off lines are dropped. Private and loopback addresses are refused.
 - **Import from a photo:** AWS Textract reads ingredient lines from a screenshot or photo.
-- **Notes:** each ingredient or step can have notes. A line starting with `> ` is a note on the line above it; `> - ` makes it a bullet. Notes take **bold**, *italic*, colours and `[link text](https://...)` links (http and https only). Ingredient lines starting with `# ` are headings.
+- **Notes:** each ingredient or step can have notes. A line starting with `> ` is a note on the line above it; `> - ` makes it a bullet. Notes take **bold**, _italic_, colours and `[link text](https://...)` links (http and https only). Ingredient lines starting with `# ` are headings.
 - **Photos:** several per recipe, shown as a gallery and as the first picture on each list card. "Take photo" opens the camera on a phone; "Choose photo" opens the library. PNG or JPEG, up to 5 MB, originals kept.
 - **Tags and search:** built-in tags plus typed ones (up to 10 per recipe, 30 characters each, stored lowercase). Search ignores case and accents. Tag manager merges and removes tags.
 - **Languages:** Catalan, Spanish, English and Russian for the interface. Switching language updates the page in place, without a reload. Recipe content is machine-translated with AWS Translate, cached by a hash of the original text, and can be edited by hand. Edited translations are flagged when the original changes, and can be reset.
@@ -50,29 +50,29 @@ Service workers only register on `localhost` or HTTPS. Use `localhost` to test t
 
 Set these in `.env` (git-ignored):
 
-| Variable | Purpose |
-|----------|---------|
-| `STORE` | `file` (default) stores data in `./data`. The AWS backend is not written yet. |
-| `RECIPE_DATA_DIR` | Optional. Moves the file store, for example in tests. |
-| `COGNITO_ISSUER` | The user pool's issuer URL. |
-| `COGNITO_DOMAIN` | The hosted sign-in domain, with `https://`. |
-| `COGNITO_CLIENT_ID` | The app client's id. The client needs the authorization code flow with PKCE. |
-| `SESSION_SECRET` | At least 32 random characters. Signs the session cookies. |
-| `AWS_REGION` | Region for Textract and Translate. |
-| `AUTH` | Leave unset. `off` disables sign-in (local development only). |
+| Variable            | Purpose                                                                       |
+| ------------------- | ----------------------------------------------------------------------------- |
+| `STORE`             | `file` (default) stores data in `./data`. The AWS backend is not written yet. |
+| `RECIPE_DATA_DIR`   | Optional. Moves the file store, for example in tests.                         |
+| `COGNITO_ISSUER`    | The user pool's issuer URL.                                                   |
+| `COGNITO_DOMAIN`    | The hosted sign-in domain, with `https://`.                                   |
+| `COGNITO_CLIENT_ID` | The app client's id. The client needs the authorization code flow with PKCE.  |
+| `SESSION_SECRET`    | At least 32 random characters. Signs the session cookies.                     |
+| `AWS_REGION`        | Region for Textract and Translate.                                            |
+| `AUTH`              | Leave unset. `off` disables sign-in (local development only).                 |
 
 AWS credentials for Textract and Translate come from the standard AWS credential chain on your machine. Do not put keys in `.env`.
 
 ## Scripts
 
-| Command | What it does |
-|---------|--------------|
-| `npm run dev` | Development server. |
-| `npm run build` | Production build. |
-| `npm run preview` | Serves the production build locally. |
-| `npm run check` | Type check (svelte-check). |
-| `npm run lint` | Prettier and ESLint. |
-| `npm test` | Unit tests (server and client projects). |
+| Command           | What it does                             |
+| ----------------- | ---------------------------------------- |
+| `npm run dev`     | Development server.                      |
+| `npm run build`   | Production build.                        |
+| `npm run preview` | Serves the production build locally.     |
+| `npm run check`   | Type check (svelte-check).               |
+| `npm run lint`    | Prettier and ESLint.                     |
+| `npm test`        | Unit tests (server and client projects). |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 
@@ -111,13 +111,13 @@ All persistence goes through the `RecipeStore` interface in `src/lib/server/stor
 
 ## Status
 
-| Phase | Scope | State |
-|-------|-------|-------|
-| 1 | Storage interface | Done |
-| 2 | Cognito sign-in, rate limits | Done; the real Cognito round trip is untested until a user pool exists |
-| 3 | PWA: manifest, icons, install page, wake lock, offline reading, sign-out | Done; icons are placeholders |
-| 4 | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown |
-| 5 | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm, per-user language setting | Not started |
-| 6 | Browser tests for the main flows | Not started |
+| Phase | Scope                                                                                                                                        | State                                                                                                       |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1     | Storage interface                                                                                                                            | Done                                                                                                        |
+| 2     | Cognito sign-in, rate limits                                                                                                                 | Done; the real Cognito round trip is untested until a user pool exists                                      |
+| 3     | PWA: manifest, icons, install page, wake lock, offline reading, sign-out                                                                     | Done; icons are placeholders                                                                                |
+| 4     | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown |
+| 5     | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm, per-user language setting                                                    | Not started                                                                                                 |
+| 6     | Browser tests for the main flows                                                                                                             | Not started                                                                                                 |
 
 The domain is not chosen yet. The first deployment will use the default CloudFront address.

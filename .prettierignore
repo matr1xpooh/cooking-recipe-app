@@ -7,3 +7,6 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Untracked notes kept beside the project
+Claude outputs/

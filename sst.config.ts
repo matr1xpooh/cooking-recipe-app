@@ -1,3 +1,4 @@
+// eslint-disable-next-line @typescript-eslint/triple-slash-reference -- SST generates this file; its template uses this form.
 /// <reference path="./.sst/platform/config.d.ts" />
 
 // Phase 5 spike: declares only the SvelteKit site so SST can download its AWS components.
