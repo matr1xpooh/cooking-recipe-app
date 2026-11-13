@@ -1,6 +1,6 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { isRecipe } from '#lib/recipes/validate.js';
+import { decodeRecipeText, isRecipe } from '#lib/recipes/validate.js';
 import { isSafeId } from '#lib/server/recipe-data.js';
 import { getStore } from '#lib/server/store.js';
 
@@ -13,8 +13,9 @@ export const POST: RequestHandler = async ({ request }) => {
 	if (!isRecipe(body) || !isSafeId(body.id)) {
 		return json({ error: 'recipe_invalid' }, { status: 400 });
 	}
-	if (body.sourceUrl) {
-		const existing = await getStore().findSameRecipe(body);
+	const recipe = decodeRecipeText(body);
+	if (recipe.sourceUrl) {
+		const existing = await getStore().findSameRecipe(recipe);
 		if (existing) {
 			return json(
 				{ error: 'duplicate', existing: { id: existing.id, title: existing.title } },
@@ -22,6 +23,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			);
 		}
 	}
-	await getStore().saveRecipe(body);
+	await getStore().saveRecipe(recipe);
 	return json({ ok: true });
 };

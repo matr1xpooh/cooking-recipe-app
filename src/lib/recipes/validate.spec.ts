@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { isRecipe, normalizeRecipe } from './validate';
+import { decodeRecipeText, isRecipe, normalizeRecipe } from './validate';
 
 const recipe = {
 	id: '1',
@@ -52,5 +52,47 @@ describe('tags from the old single category', () => {
 			'fish',
 			'soup'
 		]);
+	});
+});
+
+describe('decodeRecipeText', () => {
+	it('stores apostrophes and ampersands as characters in every text field', () => {
+		const recipe = normalizeRecipe({
+			id: 'abc',
+			title: 'Cook&#39;s &amp; friends',
+			sourceUrl: null,
+			sourceStart: null,
+			ingredients: ['Don&#39;t skip the salt'],
+			steps: ['If you don&#x27;t have a burner&#8230;'],
+			notes: 'Bob&apos;s tip',
+			images: [],
+			source: 'typed',
+			tags: [],
+			createdAt: '2026-11-13T00:00:00.000Z',
+			archived: false
+		});
+		const decoded = decodeRecipeText(recipe);
+		expect(decoded.title).toBe("Cook's & friends");
+		expect(decoded.ingredients).toEqual(["Don't skip the salt"]);
+		expect(decoded.steps).toEqual(["If you don't have a burner\u2026"]);
+		expect(decoded.notes).toBe("Bob's tip");
+	});
+
+	it('leaves text without character references unchanged', () => {
+		const recipe = normalizeRecipe({
+			id: 'abc',
+			title: 'Plain title',
+			sourceUrl: null,
+			sourceStart: null,
+			ingredients: ['1 egg'],
+			steps: ['Beat it'],
+			notes: '',
+			images: [],
+			source: 'typed',
+			tags: [],
+			createdAt: '2026-11-13T00:00:00.000Z',
+			archived: false
+		});
+		expect(decodeRecipeText(recipe)).toEqual(recipe);
 	});
 });

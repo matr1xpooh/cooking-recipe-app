@@ -1,6 +1,7 @@
 import type { Recipe } from './recipe';
 import { HEADING_MARKER, headingText, isHeading, joinNote, splitNote } from './ingredient-lines';
 import type { TranslateItem } from './translation-types';
+import { decodeEntities } from './import';
 
 /** The parts of a recipe that get translated. Title and ingredients are plain text; steps and notes are styled. */
 export interface RecipeFields {
@@ -95,4 +96,14 @@ export function isTranslatedFields(value: unknown): value is RecipeFields {
 /** A stable key for the source text: when it changes, an edited translation may be out of date. */
 export function sourceHash(recipe: Recipe): string {
 	return hashItems(toItems(fieldsOf(recipe)));
+}
+
+/** Edited translations get the same treatment as recipes: no character references are stored. */
+export function decodeFieldsText(fields: RecipeFields): RecipeFields {
+	return {
+		title: decodeEntities(fields.title),
+		ingredients: fields.ingredients.map(decodeEntities),
+		steps: fields.steps.map(decodeEntities),
+		notes: decodeEntities(fields.notes)
+	};
 }

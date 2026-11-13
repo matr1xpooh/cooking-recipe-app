@@ -6,6 +6,7 @@ import {
 	type Recipe,
 	type Tag
 } from './recipe';
+import { decodeEntities } from './import';
 
 /** Checks a value has the shape of a stored recipe. Optional fields may be missing. */
 export function isRecipe(value: unknown): value is Recipe {
@@ -75,5 +76,19 @@ export function normalizeRecipe(r: Recipe & { category?: unknown; hasImage?: unk
 		tags: tagsOf(r),
 		createdAt: r.createdAt,
 		archived: r.archived
+	};
+}
+
+/**
+ * Recipe text is shown as text, so HTML character references (such as &#39;) are decoded
+ * before a recipe is stored. Every save goes through here, whatever its source.
+ */
+export function decodeRecipeText(recipe: Recipe): Recipe {
+	return {
+		...recipe,
+		title: decodeEntities(recipe.title),
+		ingredients: recipe.ingredients.map(decodeEntities),
+		steps: recipe.steps.map(decodeEntities),
+		notes: decodeEntities(recipe.notes)
 	};
 }

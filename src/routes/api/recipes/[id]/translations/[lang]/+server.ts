@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { isLanguage } from '#lib/recipes/languages.js';
-import { isTranslatedFields } from '#lib/recipes/translation-fields.js';
+import { decodeFieldsText, isTranslatedFields } from '#lib/recipes/translation-fields.js';
 import { isSafeId } from '#lib/server/recipe-data.js';
 import { getStore } from '#lib/server/store.js';
 
@@ -25,7 +25,8 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	if (typeof body?.hash !== 'string' || body.hash.length > 64 || !isTranslatedFields(body.fields)) {
 		return json({ error: 'translation_invalid' }, { status: 400 });
 	}
-	await getStore().setOverride(params.id, lang, { hash: body.hash, fields: body.fields });
+	const fields = decodeFieldsText(body.fields);
+	await getStore().setOverride(params.id, lang, { hash: body.hash, fields });
 	return new Response(null, { status: 204 });
 };
 
