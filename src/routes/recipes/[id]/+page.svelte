@@ -68,8 +68,11 @@
 		if (!current || !isLanguage(locale)) return;
 		const request = ++latestRequest;
 		translating = true;
+		// Machine translation is a signed-in feature; a visitor sees the original text.
 		Promise.all([
-			translateFields(fieldsOf(current), current.id, locale, translationCache),
+			page.data.signedIn
+				? translateFields(fieldsOf(current), current.id, locale, translationCache)
+				: Promise.resolve(null),
 			fetchOverride(current.id, locale).catch(() => null)
 		]).then(([result, saved]) => {
 			if (request !== latestRequest) return;
@@ -242,33 +245,39 @@
 							<button
 								type="button"
 								class="tag-remove"
+								hidden={!page.data.signedIn}
 								aria-label={m.tag_remove({ tag: tagNames.label(tag) })}
 								onclick={() => removeTag(tag)}>×</button
 							>
 						</span>
 					{/each}
 				</div>
-				<div class="tag-add">
-					<input
-						type="text"
-						bind:value={newTag}
-						placeholder={m.tags_add_placeholder()}
-						aria-label={m.tags_add_placeholder()}
-						onkeydown={(event) => {
-							if (event.key === 'Enter' || event.key === ',') {
-								event.preventDefault();
-								addTag();
-							}
-						}}
-					/>
-					<button type="button" class="link-button" onclick={addTag}>{m.tags_add_button()}</button>
-				</div>
+				{#if page.data.signedIn}
+					<div class="tag-add">
+						<input
+							type="text"
+							bind:value={newTag}
+							placeholder={m.tags_add_placeholder()}
+							aria-label={m.tags_add_placeholder()}
+							onkeydown={(event) => {
+								if (event.key === 'Enter' || event.key === ',') {
+									event.preventDefault();
+									addTag();
+								}
+							}}
+						/>
+						<button type="button" class="link-button" onclick={addTag}>{m.tags_add_button()}</button
+						>
+					</div>
+				{/if}
 				{#if tagLimitHit}
 					<p role="alert">{m.tags_limit({ n: MAX_TAGS_PER_RECIPE })}</p>
 				{/if}
 			</section>
 			<p class="recipe-actions">
-				<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}>{m.recipe_edit()}</a>
+				{#if page.data.signedIn}<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}
+						>{m.recipe_edit()}</a
+					>{/if}
 				{#if recipe.sourceUrl}
 					<span aria-hidden="true">·</span>
 					<!-- External user-supplied URL: resolve() only applies to app routes. -->
@@ -284,10 +293,11 @@
 					{/if}
 				{/if}
 				<span aria-hidden="true">·</span>
-				<button type="button" class="link-button" onclick={toggleArchive}>
-					{recipe.archived ? m.restore_action() : m.archive_action()}
-				</button>
-				{#if recipe.archived}
+				{#if page.data.signedIn}<button type="button" class="link-button" onclick={toggleArchive}>
+						{recipe.archived ? m.restore_action() : m.archive_action()}
+					</button>
+				{/if}
+				{#if recipe.archived && page.data.signedIn}
 					<span aria-hidden="true">·</span>
 					<button type="button" class="link-button danger" onclick={deleteThis}>
 						{m.delete_action()}
@@ -320,7 +330,7 @@
 					{#if override && !editingTranslation}
 						<p class="meta">{m.translation_edited_note()}</p>
 					{/if}
-					{#if !editingTranslation}
+					{#if !page.data.signedIn}{:else if !editingTranslation}
 						<button type="button" class="link-button" onclick={startEditTranslation}
 							>{m.translation_edit()}</button
 						>

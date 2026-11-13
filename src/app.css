@@ -491,12 +491,24 @@ summary {
 	display: flex;
 	justify-content: flex-end;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 0.5rem;
+}
+
+/* Header items keep their size: a narrow screen wraps them rather than squeezing them */
+.site-header > * {
+	flex-shrink: 0;
+}
+
+/* Hidden means hidden, even where a component sets its own display */
+[hidden] {
+	display: none !important;
 }
 
 .sign-out {
 	min-height: 44px;
 	padding: 0 1rem;
+	white-space: nowrap;
 	border: 1px solid currentColor;
 	border-radius: 0.5rem;
 	background: transparent;

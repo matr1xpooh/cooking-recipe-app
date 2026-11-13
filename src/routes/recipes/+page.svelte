@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
@@ -161,32 +162,36 @@
 <main>
 	<header>
 		<h1>{m.recipes_title()}</h1>
-		<a href={resolve('/recipes/new')}>{m.recipes_add()}</a>
-		<a href={resolve('/tags')}>{m.manage_tags()}</a>
+		{#if page.data.signedIn}
+			<a href={resolve('/recipes/new')}>{m.recipes_add()}</a>
+			<a href={resolve('/tags')}>{m.manage_tags()}</a>
+		{/if}
 	</header>
 
 	{#if recipeStore.loadError}
 		<p role="alert">{m.error_load_failed()}</p>
 	{/if}
 
-	<div class="tabs" role="tablist" aria-label={m.recipes_title()}>
-		<button
-			type="button"
-			role="tab"
-			class="tab"
-			class:active={view === 'recipes'}
-			aria-selected={view === 'recipes'}
-			onclick={() => setView('recipes')}>{m.recipes_view()}</button
-		>
-		<button
-			type="button"
-			role="tab"
-			class="tab"
-			class:active={view === 'archive'}
-			aria-selected={view === 'archive'}
-			onclick={() => setView('archive')}>{m.archive_view()}</button
-		>
-	</div>
+	{#if page.data.signedIn}
+		<div class="tabs" role="tablist" aria-label={m.recipes_title()}>
+			<button
+				type="button"
+				role="tab"
+				class="tab"
+				class:active={view === 'recipes'}
+				aria-selected={view === 'recipes'}
+				onclick={() => setView('recipes')}>{m.recipes_view()}</button
+			>
+			<button
+				type="button"
+				role="tab"
+				class="tab"
+				class:active={view === 'archive'}
+				aria-selected={view === 'archive'}
+				onclick={() => setView('archive')}>{m.archive_view()}</button
+			>
+		</div>
+	{/if}
 
 	<div class="search">
 		<input
@@ -222,7 +227,7 @@
 		<p class="meta">{m.archive_note()}</p>
 	{/if}
 
-	{#if visible.length > 0}
+	{#if visible.length > 0 && page.data.signedIn}
 		<div class="bulk-bar">
 			<button type="button" class="chip" aria-pressed={selecting} onclick={toggleSelecting}>
 				{selecting ? m.select_done() : m.select_mode()}

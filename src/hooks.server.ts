@@ -44,6 +44,7 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 
 	const access = decideAccess({
 		pathname: event.url.pathname,
+		method: event.request.method,
 		signedIn: user !== null,
 		authDisabled: off
 	});
