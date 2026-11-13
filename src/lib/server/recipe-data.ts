@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import type { Recipe } from '#lib/recipes/recipe.js';
 import { isRecipe, normalizeRecipe } from '#lib/recipes/validate.js';
-import { normalizeSourceUrl } from '#lib/recipes/recipe.js';
 import { sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
+import { matchByUrl, matchSame } from './recipe-match';
 
 /**
  * Recipes on this machine's disk. The data directory defaults to ./data under the
@@ -180,14 +180,7 @@ export async function findRecipeByUrl(
 	exceptId?: string,
 	start?: number | null
 ): Promise<Recipe | undefined> {
-	const key = normalizeSourceUrl(url);
-	return (await listRecipes()).find(
-		(r) =>
-			r.id !== exceptId &&
-			r.sourceUrl !== null &&
-			normalizeSourceUrl(r.sourceUrl) === key &&
-			(start === undefined || (r.sourceStart ?? null) === start)
-	);
+	return matchByUrl(await listRecipes(), url, exceptId, start);
 }
 
 /**
@@ -195,15 +188,5 @@ export async function findRecipeByUrl(
  * same title. One video can hold several dishes, so the address alone is not enough.
  */
 export async function findSameRecipe(recipe: Recipe): Promise<Recipe | undefined> {
-	if (!recipe.sourceUrl) return undefined;
-	const key = normalizeSourceUrl(recipe.sourceUrl);
-	const title = recipe.title.trim().toLowerCase();
-	return (await listRecipes()).find(
-		(r) =>
-			r.id !== recipe.id &&
-			r.sourceUrl !== null &&
-			normalizeSourceUrl(r.sourceUrl) === key &&
-			(r.sourceStart ?? null) === (recipe.sourceStart ?? null) &&
-			r.title.trim().toLowerCase() === title
-	);
+	return matchSame(await listRecipes(), recipe);
 }

@@ -1,9 +1,13 @@
 import type { Recipe } from '#lib/recipes/recipe.js';
 import type { Language } from '#lib/recipes/languages.js';
 import type { ImageType } from '#lib/recipes/screenshot.js';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
+import { S3Client } from '@aws-sdk/client-s3';
 import * as files from './recipe-data';
 import * as overrides from './translation-overrides';
 import type { TranslationOverride } from './translation-overrides';
+import { createAwsStore } from './aws-store';
 
 /**
  * Everything the server persists: recipes, their original images, and hand-edited
@@ -35,7 +39,7 @@ export interface RecipeStore {
 }
 
 /** The local-disk backend, used in development. Data lives under RECIPE_DATA_DIR or ./data. */
-const fileStore: RecipeStore = {
+export const fileStore: RecipeStore = {
 	listRecipes: files.listRecipes,
 	saveRecipe: files.saveRecipe,
 	deleteRecipe: files.deleteRecipe,
@@ -51,9 +55,28 @@ const fileStore: RecipeStore = {
 	removeOverridesFor: overrides.removeOverridesFor
 };
 
+let awsSingleton: RecipeStore | undefined;
+
+/** The deployed store. Its table and bucket names come from the environment set by the SST config. */
+function awsStore(): RecipeStore {
+	if (!awsSingleton) {
+		const table = process.env.TABLE_NAME;
+		const bucket = process.env.BUCKET_NAME;
+		if (!table || !bucket) throw new Error('TABLE_NAME and BUCKET_NAME must be set for STORE=aws');
+		awsSingleton = createAwsStore({
+			table,
+			bucket,
+			dynamo: DynamoDBDocumentClient.from(new DynamoDBClient({})),
+			s3: new S3Client({})
+		});
+	}
+	return awsSingleton;
+}
+
 /** The store selected by the STORE environment variable. Defaults to the file store. */
 export function getStore(): RecipeStore {
 	const kind = process.env.STORE ?? 'file';
 	if (kind === 'file') return fileStore;
+	if (kind === 'aws') return awsStore();
 	throw new Error(`Unknown STORE "${kind}"`);
 }
