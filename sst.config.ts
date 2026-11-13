@@ -105,7 +105,7 @@ export default $config({
 		if (production) {
 			const email = process.env.BUDGET_EMAIL;
 			if (!email) throw new Error('BUDGET_EMAIL must be set to deploy production');
-			new aws.budgets.Budget('MonthlyCost', {
+			const monthly = new aws.budgets.Budget('MonthlyCost', {
 				name: 'recipes-monthly',
 				budgetType: 'COST',
 				limitAmount: '10',
@@ -127,6 +127,59 @@ export default $config({
 						subscriberEmailAddresses: [email]
 					}
 				]
+			});
+
+			// The hard stop. At 80% of the budget (actual spend), AWS Budgets attaches a
+			// deny-everything policy to the app's server role: the site can no longer reach
+			// its table, photos, Translate or Textract. Budgets updates spend only a few
+			// times a day, so the stop can come hours after the spending.
+			const serverRole = site.nodes.server.nodes.role;
+			const stopPolicy = new aws.iam.Policy('StopAppPolicy', {
+				policy: JSON.stringify({
+					Version: '2012-10-17',
+					Statement: [{ Effect: 'Deny', Action: '*', Resource: '*' }]
+				})
+			});
+			const accountId = aws.getCallerIdentityOutput().accountId;
+			// The role AWS Budgets assumes to attach that policy, and nothing more.
+			const actionRole = new aws.iam.Role('BudgetActionRole', {
+				assumeRolePolicy: $jsonStringify({
+					Version: '2012-10-17',
+					Statement: [
+						{
+							Effect: 'Allow',
+							Principal: { Service: 'budgets.amazonaws.com' },
+							Action: 'sts:AssumeRole',
+							Condition: { StringEquals: { 'aws:SourceAccount': accountId } }
+						}
+					]
+				})
+			});
+			new aws.iam.RolePolicy('BudgetActionRolePolicy', {
+				role: actionRole.name,
+				policy: $jsonStringify({
+					Version: '2012-10-17',
+					Statement: [
+						{
+							Effect: 'Allow',
+							Action: ['iam:AttachRolePolicy', 'iam:DetachRolePolicy'],
+							Resource: serverRole.arn
+						}
+					]
+				})
+			});
+			new aws.budgets.BudgetAction('StopAppAt80Percent', {
+				accountId,
+				budgetName: monthly.name,
+				actionType: 'APPLY_IAM_POLICY',
+				approvalModel: 'AUTOMATIC',
+				notificationType: 'ACTUAL',
+				executionRoleArn: actionRole.arn,
+				actionThreshold: { actionThresholdType: 'PERCENTAGE', actionThresholdValue: 80 },
+				definition: {
+					iamActionDefinition: { policyArn: stopPolicy.arn, roles: [serverRole.name] }
+				},
+				subscribers: [{ address: email, subscriptionType: 'EMAIL' }]
 			});
 		}
 
