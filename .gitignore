@@ -27,3 +27,6 @@ project.inlang/cache/
 
 # Recipe data kept on this machine
 /data
+
+# SST local state and platform components
+/.sst

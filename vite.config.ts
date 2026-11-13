@@ -1,7 +1,7 @@
 import { paraglideVitePlugin } from '@inlang/paraglide-js';
 import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
-import adapter from '@sveltejs/adapter-auto';
+import adapter from 'svelte-kit-sst';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
