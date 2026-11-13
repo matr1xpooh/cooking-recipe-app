@@ -19,10 +19,7 @@ function parseItems(value: unknown): TranslateItem[] | null {
 
 /** POST /api/recipes/translate  body: { target, items: [{ text, styled }] } -> { items: [{ text, failed }] } */
 export const POST: RequestHandler = async ({ request, locals }) => {
-	const allowed = locals.user
-		? takeToken(`translate:${locals.user.sub}`, LIMITS.translate)
-		: takeToken('translate:anon', LIMITS.translateAnonymous);
-	if (!allowed) {
+	if (!takeToken(`translate:${locals.user?.sub ?? 'anon'}`, LIMITS.translate)) {
 		return json({ error: 'rate_limited' }, { status: 429 });
 	}
 	const body = await request.json().catch(() => null);

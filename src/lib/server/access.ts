@@ -37,17 +37,6 @@ export function isPublicRead(pathname: string, method: string): boolean {
 	return PUBLIC_READ_PATHS.some((pattern) => pattern.test(pathname));
 }
 
-/**
- * Machine translation of recipe text, open to anyone with the link. It only reads the
- * text it is given and stores nothing but cached translations; it is rate limited per
- * visitor group (see LIMITS in rate-limit.ts).
- */
-export const PUBLIC_TRANSLATE_PATH = '/api/recipes/translate';
-
-export function isPublicTranslate(pathname: string, method: string): boolean {
-	return method === 'POST' && pathname === PUBLIC_TRANSLATE_PATH;
-}
-
 export function decideAccess(input: {
 	pathname: string;
 	method: string;
@@ -55,13 +44,7 @@ export function decideAccess(input: {
 	authDisabled: boolean;
 }): Access {
 	if (input.authDisabled || input.signedIn) return 'allow';
-	if (
-		isPublicPath(input.pathname) ||
-		isPublicRead(input.pathname, input.method) ||
-		isPublicTranslate(input.pathname, input.method)
-	) {
-		return 'allow';
-	}
+	if (isPublicPath(input.pathname) || isPublicRead(input.pathname, input.method)) return 'allow';
 	return input.pathname === '/api' || input.pathname.startsWith('/api/')
 		? 'unauthorized'
 		: 'sign-in';

@@ -22,6 +22,7 @@ describe('decideAccess', () => {
 
 	it('answers 401 for a signed-out write to the API', () => {
 		expect(access('/api/recipes', 'POST')).toBe('unauthorized');
+		expect(access('/api/recipes/translate', 'POST')).toBe('unauthorized');
 		expect(access('/api/recipes/abc', 'DELETE')).toBe('unauthorized');
 		expect(access('/api/recipes/abc/translations/es', 'PUT')).toBe('unauthorized');
 		expect(access('/api/me/language', 'PUT')).toBe('unauthorized');
@@ -35,12 +36,6 @@ describe('decideAccess', () => {
 		expect(access('/api/recipes/abc/images/img-1')).toBe('allow');
 		expect(access('/api/recipes/abc/translations/es')).toBe('allow');
 		expect(access('/api/recipes', 'HEAD')).toBe('allow');
-	});
-
-	it('lets anyone translate recipe text with POST, and nothing else on that path', () => {
-		expect(access('/api/recipes/translate', 'POST')).toBe('allow');
-		expect(access('/api/recipes/translate', 'GET')).toBe('unauthorized');
-		expect(access('/api/recipes/translate', 'PUT')).toBe('unauthorized');
 	});
 
 	it('keeps the read exception to GET and HEAD only', () => {

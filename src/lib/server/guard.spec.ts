@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
-import { decideAccess, isPublicPath, PUBLIC_TRANSLATE_PATH } from './access';
+import { decideAccess, isPublicPath } from './access';
 import { fileStore, getStore } from './store';
 
 /**
@@ -41,9 +41,8 @@ describe('every API route needs a signed-in user, except the recipe reads', () =
 		expect(routes.length).toBeGreaterThan(0);
 	});
 
-	it('answers 401 to a signed-out write on every API route except the public translate', async () => {
+	it('answers 401 to a signed-out write on every API route', async () => {
 		for (const pathname of await apiRoutePaths()) {
-			if (pathname === PUBLIC_TRANSLATE_PATH) continue;
 			expect(
 				decideAccess({ pathname, method: 'POST', signedIn: false, authDisabled: false }),
 				pathname
@@ -61,18 +60,6 @@ describe('every API route needs a signed-in user, except the recipe reads', () =
 			}
 		}
 		expect(opened.sort()).toEqual([...PUBLIC_API_READS].sort());
-	});
-
-	it('opens to a signed-out POST only the public translate route', async () => {
-		const opened: string[] = [];
-		for (const pathname of await apiRoutePaths()) {
-			if (
-				decideAccess({ pathname, method: 'POST', signedIn: false, authDisabled: false }) === 'allow'
-			) {
-				opened.push(pathname);
-			}
-		}
-		expect(opened).toEqual([PUBLIC_TRANSLATE_PATH]);
 	});
 
 	it('never lists an API route as public', async () => {

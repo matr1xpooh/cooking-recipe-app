@@ -31,8 +31,6 @@ export function takeToken(key: string, limit: Limit, now = Date.now()): boolean 
 /** Limits for the endpoints that spend AWS money or fetch from the web. */
 export const LIMITS = {
 	translate: { capacity: 20, perMinute: 20 },
-	/** Shared by every signed-out visitor, so it is higher: one page load makes several calls. */
-	translateAnonymous: { capacity: 60, perMinute: 60 },
 	ocr: { capacity: 10, perMinute: 5 },
 	import: { capacity: 20, perMinute: 10 },
 	importImage: { capacity: 30, perMinute: 15 }
