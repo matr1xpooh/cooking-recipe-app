@@ -13,6 +13,8 @@
 	import { TAGS, type Tag } from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { SvelteSet } from 'svelte/reactivity';
+	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
+	import SignOutButton from '#lib/SignOutButton.svelte';
 
 	onMount(() => recipeStore.load());
 
@@ -83,6 +85,8 @@
 	);
 
 	let query = $state('');
+	/** The tag filters are folded away until the user opens them. */
+	let filtersOpen = $state(false);
 
 	/** Recipes matching the view, the selected tags and the name search. */
 	const visible = $derived(
@@ -160,11 +164,19 @@
 </svelte:head>
 
 <main>
-	<header>
+	<header class="list-header">
 		<h1>{m.recipes_title()}</h1>
+		<div class="list-tools">
+			<LanguageSwitcher />
+			{#if page.data.showSignOut}
+				<SignOutButton />
+			{/if}
+		</div>
 		{#if page.data.signedIn}
-			<a href={resolve('/recipes/new')}>{m.recipes_add()}</a>
-			<a href={resolve('/tags')}>{m.manage_tags()}</a>
+			<div class="list-links">
+				<a class="header-link" href={resolve('/recipes/new')}>{m.recipes_add()}</a>
+				<a class="header-link" href={resolve('/tags')}>{m.manage_tags()}</a>
+			</div>
 		{/if}
 	</header>
 
@@ -180,7 +192,7 @@
 				class="tab"
 				class:active={view === 'recipes'}
 				aria-selected={view === 'recipes'}
-				onclick={() => setView('recipes')}>{m.recipes_view()}</button
+				onclick={() => setView('recipes')}>{m.view_active()}</button
 			>
 			<button
 				type="button"
@@ -202,8 +214,30 @@
 		/>
 	</div>
 
-	{#if counts.length > 0}
-		<div class="chips" role="group" aria-label={m.recipe_field_tags()}>
+	<div class="filter-row">
+		{#if counts.length > 0}
+			<button
+				type="button"
+				class="chip"
+				aria-expanded={filtersOpen}
+				aria-controls="tag-filters"
+				onclick={() => (filtersOpen = !filtersOpen)}
+				>{m.filters_toggle()}{filters.size > 0 ? ` (${filters.size})` : ''}
+				{filtersOpen ? '▴' : '▾'}</button
+			>
+		{/if}
+		{#if visible.length > 0 && page.data.signedIn}
+			<button
+				type="button"
+				class="chip select-chip"
+				aria-pressed={selecting}
+				onclick={toggleSelecting}>{selecting ? m.select_done() : m.select_mode()}</button
+			>
+		{/if}
+	</div>
+
+	{#if filtersOpen && counts.length > 0}
+		<div id="tag-filters" class="chips" role="group" aria-label={m.recipe_field_tags()}>
 			<button
 				type="button"
 				class="chip"
@@ -227,35 +261,27 @@
 		<p class="meta">{m.archive_note()}</p>
 	{/if}
 
-	{#if visible.length > 0 && page.data.signedIn}
+	{#if selecting && visible.length > 0 && page.data.signedIn}
 		<div class="bulk-bar">
-			<button type="button" class="chip" aria-pressed={selecting} onclick={toggleSelecting}>
-				{selecting ? m.select_done() : m.select_mode()}
-			</button>
-			{#if selecting}
-				<button type="button" class="link-button" onclick={selectAllVisible}
-					>{m.select_all()}</button
-				>
-				<button type="button" class="link-button" onclick={deselectAll}>{m.deselect_all()}</button>
-				{#if selected.size > 0}
-					<span>{m.selected_count({ n: selected.size })}</span>
-					{#if view === 'recipes'}
-						<button type="button" class="chip" disabled={busy} onclick={archiveSelected}
-							>{m.archive_action()}</button
-						>
-					{:else}
-						<button type="button" class="chip" disabled={busy} onclick={restoreSelected}
-							>{m.restore_action()}</button
-						>
-						<button type="button" class="chip danger" disabled={busy} onclick={deleteSelected}
-							>{m.delete_action()}</button
-						>
-					{/if}
+			<button type="button" class="link-button" onclick={selectAllVisible}>{m.select_all()}</button>
+			<button type="button" class="link-button" onclick={deselectAll}>{m.deselect_all()}</button>
+			{#if selected.size > 0}
+				<span>{m.selected_count({ n: selected.size })}</span>
+				{#if view === 'recipes'}
+					<button type="button" class="chip" disabled={busy} onclick={archiveSelected}
+						>{m.archive_action()}</button
+					>
+				{:else}
+					<button type="button" class="chip" disabled={busy} onclick={restoreSelected}
+						>{m.restore_action()}</button
+					>
+					<button type="button" class="chip danger" disabled={busy} onclick={deleteSelected}
+						>{m.delete_action()}</button
+					>
 				{/if}
 			{/if}
 		</div>
 	{/if}
-
 	{#if actionError}
 		<p role="alert">{actionError}</p>
 	{/if}

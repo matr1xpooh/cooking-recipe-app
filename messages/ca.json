@@ -129,5 +129,7 @@
 	"notes_list": "Element de llista",
 	"notes_link": "Enllaç",
 	"translation_original": "Original",
-	"translation_yours": "Traducció"
+	"translation_yours": "Traducció",
+	"filters_toggle": "Filtres",
+	"view_active": "Actives"
 }

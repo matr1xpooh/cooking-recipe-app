@@ -129,5 +129,7 @@
 	"notes_list": "Пункт списка",
 	"notes_link": "Ссылка",
 	"translation_original": "Оригинал",
-	"translation_yours": "Перевод"
+	"translation_yours": "Перевод",
+	"filters_toggle": "Фильтры",
+	"view_active": "Активные"
 }

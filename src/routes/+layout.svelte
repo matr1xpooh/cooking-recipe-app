@@ -9,13 +9,16 @@
 	import { dev } from '$app/env';
 	import favicon from '#lib/assets/favicon.svg';
 	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
-	import { m } from '#lib/paraglide/messages.js';
+	import { page } from '$app/state';
+	import SignOutButton from '#lib/SignOutButton.svelte';
 	import { localeChange } from '#lib/locale-change.svelte.js';
-	import { RECIPE_CACHE } from '#lib/recipes/offline-cache.js';
 	import type { LayoutProps } from './$types';
 	import '../app.css';
 
 	let { children, data }: LayoutProps = $props();
+
+	// The recipe list draws its own header (title, languages, sign-out) on the same line.
+	const ownHeader = $derived(page.route.id === '/recipes');
 
 	// Offline reading: the service worker is registered in production builds only.
 	onMount(() => {
@@ -24,18 +27,6 @@
 			navigator.serviceWorker.register('/service-worker.js').catch(() => {});
 		}
 	});
-
-	// Signing out forgets the recipes kept on this device, then ends the session.
-	async function signOut(event: SubmitEvent) {
-		event.preventDefault();
-		const form = event.currentTarget as HTMLFormElement;
-		try {
-			await caches.delete(RECIPE_CACHE);
-		} catch {
-			// No Cache API here: nothing was kept.
-		}
-		form.submit();
-	}
 </script>
 
 <svelte:head>
@@ -44,14 +35,14 @@
 
 <!-- Keyed on the language version: a language change re-renders the page in place. -->
 {#key localeChange.version}
-	<header class="site-header">
-		<LanguageSwitcher />
-		{#if data.showSignOut}
-			<form method="POST" action="/auth/logout" onsubmit={signOut}>
-				<button type="submit" class="sign-out">{m.sign_out()}</button>
-			</form>
-		{/if}
-	</header>
+	{#if !ownHeader}
+		<header class="site-header">
+			<LanguageSwitcher />
+			{#if data.showSignOut}
+				<SignOutButton />
+			{/if}
+		</header>
+	{/if}
 
 	{@render children()}
 {/key}

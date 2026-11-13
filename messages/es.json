@@ -129,5 +129,7 @@
 	"notes_list": "Elemento de lista",
 	"notes_link": "Enlace",
 	"translation_original": "Original",
-	"translation_yours": "Traducción"
+	"translation_yours": "Traducción",
+	"filters_toggle": "Filtros",
+	"view_active": "Activas"
 }

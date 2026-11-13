@@ -130,6 +130,54 @@ main > p {
 	color: var(--muted);
 }
 
+/* The recipe list's own header: title and languages on one line, links on the next */
+.list-tools {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.list-links {
+	display: flex;
+	flex-basis: 100%;
+	gap: 1rem;
+}
+
+/* Folded filters, with Select on the same row in its own colour */
+.filter-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.4rem;
+	margin: 0.75rem 0 0;
+}
+
+button.chip.select-chip {
+	color: var(--focus);
+	border-color: var(--focus);
+}
+
+button.chip.select-chip[aria-pressed='true'] {
+	color: var(--bg);
+	background: var(--focus);
+	border-color: var(--focus);
+}
+
+/* Less-used actions on the recipe list: plain text links, so the list comes first */
+main > header a.header-link {
+	min-height: 44px;
+	padding: 0 0.25rem;
+	background: none;
+	color: var(--accent);
+	font-weight: 500;
+	border-radius: 0;
+	text-decoration: underline;
+}
+
+main > header a.header-link:hover {
+	background: none;
+	color: var(--accent-hover);
+}
+
 main ul {
 	list-style: none;
 	margin: 0;
