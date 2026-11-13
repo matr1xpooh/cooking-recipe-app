@@ -303,6 +303,18 @@
 						{m.delete_action()}
 					</button>
 				{/if}
+				{#if translated && !translated.failed && !translating}
+					<span aria-hidden="true">·</span>
+					<button type="button" class="link-button" onclick={() => (showOriginal = !showOriginal)}>
+						{showOriginal ? m.show_translation() : m.show_original()}
+					</button>
+				{/if}
+				{#if page.data.signedIn && !translating && recipe && isLanguage(locale) && !editingTranslation}
+					<span aria-hidden="true">·</span>
+					<button type="button" class="link-button" onclick={startEditTranslation}
+						>{m.translation_edit()}</button
+					>
+				{/if}
 			</p>
 			{#if actionError}
 				<p role="alert">{actionError}</p>
@@ -310,19 +322,9 @@
 
 			{#if translating}
 				<p class="meta">{m.translating()}</p>
-			{:else if translated}
+			{:else if translated?.failed}
 				<p class="translation-bar">
-					{#if translated.failed}
-						<span role="status">{m.translation_failed()}</span>
-					{:else}
-						<button
-							type="button"
-							class="link-button"
-							onclick={() => (showOriginal = !showOriginal)}
-						>
-							{showOriginal ? m.show_translation() : m.show_original()}
-						</button>
-					{/if}
+					<span role="status">{m.translation_failed()}</span>
 				</p>
 			{/if}
 
@@ -334,11 +336,7 @@
 					{#if override && !editingTranslation}
 						<p class="meta">{m.translation_edited_note()}</p>
 					{/if}
-					{#if !page.data.signedIn}{:else if !editingTranslation}
-						<button type="button" class="link-button" onclick={startEditTranslation}
-							>{m.translation_edit()}</button
-						>
-					{:else}
+					{#if editingTranslation && page.data.signedIn}
 						<form
 							class="translation-edit"
 							onsubmit={(event) => {

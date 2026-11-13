@@ -85,10 +85,35 @@ export function pageImage(html: string): string | undefined {
 	return (first?.[1] ?? second?.[1])?.trim() || undefined;
 }
 
-/** Removes HTML tags and collapses whitespace. */
+const NAMED_ENTITIES: Record<string, string> = {
+	amp: '&',
+	lt: '<',
+	gt: '>',
+	quot: '"',
+	apos: "'",
+	nbsp: ' '
+};
+
+/**
+ * Turns HTML character references (&#39;, &#x27;, &amp;) into the characters they stand for.
+ * Pages escape apostrophes and quotes in their recipe text; the app shows plain text.
+ */
+export function decodeEntities(text: string): string {
+	return text.replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (whole, body: string) => {
+		if (body[0] === '#') {
+			const code =
+				body[1] === 'x' || body[1] === 'X' ? parseInt(body.slice(2), 16) : Number(body.slice(1));
+			return Number.isInteger(code) && code > 0 && code <= 0x10ffff
+				? String.fromCodePoint(code)
+				: whole;
+		}
+		return NAMED_ENTITIES[body.toLowerCase()] ?? whole;
+	});
+}
+
+/** Removes HTML tags, decodes character references and collapses whitespace. */
 function cleanText(text: string): string {
-	return text
-		.replace(/<[^>]*>/g, ' ')
+	return decodeEntities(text.replace(/<[^>]*>/g, ' '))
 		.replace(/\s+/g, ' ')
 		.trim();
 }

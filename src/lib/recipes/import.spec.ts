@@ -3,6 +3,7 @@ import {
 	pageImage,
 	extractRecipe,
 	extractYouTubeDescription,
+	decodeEntities,
 	isYouTubeUrl,
 	pageTitle,
 	parseDescription
@@ -252,5 +253,19 @@ describe('parseDescription drops credits after the recipe', () => {
 			'Ingredients -\n2 eggs\n1 cup flour\n\nSteps:\nMix.\n\nMusic in this video\nhttps://example.com/track\nSong - Something\nArtist - Someone'
 		);
 		expect(parsed).toEqual({ ingredients: ['2 eggs', '1 cup flour'], steps: ['Mix.'] });
+	});
+});
+
+describe('decodeEntities', () => {
+	it('turns escaped apostrophes, quotes and ampersands into characters', () => {
+		expect(decodeEntities('If you don&#39;t have a gas burner')).toBe(
+			"If you don't have a gas burner"
+		);
+		expect(decodeEntities('salt &amp; pepper &quot;fresh&quot;')).toBe('salt & pepper "fresh"');
+		expect(decodeEntities('&#x27;quoted&#x27; &lt;b&gt;')).toBe("'quoted' <b>");
+	});
+
+	it('leaves unknown or invalid references as they are', () => {
+		expect(decodeEntities('&bogus; &#0; &#99999999;')).toBe('&bogus; &#0; &#99999999;');
 	});
 });
