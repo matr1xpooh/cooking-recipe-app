@@ -10,13 +10,14 @@ The product brief is in [APP_PROMPT.md](APP_PROMPT.md). It is the standing spec 
 - **Duplicates:** a recipe with the same source link, start time and title as an existing one is rejected, and the existing recipe is shown.
 - **Import from a web page or video description:** title, ingredients, steps and a picture are filled in. Credit, hashtag and sign-off lines are dropped. Private and loopback addresses are refused.
 - **Import from a photo:** AWS Textract reads ingredient lines from a screenshot or photo.
-- **Photos:** several per recipe, shown as a gallery. PNG or JPEG, up to 5 MB, originals kept.
+- **Notes:** each ingredient or step can have notes. A line starting with `> ` is a note on the line above it; `> - ` makes it a bullet. Notes take **bold**, *italic*, colours and `[link text](https://...)` links (http and https only). Ingredient lines starting with `# ` are headings.
+- **Photos:** several per recipe, shown as a gallery and as the first picture on each list card. "Take photo" opens the camera on a phone; "Choose photo" opens the library. PNG or JPEG, up to 5 MB, originals kept.
 - **Tags and search:** built-in tags plus typed ones (up to 10 per recipe, 30 characters each, stored lowercase). Search ignores case and accents. Tag manager merges and removes tags.
-- **Languages:** Catalan, Spanish, English and Russian for the interface. Recipe content is machine-translated with AWS Translate, cached by a hash of the original text, and can be edited by hand. Edited translations are flagged when the original changes, and can be reset.
+- **Languages:** Catalan, Spanish, English and Russian for the interface. Switching language updates the page in place, without a reload. Recipe content is machine-translated with AWS Translate, cached by a hash of the original text, and can be edited by hand. Edited translations are flagged when the original changes, and can be reset.
 - **Phone use:** installable to the home screen (PWA), the screen stays awake while a recipe is open, and recipes already viewed open without a connection.
 - **Sign-in:** every page and API route needs a signed-in user. Accounts are created by an administrator in Amazon Cognito; there is no public sign-up.
 
-Not yet done, see [Status](#status): the AWS deployment, the DynamoDB and S3 storage backend, and the remaining UI items in phase 4.
+Not yet done, see [Status](#status): the AWS deployment, the DynamoDB and S3 storage backend, the per-user language setting, and the browser tests.
 
 ## Stack
 
@@ -115,7 +116,7 @@ All persistence goes through the `RecipeStore` interface in `src/lib/server/stor
 | 1 | Storage interface | Done |
 | 2 | Cognito sign-in, rate limits | Done; the real Cognito round trip is untested until a user pool exists |
 | 3 | PWA: manifest, icons, install page, wake lock, offline reading, sign-out | Done; icons are placeholders |
-| 4 | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, faster language switch, tap targets and contrast | In progress |
+| 4 | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown |
 | 5 | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm, per-user language setting | Not started |
 | 6 | Browser tests for the main flows | Not started |
 

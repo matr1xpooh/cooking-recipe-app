@@ -102,7 +102,7 @@ See [README.md](README.md) for how to run the app and the current phase table.
 | 1 | Storage interface (`RecipeStore`) | Done |
 | 2 | Cognito sign-in, per-user rate limits | Done. The real Cognito round trip is untested until a user pool exists |
 | 3 | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out | Done. Icons are placeholders |
-| 4 | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | In progress |
+| 4 | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; translated text still loads from the service on first view |
 | 5 | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm, per-user language setting, server-side translation cache | Not started |
 | 6 | Browser tests for the main flows | Not started |
 
@@ -110,5 +110,8 @@ Decisions made along the way:
 - Rate limits are per user, in memory, per server instance. They are a safety net; the AWS Budget alarm is the real cost cap.
 - Local development bypasses sign-in only with `AUTH=off`. There is no default bypass, so a deployed server never runs without sign-in by accident.
 - Per-user language preference waits for the DynamoDB store (phase 5). Until then the language is a cookie.
+- Notes stay in the same list as the items they belong to: a line starting with "> " is a note on the line above it ("> - " for a bullet), and a line starting with "# " is a heading. No schema change was needed.
+- Links in notes accept only http and https addresses. Link text is plain (no nested styling).
+- Language change re-renders the page in place. The language is still a cookie until the per-user setting in phase 5.
 - Archive stays as two tabs (active and archived) rather than a toggle, unless the user asks for a toggle.
 - Repository hygiene: the README is kept current with each phase. Untracked folders such as `Claude outputs/` are not committed.
