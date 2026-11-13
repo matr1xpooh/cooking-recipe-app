@@ -15,6 +15,35 @@
 	}
 </script>
 
+<!-- A text link, the same size as the other links: no panel and no filled button. -->
 <form method="POST" action="/auth/logout" onsubmit={signOut}>
-	<button type="submit" class="sign-out">{m.sign_out()}</button>
+	<button type="submit">{m.sign_out()}</button>
 </form>
+
+<style>
+	form {
+		display: inline;
+		margin: 0;
+		padding: 0;
+		background: none;
+		border: 0;
+		border-radius: 0;
+	}
+
+	button {
+		min-height: 44px;
+		padding: 0;
+		background: none;
+		border: 0;
+		border-radius: 0;
+		color: var(--accent);
+		font: inherit;
+		font-weight: 500;
+		text-decoration: underline;
+		cursor: pointer;
+	}
+
+	button:hover {
+		color: var(--accent-hover);
+	}
+</style>

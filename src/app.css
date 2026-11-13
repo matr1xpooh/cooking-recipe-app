@@ -132,7 +132,7 @@ main > p {
 
 /* The recipe list's own header: title and languages on one line, links and sign-out on the next */
 .list-header h1 {
-	font-size: 1.5rem;
+	font-size: 1.25rem;
 	margin: 0;
 }
 
@@ -149,7 +149,7 @@ main > p {
 
 .list-tools .language-links .lang {
 	min-width: 44px;
-	padding: 0 0.35rem;
+	padding: 0 0.25rem;
 }
 
 .list-links {
@@ -581,18 +581,6 @@ summary {
 /* Hidden means hidden, even where a component sets its own display */
 [hidden] {
 	display: none !important;
-}
-
-.sign-out {
-	min-height: 44px;
-	padding: 0 1rem;
-	white-space: nowrap;
-	border: 1px solid currentColor;
-	border-radius: 0.5rem;
-	background: transparent;
-	color: inherit;
-	font: inherit;
-	cursor: pointer;
 }
 
 /* Translation status row on the detail page */
