@@ -51,10 +51,6 @@ export default $config({
 			transform: {
 				userPool: (args) => {
 					args.adminCreateUserConfig = { allowAdminCreateUserOnly: true };
-					// Every sign-in asks for a code from an authenticator app (TOTP). A stolen
-					// password alone is not enough.
-					args.mfaConfiguration = 'ON';
-					args.softwareTokenMfaConfiguration = { enabled: true };
 				}
 			}
 		});
