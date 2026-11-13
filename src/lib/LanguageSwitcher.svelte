@@ -2,16 +2,17 @@
 	import { resolve } from '$app/paths';
 	import type { Path } from '$app/types';
 	import { page } from '$app/state';
-	import { getLocale, locales, setLocale } from '#lib/paraglide/runtime.js';
+	import { getLocale, locales } from '#lib/paraglide/runtime.js';
 	import { m } from '#lib/paraglide/messages.js';
-	import { LANGUAGE_NAMES, isLanguage } from '#lib/recipes/languages.js';
+	import { LANGUAGE_NAMES } from '#lib/recipes/languages.js';
+	import { switchLocale } from '#lib/locale-change.svelte.js';
 
 	const current = getLocale();
 
-	/** Switches the whole site's language. Paraglide stores the choice and reloads the page. */
+	/** Switches the site language in place. The link still works without JavaScript. */
 	function choose(event: MouseEvent, code: string) {
 		event.preventDefault();
-		if (isLanguage(code)) setLocale(code, { reload: true });
+		switchLocale(code);
 	}
 </script>
 
