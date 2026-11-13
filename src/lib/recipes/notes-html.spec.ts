@@ -23,6 +23,24 @@ describe('round trip', () => {
 	});
 });
 
+describe('links', () => {
+	it('keeps a link through the HTML form', () => {
+		const notes = 'Watch [the clip](https://example.com/a?b=1&c=2) first';
+		expect(notesToHtml(notes)).toBe(
+			'Watch <a href="https://example.com/a?b=1&amp;c=2">the clip</a> first'
+		);
+		expect(parseNotes(htmlToNotes(notesToHtml(notes)))).toEqual(parseNotes(notes));
+	});
+
+	it('keeps the text of a link whose address is not http or https', () => {
+		expect(htmlToNotes('<a href="javascript:alert(1)">click</a>')).toBe('click');
+	});
+
+	it('keeps a link opened in translation with its style', () => {
+		expect(htmlToNotes('<b><a href="https://a.test">go</a></b>')).toBe('**[go](https://a.test)**');
+	});
+});
+
 describe('htmlToNotes', () => {
 	it('drops unknown tags and invalid colours', () => {
 		expect(htmlToNotes('<script>x</script><span data-color="pink">y</span>')).toBe('xy');

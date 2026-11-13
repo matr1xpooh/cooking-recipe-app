@@ -54,4 +54,37 @@ describe('parseNotes', () => {
 	it('returns no segments for empty notes', () => {
 		expect(parseNotes('')).toEqual([]);
 	});
+
+	it('makes a link from text and an http or https address', () => {
+		expect(parseNotes('See [the video](https://example.com/v?x=1) now')).toEqual([
+			{ text: 'See ', bold: false, italic: false, color: null },
+			{
+				text: 'the video',
+				bold: false,
+				italic: false,
+				color: null,
+				href: 'https://example.com/v?x=1'
+			},
+			{ text: ' now', bold: false, italic: false, color: null }
+		]);
+	});
+
+	it('keeps the style that is on when a link starts', () => {
+		expect(parseNotes('**[go](http://a.test)**')).toEqual([
+			{ text: 'go', bold: true, italic: false, color: null, href: 'http://a.test' }
+		]);
+	});
+
+	it('does not make a link from other addresses', () => {
+		expect(parseNotes('[x](javascript:alert(1))')).toEqual([
+			{ text: '[x](javascript:alert(1))', bold: false, italic: false, color: null }
+		]);
+	});
+
+	it('does not read a closing colour tag followed by brackets as a link', () => {
+		expect(parseNotes('[red]a[/red](https://x.test)')).toEqual([
+			{ text: 'a', bold: false, italic: false, color: 'red' },
+			{ text: '(https://x.test)', bold: false, italic: false, color: null }
+		]);
+	});
 });

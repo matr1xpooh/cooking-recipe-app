@@ -33,7 +33,7 @@
 	"recipe_steps_heading": "Pasos",
 	"recipe_notes_heading": "Notas",
 	"recipe_not_found": "Receta no encontrada.",
-	"steps_hint": "Usa **negrita**, *cursiva* o [red]color[/red].",
+	"steps_hint": "Usa **negrita**, *cursiva*, [red]color[/red] o [texto del enlace](https://ejemplo.com). Empieza una línea con > para añadir una nota al paso de arriba.",
 	"site_language_label": "Idioma",
 	"translating": "Traduciendo…",
 	"translation_failed": "No se pudo traducir ahora.",
@@ -64,7 +64,7 @@
 	"tab_image": "Imagen",
 	"image_read_text": "Leer texto de la imagen",
 	"image_empty": "Aún no hay imagen. Elige un archivo o pega una captura.",
-	"ingredients_hint": "Un ingrediente por línea. Empieza una línea con # para hacer un encabezado, por ejemplo: # Para la salsa.",
+	"ingredients_hint": "Un ingrediente por línea. Empieza una línea con # para crear un encabezado, por ejemplo: # Para la salsa. Empieza una línea con > para añadir una nota a la línea de arriba.",
 	"error_save_failed": "No se pudo guardar la receta. Comprueba que el servidor de la app está en marcha e inténtalo de nuevo.",
 	"error_load_failed": "No se pudieron cargar tus recetas. Comprueba que el servidor de la app está en marcha.",
 	"category_meat": "Carne",
@@ -124,5 +124,8 @@
 	"sign_out": "Cerrar sesión",
 	"install_qr_caption": "Escanéalo con la cámara del teléfono para abrir la app.",
 	"photo_take": "Hacer una foto",
-	"photo_library": "Elegir una foto"
+	"photo_library": "Elegir una foto",
+	"notes_note": "Nota",
+	"notes_list": "Elemento de lista",
+	"notes_link": "Enlace"
 }

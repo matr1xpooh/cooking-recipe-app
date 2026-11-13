@@ -33,7 +33,7 @@
 	"recipe_steps_heading": "Steps",
 	"recipe_notes_heading": "Notes",
 	"recipe_not_found": "Recipe not found.",
-	"steps_hint": "Use **bold**, *italic*, or [red]colour[/red].",
+	"steps_hint": "Use **bold**, *italic*, [red]colour[/red] or [link text](https://example.com). Start a line with > to add a note to the step above it.",
 	"site_language_label": "Language",
 	"translating": "Translating…",
 	"translation_failed": "Couldn't translate right now.",
@@ -64,7 +64,7 @@
 	"tab_image": "Image",
 	"image_read_text": "Read text from image",
 	"image_empty": "No image yet. Choose a file or paste a screenshot.",
-	"ingredients_hint": "One ingredient per line. Start a line with # to make a heading, for example: # For the sauce.",
+	"ingredients_hint": "One ingredient per line. Start a line with # to make a heading, for example: # For the sauce. Start a line with > to add a note to the line above it.",
 	"error_save_failed": "Couldn't save the recipe. Check that the app's server is running, then try again.",
 	"error_load_failed": "Couldn't load your recipes. Check that the app's server is running.",
 	"category_meat": "Meat",
@@ -124,5 +124,8 @@
 	"sign_out": "Sign out",
 	"install_qr_caption": "Scan with your phone camera to open the app.",
 	"photo_take": "Take photo",
-	"photo_library": "Choose photo"
+	"photo_library": "Choose photo",
+	"notes_note": "Note",
+	"notes_list": "List item",
+	"notes_link": "Link"
 }

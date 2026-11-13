@@ -23,6 +23,8 @@
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { suggestTags } from '#lib/recipes/tag-suggest.js';
 	import { SvelteSet } from 'svelte/reactivity';
+	import NoteToolbar from './NoteToolbar.svelte';
+	import { applyMarkup, type MarkupAction } from './markup-edit.js';
 
 	let {
 		initial,
@@ -125,14 +127,6 @@
 	/** Display addresses for the saved and new images. */
 	let savedUrls = $state<Record<string, string>>({});
 	let newUrls = $state<string[]>([]);
-
-	const styleColors = [
-		{ key: 'red', label: () => m.color_red() },
-		{ key: 'orange', label: () => m.color_orange() },
-		{ key: 'green', label: () => m.color_green() },
-		{ key: 'blue', label: () => m.color_blue() },
-		{ key: 'purple', label: () => m.color_purple() }
-	] as const;
 
 	const errorMessages: Record<RecipeErrorKey, () => string> = {
 		title_required: () => m.error_title_required(),
@@ -374,16 +368,17 @@
 		}
 	}
 
-	/** Wraps the selected steps text in markup markers, keeping the selection. */
-	async function wrapSteps(open: string, close: string) {
-		const el = stepsField;
-		if (!el) return;
-		const { selectionStart: start, selectionEnd: end, value } = el;
-		const selected = value.slice(start, end);
-		input.steps = value.slice(0, start) + open + selected + close + value.slice(end);
+	let ingredientsField = $state<HTMLTextAreaElement>();
+
+	/** Applies a toolbar button to one of the two text fields, keeping the selection. */
+	async function applyToField(field: HTMLTextAreaElement | undefined, action: MarkupAction) {
+		if (!field) return;
+		const edit = applyMarkup(action, field.value, field.selectionStart, field.selectionEnd);
+		if (field === stepsField) input.steps = edit.value;
+		else text = edit.value;
 		await tick();
-		el.focus();
-		el.setSelectionRange(start + open.length, start + open.length + selected.length);
+		field.focus();
+		field.setSelectionRange(edit.start, edit.end);
 	}
 
 	function submit(event: SubmitEvent) {
@@ -473,7 +468,16 @@
 
 		{#if tab === 'text'}
 			<div role="tabpanel" id="panel-text" aria-labelledby="tab-text" class="tabpanel">
-				<textarea rows="8" aria-label={m.recipe_field_ingredients()} bind:value={text}></textarea>
+				<NoteToolbar
+					styles={false}
+					label={m.recipe_field_ingredients()}
+					onaction={(action) => applyToField(ingredientsField, action)}
+				/>
+				<textarea
+					rows="8"
+					aria-label={m.recipe_field_ingredients()}
+					bind:this={ingredientsField}
+					bind:value={text}></textarea>
 				<small>{m.ingredients_hint()}</small>
 				<p class="meta">{m.ingredients_source()}: {sourceLabels[source]()}</p>
 
@@ -564,24 +568,10 @@
 
 	<div class="styled-field">
 		<span class="field-label">{m.recipe_field_steps()}</span>
-		<div class="toolbar" role="toolbar" aria-label={m.recipe_field_steps()}>
-			<button type="button" onclick={() => wrapSteps('**', '**')} aria-label={m.notes_bold()}>
-				<strong>B</strong>
-			</button>
-			<button type="button" onclick={() => wrapSteps('*', '*')} aria-label={m.notes_italic()}>
-				<em>I</em>
-			</button>
-			{#each styleColors as color (color.key)}
-				<button
-					type="button"
-					class="swatch note-{color.key}"
-					onclick={() => wrapSteps(`[${color.key}]`, `[/${color.key}]`)}
-					aria-label={color.label()}
-				>
-					{color.label()}
-				</button>
-			{/each}
-		</div>
+		<NoteToolbar
+			label={m.recipe_field_steps()}
+			onaction={(action) => applyToField(stepsField, action)}
+		/>
 		<textarea
 			rows="8"
 			aria-label={m.recipe_field_steps()}

@@ -27,7 +27,8 @@
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { keepScreenAwake } from '#lib/wake-lock.js';
-	import { groupIngredients, restoreHeadings } from '#lib/recipes/ingredient-lines.js';
+	import { attachNotes, groupIngredients, restoreHeadings } from '#lib/recipes/ingredient-lines.js';
+	import NoteBlock from '#lib/recipes/NoteBlock.svelte';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
@@ -406,8 +407,12 @@
 						{/if}
 						{#if group.items.length > 0}
 							<ul class="plain">
-								{#each group.items as item, i (i)}
-									<li>{item}</li>
+								{#each attachNotes(group.items) as entry, i (i)}
+									<li class:note-only={entry.item === null}>
+										{entry.item ?? ''}{#if entry.notes.length > 0}<NoteBlock
+												notes={entry.notes}
+											/>{/if}
+									</li>
 								{/each}
 							</ul>
 						{/if}
@@ -425,8 +430,12 @@
 				<section>
 					<h2>{m.recipe_steps_heading()}</h2>
 					<ol>
-						{#each shown.steps as step, i (i)}
-							<li><RichText source={step} /></li>
+						{#each attachNotes(shown.steps) as entry, i (i)}
+							<li class:note-only={entry.item === null}>
+								{#if entry.item !== null}<RichText
+										source={entry.item}
+									/>{/if}{#if entry.notes.length > 0}<NoteBlock notes={entry.notes} />{/if}
+							</li>
 						{/each}
 					</ol>
 				</section>

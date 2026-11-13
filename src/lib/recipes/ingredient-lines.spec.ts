@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { groupIngredients, headingText, isHeading } from './ingredient-lines';
+import {
+	attachNotes,
+	groupIngredients,
+	headingText,
+	isHeading,
+	joinNote,
+	noteBlocks,
+	splitNote
+} from './ingredient-lines';
 import { fromTexts, toItems, type RecipeFields } from './translation-fields';
 
 describe('heading lines', () => {
@@ -78,5 +86,101 @@ describe('translation keeps headings', () => {
 			''
 		]);
 		expect(translated.ingredients).toEqual(['# Маринад для говядины', '1 ст. л. соевого соуса']);
+	});
+});
+
+describe('note lines', () => {
+	it('reads a note and its bullet', () => {
+		expect(splitNote('> Sift first')).toEqual({ bullet: false, text: 'Sift first' });
+		expect(splitNote('> - Sift first')).toEqual({ bullet: true, text: 'Sift first' });
+		expect(splitNote('>')).toEqual({ bullet: false, text: '' });
+		expect(splitNote('2 eggs')).toBeNull();
+		expect(splitNote('>no space')).toBeNull();
+	});
+
+	it('writes a note line back the same way', () => {
+		for (const line of ['> Sift first', '> - Sift first']) {
+			expect(joinNote(splitNote(line)!)).toBe(line);
+		}
+	});
+
+	it('attaches notes to the item above them', () => {
+		expect(
+			attachNotes(['2 eggs', '> Room temperature', '> - Separate the whites', '1 tbsp. Sugar'])
+		).toEqual([
+			{
+				item: '2 eggs',
+				notes: [
+					{ bullet: false, text: 'Room temperature' },
+					{ bullet: true, text: 'Separate the whites' }
+				]
+			},
+			{ item: '1 tbsp. Sugar', notes: [] }
+		]);
+	});
+
+	it('keeps notes before any item as a note with no item', () => {
+		expect(attachNotes(['> Serves four', 'Salt'])).toEqual([
+			{ item: null, notes: [{ bullet: false, text: 'Serves four' }] },
+			{ item: 'Salt', notes: [] }
+		]);
+	});
+
+	it('groups consecutive bullets into one list', () => {
+		const notes = [
+			{ bullet: true, text: 'a' },
+			{ bullet: true, text: 'b' },
+			{ bullet: false, text: 'c' },
+			{ bullet: true, text: 'd' }
+		];
+		expect(noteBlocks(notes)).toEqual([
+			{ kind: 'list', items: [notes[0], notes[1]] },
+			{ kind: 'paragraph', line: notes[2] },
+			{ kind: 'list', items: [notes[3]] }
+		]);
+	});
+
+	it('keeps notes inside a heading group', () => {
+		expect(groupIngredients(['# Sauce', '1 tbsp. Soy', '> Light soy'])).toEqual([
+			{ heading: 'Sauce', items: ['1 tbsp. Soy', '> Light soy'] }
+		]);
+	});
+});
+
+describe('translation keeps notes', () => {
+	const fields: RecipeFields = {
+		title: 'Omelette',
+		ingredients: ['2 eggs', '> - Room temperature'],
+		steps: ['Whisk.', '> Use a non-stick pan.'],
+		notes: ''
+	};
+
+	it('sends each note as its text, without the marker', () => {
+		const texts = toItems(fields).map((item) => item.text);
+		expect(texts).toEqual([
+			'Omelette',
+			'2 eggs',
+			'Room temperature',
+			'Whisk.',
+			'Use a non-stick pan.',
+			''
+		]);
+	});
+
+	it('puts the note markers and bullets back on the translation', () => {
+		const translated = fromTexts(fields, [
+			'Омлет',
+			'2 яйца',
+			'комнатной температуры',
+			'Взбейте.',
+			'Используйте антипригарную сковороду.',
+			''
+		]);
+		expect(translated).toEqual({
+			title: 'Омлет',
+			ingredients: ['2 яйца', '> - комнатной температуры'],
+			steps: ['Взбейте.', '> Используйте антипригарную сковороду.'],
+			notes: ''
+		});
 	});
 });

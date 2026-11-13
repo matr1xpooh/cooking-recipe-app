@@ -33,7 +33,7 @@
 	"recipe_steps_heading": "Passos",
 	"recipe_notes_heading": "Notes",
 	"recipe_not_found": "No s'ha trobat la recepta.",
-	"steps_hint": "Fes servir **negreta**, *cursiva* o [red]color[/red].",
+	"steps_hint": "Fes servir **negreta**, *cursiva*, [red]color[/red] o [text de l'enllaç](https://exemple.com). Comença una línia amb > per afegir una nota al pas de dalt.",
 	"site_language_label": "Idioma",
 	"translating": "Traduint…",
 	"translation_failed": "No s'ha pogut traduir ara.",
@@ -64,7 +64,7 @@
 	"tab_image": "Imatge",
 	"image_read_text": "Llegeix el text de la imatge",
 	"image_empty": "Encara no hi ha imatge. Tria un fitxer o enganxa una captura.",
-	"ingredients_hint": "Un ingredient per línia. Comença una línia amb # per fer un encapçalament, per exemple: # Per a la salsa.",
+	"ingredients_hint": "Un ingredient per línia. Comença una línia amb # per fer un encapçalament, per exemple: # Per a la salsa. Comença una línia amb > per afegir una nota a la línia de dalt.",
 	"error_save_failed": "No s'ha pogut desar la recepta. Comprova que el servidor de l'app està en marxa i torna-ho a provar.",
 	"error_load_failed": "No s'han pogut carregar les teves receptes. Comprova que el servidor de l'app està en marxa.",
 	"category_meat": "Carn",
@@ -124,5 +124,8 @@
 	"sign_out": "Tanca la sessió",
 	"install_qr_caption": "Escaneja-ho amb la càmera del mòbil per obrir l'app.",
 	"photo_take": "Fes una foto",
-	"photo_library": "Tria una foto"
+	"photo_library": "Tria una foto",
+	"notes_note": "Nota",
+	"notes_list": "Element de llista",
+	"notes_link": "Enllaç"
 }

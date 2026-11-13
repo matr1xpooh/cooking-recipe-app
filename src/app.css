@@ -929,3 +929,26 @@ button.tag.on,
 	gap: 0.75rem;
 	align-items: center;
 }
+
+/* Notes under an ingredient or step: a bar on the left, text in the normal colour */
+.item-notes {
+	margin: 0.25rem 0 0;
+	padding-left: 0.75rem;
+	border-left: 3px solid var(--accent);
+	font-size: 0.95rem;
+}
+
+.item-notes p,
+.item-notes ul {
+	margin: 0.15rem 0;
+}
+
+.item-notes ul {
+	padding-left: 1.1rem;
+	list-style: disc;
+}
+
+/* A note with no item above it: no number, no bullet */
+li.note-only {
+	list-style: none;
+}
