@@ -122,5 +122,6 @@
 	"install_ios_steps": "Open the address in Safari. Tap Share, then Add to Home Screen.",
 	"install_android_title": "Android",
 	"install_android_steps": "Open the address in Chrome. Open the menu, then Install app.",
-	"sign_out": "Sign out"
+	"sign_out": "Sign out",
+	"install_qr_caption": "Scan with your phone camera to open the app."
 }

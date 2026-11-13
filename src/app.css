@@ -339,6 +339,24 @@ article ul.plain {
 	list-style: disc;
 }
 
+/* Install page: the QR code of the app's address */
+.install-qr {
+	margin: 1.25rem 0;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.install-qr img {
+	width: min(12rem, 70vw);
+	height: auto;
+}
+
+.install-qr figcaption {
+	text-align: center;
+}
+
 /* A heading over a group of ingredients: no bullet, bold, a little space above */
 article h3.ingredient-heading {
 	font-size: 1rem;

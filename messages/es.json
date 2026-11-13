@@ -122,5 +122,6 @@
 	"install_ios_steps": "Abre la dirección en Safari. Toca Compartir y, después, Añadir a pantalla de inicio.",
 	"install_android_title": "Android",
 	"install_android_steps": "Abre la dirección en Chrome. Abre el menú y, después, Instalar aplicación.",
-	"sign_out": "Cerrar sesión"
+	"sign_out": "Cerrar sesión",
+	"install_qr_caption": "Escanéalo con la cámara del teléfono para abrir la app."
 }
