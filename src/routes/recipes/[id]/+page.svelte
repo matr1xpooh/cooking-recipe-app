@@ -8,16 +8,10 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RichText from '#lib/recipes/RichText.svelte';
 	import { isLanguage } from '#lib/recipes/languages.js';
-	import { translateFields } from '#lib/recipes/translate-client.js';
-	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { fieldsOf, sourceHash, type RecipeFields } from '#lib/recipes/translation-fields.js';
-	import {
-		deleteOverride,
-		fetchOverride,
-		saveOverride,
-		type EditedTranslation
-	} from '#lib/recipes/recipe-api.js';
-	import type { IngredientSource, Recipe } from '#lib/recipes/recipe.js';
+	import { deleteOverride, saveOverride, type EditedTranslation } from '#lib/recipes/recipe-api.js';
+	import { loadDisplay, shownFields, type Translated } from '#lib/recipes/display.js';
+	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import {
 		MAX_TAGS_PER_RECIPE,
@@ -27,7 +21,7 @@
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { keepScreenAwake } from '#lib/wake-lock.js';
-	import { attachNotes, groupIngredients, restoreHeadings } from '#lib/recipes/ingredient-lines.js';
+	import { attachNotes, groupIngredients } from '#lib/recipes/ingredient-lines.js';
 	import NoteBlock from '#lib/recipes/NoteBlock.svelte';
 
 	let loaded = $state(false);
@@ -40,7 +34,7 @@
 
 	let newTag = $state('');
 	let tagLimitHit = $state(false);
-	let translated = $state<{ fields: RecipeFields; failed: boolean } | null>(null);
+	let translated = $state<Translated | null>(null);
 	let translating = $state(false);
 	let showOriginal = $state(false);
 	let ingredientsTab = $state<'text' | 'image'>('image');
@@ -68,16 +62,10 @@
 		if (!current || !isLanguage(locale)) return;
 		const request = ++latestRequest;
 		translating = true;
-		// Machine translation is a signed-in feature; a visitor sees the original text.
-		Promise.all([
-			page.data.signedIn
-				? translateFields(fieldsOf(current), current.id, locale, translationCache)
-				: Promise.resolve(null),
-			fetchOverride(current.id, locale).catch(() => null)
-		]).then(([result, saved]) => {
+		loadDisplay(current, locale, page.data.signedIn).then((result) => {
 			if (request !== latestRequest) return;
-			translated = result;
-			override = saved;
+			translated = result.translated;
+			override = result.override;
 			translating = false;
 		});
 	});
@@ -156,21 +144,8 @@
 	};
 
 	const shown = $derived<RecipeFields | null>(
-		recipe
-			? showOriginal
-				? fieldsOf(recipe)
-				: override
-					? withHeadings(override.fields, recipe)
-					: translated
-						? withHeadings(translated.fields, recipe)
-						: fieldsOf(recipe)
-			: null
+		recipe ? (showOriginal ? fieldsOf(recipe) : shownFields(recipe, translated, override)) : null
 	);
-
-	/** A translation keeps the heading markers of the original ingredient list. */
-	function withHeadings(fields: RecipeFields, source: Recipe): RecipeFields {
-		return { ...fields, ingredients: restoreHeadings(fields.ingredients, source.ingredients) };
-	}
 
 	/** The original text changed after the edited translation was saved. */
 	const translationStale = $derived(
@@ -275,6 +250,11 @@
 				{/if}
 			</section>
 			<p class="recipe-actions">
+				{#if shown.steps.length > 0}<a href={resolve('/recipes/[id]/cook', { id: recipe.id })}
+						>{m.cook_open()}</a
+					>
+					<span aria-hidden="true">·</span>
+				{/if}
 				{#if page.data.signedIn}<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}
 						>{m.recipe_edit()}</a
 					>{/if}

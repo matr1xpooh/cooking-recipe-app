@@ -136,5 +136,17 @@
 	"tags_short": "Tags",
 	"text_size_label": "Text size",
 	"text_size_smaller": "Smaller text",
-	"text_size_larger": "Larger text"
+	"text_size_larger": "Larger text",
+	"cook_open": "Cook",
+	"cook_close": "Close",
+	"cook_progress": "Step {n} of {total}",
+	"cook_back": "Back",
+	"cook_next": "Next",
+	"cook_voice_on": "Turn on voice commands",
+	"cook_voice_off": "Turn off voice commands",
+	"cook_voice_hint": "Say “next”, “back” or “repeat”.",
+	"cook_no_steps": "This recipe has no steps.",
+	"cook_ingredients_for_step": "Ingredients for this step",
+	"cook_remaining": "remaining",
+	"cook_all_ingredients": "All ingredients"
 }

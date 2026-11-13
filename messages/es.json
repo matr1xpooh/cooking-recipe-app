@@ -136,5 +136,17 @@
 	"tags_short": "Etiquetas",
 	"text_size_label": "Tamaño del texto",
 	"text_size_smaller": "Texto más pequeño",
-	"text_size_larger": "Texto más grande"
+	"text_size_larger": "Texto más grande",
+	"cook_open": "Cocinar",
+	"cook_close": "Cerrar",
+	"cook_progress": "Paso {n} de {total}",
+	"cook_back": "Atrás",
+	"cook_next": "Siguiente",
+	"cook_voice_on": "Activar comandos de voz",
+	"cook_voice_off": "Desactivar comandos de voz",
+	"cook_voice_hint": "Di “siguiente”, “atrás” o “repetir”.",
+	"cook_no_steps": "Esta receta no tiene pasos.",
+	"cook_ingredients_for_step": "Ingredientes de este paso",
+	"cook_remaining": "restante",
+	"cook_all_ingredients": "Todos los ingredientes"
 }

@@ -136,5 +136,17 @@
 	"tags_short": "Etiquetes",
 	"text_size_label": "Mida del text",
 	"text_size_smaller": "Text més petit",
-	"text_size_larger": "Text més gran"
+	"text_size_larger": "Text més gran",
+	"cook_open": "Cuina",
+	"cook_close": "Tanca",
+	"cook_progress": "Pas {n} de {total}",
+	"cook_back": "Enrere",
+	"cook_next": "Següent",
+	"cook_voice_on": "Activa les ordres de veu",
+	"cook_voice_off": "Desactiva les ordres de veu",
+	"cook_voice_hint": "Digues «següent», «enrere» o «repeteix».",
+	"cook_no_steps": "Aquesta recepta no té passos.",
+	"cook_ingredients_for_step": "Ingredients d’aquest pas",
+	"cook_remaining": "restant",
+	"cook_all_ingredients": "Tots els ingredients"
 }

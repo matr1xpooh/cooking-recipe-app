@@ -313,6 +313,17 @@ button {
 	border-radius: 999px;
 	border: 1px solid var(--accent);
 	cursor: pointer;
+	/* Hover and focus colour changes fade rather than jump. */
+	transition:
+		background-color 150ms ease,
+		border-color 150ms ease,
+		color 150ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	button {
+		transition: none;
+	}
 }
 
 button[type='submit'] {

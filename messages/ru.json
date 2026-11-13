@@ -136,5 +136,17 @@
 	"tags_short": "Теги",
 	"text_size_label": "Размер текста",
 	"text_size_smaller": "Мельче текст",
-	"text_size_larger": "Крупнее текст"
+	"text_size_larger": "Крупнее текст",
+	"cook_open": "Готовить",
+	"cook_close": "Закрыть",
+	"cook_progress": "Шаг {n} из {total}",
+	"cook_back": "Назад",
+	"cook_next": "Далее",
+	"cook_voice_on": "Включить голосовые команды",
+	"cook_voice_off": "Выключить голосовые команды",
+	"cook_voice_hint": "Скажите «далее», «назад» или «повтори».",
+	"cook_no_steps": "В этом рецепте нет шагов.",
+	"cook_ingredients_for_step": "Ингредиенты для этого шага",
+	"cook_remaining": "остаток",
+	"cook_all_ingredients": "Все ингредиенты"
 }
