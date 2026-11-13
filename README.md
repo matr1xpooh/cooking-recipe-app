@@ -13,12 +13,12 @@ The product brief is in [APP_PROMPT.md](APP_PROMPT.md). It is the standing spec 
 - **Notes:** each ingredient or step can have notes. A line starting with `> ` is a note on the line above it; `> - ` makes it a bullet. Notes take **bold**, _italic_, colours and `[link text](https://...)` links (http and https only). Ingredient lines starting with `# ` are headings.
 - **Photos:** several per recipe, shown as a gallery and as the first picture on each list card. "Take photo" opens the camera on a phone; "Choose photo" opens the library. PNG or JPEG, up to 5 MB, originals kept.
 - **Tags and search:** built-in tags plus typed ones (up to 10 per recipe, 30 characters each, stored lowercase). Search ignores case and accents. Tag manager merges and removes tags.
-- **Languages:** Catalan, Spanish, English and Russian for the interface. Switching language updates the page in place, without a reload. Recipe content is machine-translated with AWS Translate for signed-in users, cached by a hash of the original text, and can be edited by hand. Edited translations are flagged when the original changes, and can be reset.
+- **Languages:** Catalan, Spanish, English and Russian for the interface. The choice is saved to your account, so a new browser or phone signed in to the same account opens in the same language. Switching language updates the page in place, without a reload. Recipe content is machine-translated with AWS Translate for signed-in users, cached by a hash of the original text, and can be edited by hand. Edited translations are flagged when the original changes, and can be reset.
 - **Recipe list:** the title, the sign-out icon (or sign-in icon) at the top right, languages and text size (A− / A+), links to add a recipe and manage tags, Active and Archived tabs, search, and tag filters folded behind a Filters button with Select beside it.
 - **Phone use:** installable to the home screen (PWA), the screen stays awake while a recipe is open, and recipes already viewed open without a connection.
 - **Sign-in:** recipes can be read by anyone with the link (the list, a recipe, its photos and edited translations). Everything else needs a signed-in user: editing, import, photo reading and machine translation. Accounts are created by an administrator in Amazon Cognito; there is no public sign-up. Sign-in is by password for now.
 
-Not yet done, see [Status](#status): passkey and authenticator sign-in (blocked until the app has a custom domain), the per-user language setting, the browser tests, and the Safari list problem (see [Known issues](#known-issues)).
+Not yet done, see [Status](#status): passkey and authenticator sign-in (blocked until the app has a custom domain), the browser tests, and the Safari list problem (see [Known issues](#known-issues)).
 
 ## Stack
 
@@ -136,14 +136,14 @@ Not yet set up: a custom domain (add the commented `domain` block in `sst.config
 
 ## Status
 
-| Phase | Scope                                                                                                                                        | State                                                                                                         |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 1     | Storage interface                                                                                                                            | Done                                                                                                          |
-| 2     | Cognito sign-in, rate limits                                                                                                                 | Done; sign-in works on the deployed site                                                                      |
-| 3     | PWA: manifest, icons, install page, wake lock, offline reading, sign-out                                                                     | Done; icons are placeholders                                                                                  |
-| 4     | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown   |
-| 5     | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting                                           | Deployed to production (eu-west-1) and migrated on 2026-11-13. The per-user language setting is not built yet |
-| 6     | Browser tests for the main flows                                                                                                             | Not started                                                                                                   |
+| Phase | Scope                                                                                                                                        | State                                                                                                       |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| 1     | Storage interface                                                                                                                            | Done                                                                                                        |
+| 2     | Cognito sign-in, rate limits                                                                                                                 | Done; sign-in works on the deployed site                                                                    |
+| 3     | PWA: manifest, icons, install page, wake lock, offline reading, sign-out                                                                     | Done; icons are placeholders                                                                                |
+| 4     | Photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, in-place language switch, tap targets and contrast | Done. The translated recipe body still waits for the translation service the first time a language is shown |
+| 5     | AWS (SST v3), DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting                                           | Deployed to production (eu-west-1) and migrated on 2026-11-13. Per-user language saved on the server        |
+| 6     | Browser tests for the main flows                                                                                                             | Not started                                                                                                 |
 
 The domain is not chosen yet. The site runs on the default CloudFront address.
 

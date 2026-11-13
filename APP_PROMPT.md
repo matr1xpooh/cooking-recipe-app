@@ -111,20 +111,20 @@ A personal recipe book for a small group of known users (household, family, frie
 
 See [README.md](README.md) for how to run the app and the current phase table.
 
-| Phase | Scope                                                                                                                                              | State                                                                                                         |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 1     | Storage interface (`RecipeStore`)                                                                                                                  | Done                                                                                                          |
-| 2     | Cognito sign-in, per-user rate limits                                                                                                              | Done. Sign-in works on the deployed site                                                                      |
-| 3     | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out                                                                   | Done. Icons are placeholders                                                                                  |
-| 4     | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; translated text still loads from the service on first view           |
-| 5     | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting, server-side translation cache                   | Deployed to production (eu-west-1) and migrated on 2026-11-13. The per-user language setting is not built yet |
-| 6     | Browser tests for the main flows                                                                                                                   | Not started                                                                                                   |
+| Phase | Scope                                                                                                                                              | State                                                                                                |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| 1     | Storage interface (`RecipeStore`)                                                                                                                  | Done                                                                                                 |
+| 2     | Cognito sign-in, per-user rate limits                                                                                                              | Done. Sign-in works on the deployed site                                                             |
+| 3     | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out                                                                   | Done. Icons are placeholders                                                                         |
+| 4     | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; translated text still loads from the service on first view  |
+| 5     | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting, server-side translation cache                   | Deployed to production (eu-west-1) and migrated on 2026-11-13. Per-user language saved on the server |
+| 6     | Browser tests for the main flows                                                                                                                   | Not started                                                                                          |
 
 Decisions made along the way:
 
 - Rate limits are per user, in memory, per server instance. They are a safety net; the AWS Budget alarm is the real cost cap.
 - Local development bypasses sign-in only with `AUTH=off`. There is no default bypass, so a deployed server never runs without sign-in by accident.
-- The per-user language preference is not built yet. Until then the language is a cookie.
+- The per-user language is saved on the server (DynamoDB, under the user's account) when the user switches language, and applied at sign-in when the browser has no language cookie. The cookie stays the fast path. Signed-out visitors only get the cookie.
 - Notes stay in the same list as the items they belong to: a line starting with "> " is a note on the line above it ("> - " for a bullet), and a line starting with "# " is a heading. No schema change was needed.
 - Links in notes accept only http and https addresses. Link text is plain (no nested styling).
 - Language change re-renders the page in place.
