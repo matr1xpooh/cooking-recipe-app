@@ -160,8 +160,27 @@ main > p {
 	gap: 1rem;
 }
 
-.list-links .sign-out-slot {
+.list-links .sign-out-slot,
+.list-links .icon-link {
 	margin-left: auto;
+}
+
+main > header .list-links a.icon-link {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	min-height: 44px;
+	padding: 0;
+	background: none;
+	color: var(--accent);
+	border-radius: 0;
+	text-decoration: none;
+}
+
+main > header .list-links a.icon-link:hover {
+	background: none;
+	color: var(--accent-hover);
 }
 
 /* Folded filters, with Select on the same row in its own colour */

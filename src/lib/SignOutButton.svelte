@@ -15,9 +15,16 @@
 	}
 </script>
 
-<!-- A text link, the same size as the other links: no panel and no filled button. -->
+<!-- An icon (a door with an arrow out); the words are for screen readers and the tooltip. -->
 <form class="sign-out-form" method="POST" action="/auth/logout" onsubmit={signOut}>
-	<button class="sign-out-link" type="submit">{m.sign_out()}</button>
+	<button class="sign-out-link" type="submit" aria-label={m.sign_out()} title={m.sign_out()}>
+		<svg viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false">
+			<path
+				fill="currentColor"
+				d="M10.09 15.59 11.5 17l5-5-5-5-1.41 1.41L12.67 11H3v2h9.67l-2.58 2.59zM19 3H5c-1.11 0-2 .9-2 2v4h2V5h14v14H5v-4H3v4c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"
+			/>
+		</svg>
+	</button>
 </form>
 
 <style>
@@ -31,15 +38,16 @@
 	}
 
 	.sign-out-link {
-		min-height: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
 		padding: 0;
 		background: none;
 		border: 0;
 		border-radius: 0;
 		color: var(--accent);
-		font: inherit;
-		font-weight: 500;
-		text-decoration: underline;
 		cursor: pointer;
 	}
 
