@@ -332,18 +332,38 @@
 								saveTranslation();
 							}}
 						>
-							<label>
-								{m.recipe_field_title()}
-								<input type="text" bind:value={translationDraft.title} />
-							</label>
-							<label>
-								{m.recipe_field_ingredients()}
-								<textarea rows="6" bind:value={translationDraft.ingredients}></textarea>
-							</label>
-							<label>
-								{m.recipe_field_steps()}
-								<textarea rows="8" bind:value={translationDraft.steps}></textarea>
-							</label>
+							<div class="translation-columns">
+								<fieldset class="translation-side">
+									<legend>{m.translation_original()}</legend>
+									<label>
+										{m.recipe_field_title()}
+										<input type="text" value={recipe.title} readonly />
+									</label>
+									<label>
+										{m.recipe_field_ingredients()}
+										<textarea rows="6" value={recipe.ingredients.join('\n')} readonly></textarea>
+									</label>
+									<label>
+										{m.recipe_field_steps()}
+										<textarea rows="8" value={recipe.steps.join('\n')} readonly></textarea>
+									</label>
+								</fieldset>
+								<fieldset class="translation-side">
+									<legend>{m.translation_yours()}</legend>
+									<label>
+										{m.recipe_field_title()}
+										<input type="text" bind:value={translationDraft.title} />
+									</label>
+									<label>
+										{m.recipe_field_ingredients()}
+										<textarea rows="6" bind:value={translationDraft.ingredients}></textarea>
+									</label>
+									<label>
+										{m.recipe_field_steps()}
+										<textarea rows="8" bind:value={translationDraft.steps}></textarea>
+									</label>
+								</fieldset>
+							</div>
 							<div class="translation-actions">
 								<button type="submit">{m.translation_save()}</button>
 								<button

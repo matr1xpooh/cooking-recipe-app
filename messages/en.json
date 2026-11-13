@@ -127,5 +127,7 @@
 	"photo_library": "Choose photo",
 	"notes_note": "Note",
 	"notes_list": "List item",
-	"notes_link": "Link"
+	"notes_link": "Link",
+	"translation_original": "Original",
+	"translation_yours": "Translation"
 }
