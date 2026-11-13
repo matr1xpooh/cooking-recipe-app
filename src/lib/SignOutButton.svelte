@@ -16,12 +16,12 @@
 </script>
 
 <!-- A text link, the same size as the other links: no panel and no filled button. -->
-<form method="POST" action="/auth/logout" onsubmit={signOut}>
-	<button type="submit">{m.sign_out()}</button>
+<form class="sign-out-form" method="POST" action="/auth/logout" onsubmit={signOut}>
+	<button class="sign-out-link" type="submit">{m.sign_out()}</button>
 </form>
 
 <style>
-	form {
+	.sign-out-form {
 		display: inline;
 		margin: 0;
 		padding: 0;
@@ -30,7 +30,7 @@
 		border-radius: 0;
 	}
 
-	button {
+	.sign-out-link {
 		min-height: 44px;
 		padding: 0;
 		background: none;
@@ -43,7 +43,7 @@
 		cursor: pointer;
 	}
 
-	button:hover {
+	.sign-out-link:hover {
 		color: var(--accent-hover);
 	}
 </style>
