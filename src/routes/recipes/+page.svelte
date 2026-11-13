@@ -168,16 +168,22 @@
 		<h1>{m.recipes_title()}</h1>
 		<div class="list-tools">
 			<LanguageSwitcher />
+		</div>
+		<div class="list-links">
+			{#if page.data.signedIn}
+				<a class="header-link" href={resolve('/recipes/new')} aria-label={m.recipes_add()}
+					>{m.add_recipe_short()}</a
+				>
+				<a class="header-link" href={resolve('/tags')} aria-label={m.manage_tags()}
+					>{m.tags_short()}</a
+				>
+			{/if}
 			{#if page.data.showSignOut}
-				<SignOutButton />
+				<span class="sign-out-slot">
+					<SignOutButton />
+				</span>
 			{/if}
 		</div>
-		{#if page.data.signedIn}
-			<div class="list-links">
-				<a class="header-link" href={resolve('/recipes/new')}>{m.recipes_add()}</a>
-				<a class="header-link" href={resolve('/tags')}>{m.manage_tags()}</a>
-			</div>
-		{/if}
 	</header>
 
 	{#if recipeStore.loadError}

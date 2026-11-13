@@ -130,17 +130,38 @@ main > p {
 	color: var(--muted);
 }
 
-/* The recipe list's own header: title and languages on one line, links on the next */
+/* The recipe list's own header: title and languages on one line, links and sign-out on the next */
+.list-header h1 {
+	font-size: 1.5rem;
+	margin: 0;
+}
+
 .list-tools {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
+	flex-shrink: 0;
+}
+
+.list-tools .language-links {
+	gap: 0.25rem;
+}
+
+.list-tools .language-links .lang {
+	min-width: 44px;
+	padding: 0 0.35rem;
 }
 
 .list-links {
 	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
 	flex-basis: 100%;
 	gap: 1rem;
+}
+
+.list-links .sign-out-slot {
+	margin-left: auto;
 }
 
 /* Folded filters, with Select on the same row in its own colour */

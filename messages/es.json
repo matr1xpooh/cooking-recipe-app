@@ -131,5 +131,7 @@
 	"translation_original": "Original",
 	"translation_yours": "Traducción",
 	"filters_toggle": "Filtros",
-	"view_active": "Activas"
+	"view_active": "Activas",
+	"add_recipe_short": "+ Receta",
+	"tags_short": "Etiquetas"
 }
