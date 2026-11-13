@@ -68,11 +68,8 @@
 		if (!current || !isLanguage(locale)) return;
 		const request = ++latestRequest;
 		translating = true;
-		// Machine translation is a signed-in feature; a visitor sees the original text.
 		Promise.all([
-			page.data.signedIn
-				? translateFields(fieldsOf(current), current.id, locale, translationCache)
-				: Promise.resolve(null),
+			translateFields(fieldsOf(current), current.id, locale, translationCache),
 			fetchOverride(current.id, locale).catch(() => null)
 		]).then(([result, saved]) => {
 			if (request !== latestRequest) return;
