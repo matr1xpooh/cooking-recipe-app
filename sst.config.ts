@@ -77,6 +77,8 @@ export default $config({
 
 		const site = new sst.aws.SvelteKit('Site', {
 			link: [table, bucket],
+			// AWS retires nodejs20.x; the README asks for Node 22.17 or newer.
+			server: { runtime: 'nodejs22.x' },
 			// Textract reads recipe photos; Translate translates recipe text. Both only take
 			// "*" as the resource, so this is the narrowest grant they allow.
 			permissions: [
