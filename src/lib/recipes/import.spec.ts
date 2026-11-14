@@ -269,3 +269,51 @@ describe('decodeEntities', () => {
 		expect(decodeEntities('&bogus; &#0; &#99999999;')).toBe('&bogus; &#0; &#99999999;');
 	});
 });
+
+describe('JSON-LD with comments', () => {
+	it('reads a recipe that has a /* */ comment in its JSON-LD', () => {
+		const html = page(`{
+  "@type": "Recipe",
+  "name": "Quiche",
+  /*"description": "Too much fussing about."*/
+  "recipeIngredient": ["1 potato", "2 eggs"],
+  "recipeInstructions": [{"@type": "HowToStep", "text": "Bake."}]
+}`);
+		const recipe = extractRecipe(html);
+		expect(recipe?.title).toBe('Quiche');
+		expect(recipe?.ingredients).toEqual(['1 potato', '2 eggs']);
+		expect(recipe?.steps).toEqual(['Bake.']);
+	});
+
+	it('reads a recipe that has a // comment in its JSON-LD', () => {
+		const html = page(`{
+  "@type": "Recipe",
+  "name": "Soup",
+  // a note from the site
+  "recipeIngredient": ["water"],
+  "recipeInstructions": ["Boil."]
+}`);
+		expect(extractRecipe(html)?.steps).toEqual(['Boil.']);
+	});
+
+	it('keeps comment-like text inside strings', () => {
+		const html = page(`{
+  "@type": "Recipe",
+  "name": "See https://example.com/*x*/ and //y",
+  "recipeIngredient": ["water"],
+  "recipeInstructions": ["Boil."]
+}`);
+		expect(extractRecipe(html)?.title).toBe('See https://example.com/*x*/ and //y');
+	});
+});
+
+describe('schema recipe with "ingredients" instead of "recipeIngredient"', () => {
+	it('reads the ingredients', () => {
+		const html = page(`{
+  "@type": "Recipe",
+  "name": "Quiche",
+  "ingredients": ["1 potato", "2 eggs"]
+}`);
+		expect(extractRecipe(html)?.ingredients).toEqual(['1 potato', '2 eggs']);
+	});
+});

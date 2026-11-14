@@ -122,12 +122,47 @@ function cleanText(text: string): string {
  * Extracts a recipe from a page's schema.org JSON-LD data.
  * Returns null when the page has no usable recipe.
  */
+/**
+ * Removes /* *\/ and // comments that are outside strings. Some sites write them inside their
+ * JSON-LD, which makes it invalid JSON, so the recipe would be skipped.
+ */
+export function stripJsonComments(text: string): string {
+	let out = '';
+	let inString = false;
+	for (let i = 0; i < text.length; i++) {
+		const c = text[i];
+		if (inString) {
+			out += c;
+			if (c === '\\') out += text[++i] ?? '';
+			else if (c === '"') inString = false;
+			continue;
+		}
+		if (c === '"') {
+			inString = true;
+			out += c;
+		} else if (c === '/' && text[i + 1] === '*') {
+			const end = text.indexOf('*/', i + 2);
+			if (end === -1) break;
+			i = end + 1;
+		} else if (c === '/' && text[i + 1] === '/') {
+			const end = text.indexOf('\n', i);
+			if (end === -1) break;
+			i = end - 1;
+		} else {
+			out += c;
+		}
+	}
+	return out;
+}
+
 export function extractRecipe(html: string): ImportedRecipe | null {
 	for (const match of html.matchAll(LD_JSON_SCRIPT)) {
 		let data: unknown;
 		try {
 			// Raw tabs and newlines inside JSON strings are invalid JSON, and many sites emit them.
-			data = JSON.parse(Array.from(match[1], (c) => (c.charCodeAt(0) < 32 ? ' ' : c)).join(''));
+			// Comments are removed first, while line breaks still end a // comment.
+			const text = stripJsonComments(match[1]);
+			data = JSON.parse(Array.from(text, (c) => (c.charCodeAt(0) < 32 ? ' ' : c)).join(''));
 		} catch {
 			continue;
 		}
@@ -136,7 +171,8 @@ export function extractRecipe(html: string): ImportedRecipe | null {
 
 		const recipe: ImportedRecipe = {
 			title: typeof node.name === 'string' ? cleanText(node.name) : '',
-			ingredients: stringList(node.recipeIngredient),
+			// Some sites write the list as "ingredients" rather than the standard "recipeIngredient".
+			ingredients: stringList(node.recipeIngredient ?? node.ingredients),
 			steps: instructions(node.recipeInstructions)
 		};
 		const image = imageUrlOf(node.image);
