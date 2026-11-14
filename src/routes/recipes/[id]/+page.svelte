@@ -15,8 +15,13 @@
 		sourceHash,
 		type RecipeFields
 	} from '#lib/recipes/translation-fields.js';
-	import { deleteOverride, saveOverride, type EditedTranslation } from '#lib/recipes/recipe-api.js';
-	import { loadDisplay, shownFields, type Translated } from '#lib/recipes/display.js';
+	import {
+		deleteLine,
+		deleteOverride,
+		saveOverride,
+		type EditedTranslation
+	} from '#lib/recipes/recipe-api.js';
+	import { editedFits, loadDisplay, shownFields, type Translated } from '#lib/recipes/display.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import {
@@ -165,7 +170,7 @@
 	 * translation. Null when there is none to edit (signed out, translating, or failed).
 	 */
 	const baseFields = $derived<RecipeFields | null>(
-		recipe && (override || (translated && !translated.failed))
+		recipe && (editedFits(recipe, override) || (translated && !translated.failed))
 			? shownFields(recipe, translated, override)
 			: null
 	);
@@ -174,7 +179,9 @@
 	 * A saved translation is stamped with the original it was made from. An edited one keeps
 	 * its old stamp, so it stays flagged as out of date until it is reset.
 	 */
-	const baseHash = $derived(recipe ? (override ? override.hash : sourceHash(recipe)) : '');
+	const baseHash = $derived(
+		recipe ? (override && editedFits(recipe, override) ? override.hash : sourceHash(recipe)) : ''
+	);
 
 	const canEdit = $derived(
 		baseFields !== null && page.data.signedIn && !showOriginal && isLanguage(locale)
@@ -185,11 +192,19 @@
 		override !== null && recipe !== undefined && override.hash !== sourceHash(recipe)
 	);
 
-	function lines(text: string): string[] {
-		return text
-			.split('\n')
-			.map((line) => line.trim())
-			.filter((line) => line.length > 0);
+	/** The edited translation no longer has the recipe's lines, so it is not shown. */
+	const translationMisaligned = $derived(
+		override !== null && recipe !== undefined && !editedFits(recipe, override)
+	);
+
+	/**
+	 * The lines of a text box, one per line. Blank lines at the end are dropped; a blank line in the
+	 * middle is kept, so the save can refuse it.
+	 */
+	function rawLines(text: string): string[] {
+		const list = text.split('\n').map((line) => line.trim());
+		while (list.length > 0 && list[list.length - 1] === '') list.pop();
+		return list;
 	}
 
 	function startEditTranslation() {
@@ -233,9 +248,17 @@
 	async function commitInline() {
 		const current = editing;
 		editing = null;
-		if (!current || !baseFields || !recipe || !isLanguage(locale)) return;
+		if (!current || !recipe) return;
 		const text = editDraft.trim();
-		if (text.length === 0 || text === editStart) return;
+		if (text === editStart) return;
+		if (text.length === 0) {
+			// Emptying an ingredient or step deletes it, in every language, once the user confirms.
+			if (current.part !== 'title' && window.confirm(m.line_delete_confirm())) {
+				await removeLine(current.part, current.index);
+			}
+			return;
+		}
+		if (!baseFields || !isLanguage(locale)) return;
 		const fields = decodeFieldsText(replaceLine(baseFields, current.part, current.index, text));
 		const hash = baseHash;
 		try {
@@ -247,14 +270,41 @@
 		}
 	}
 
+	/** Deletes a line from the recipe in every language, then reloads the recipe. */
+	async function removeLine(part: 'ingredients' | 'steps', index: number) {
+		if (!recipe) return;
+		try {
+			await deleteLine(recipe.id, part, index);
+			translationError = null;
+			await recipeStore.load();
+			if (recipeStore.loadError) translationError = m.error_load_failed();
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
+
 	async function saveTranslation() {
-		if (!recipe || !isLanguage(locale)) return;
+		if (!recipe || !baseFields || !isLanguage(locale)) return;
 		const fields = {
 			title: translationDraft.title.trim(),
-			ingredients: lines(translationDraft.ingredients),
-			steps: lines(translationDraft.steps),
+			ingredients: rawLines(translationDraft.ingredients),
+			steps: rawLines(translationDraft.steps),
 			notes: translationDraft.notes.trim()
 		};
+		// A line can only be removed or added on the recipe, so the counts must stay the same.
+		const blank =
+			fields.title === '' || [...fields.ingredients, ...fields.steps].some((line) => line === '');
+		if (blank) {
+			translationError = m.translation_line_empty();
+			return;
+		}
+		if (
+			fields.ingredients.length !== baseFields.ingredients.length ||
+			fields.steps.length !== baseFields.steps.length
+		) {
+			translationError = m.translation_line_count();
+			return;
+		}
 		const hash = baseHash;
 		try {
 			await saveOverride(recipe.id, locale, { hash, fields });
@@ -433,8 +483,13 @@
 							>
 						{/if}
 					</p>
-					{#if translationStale}
+					{#if translationMisaligned}
+						<p role="status">{m.translation_misaligned()}</p>
+					{:else if translationStale}
 						<p role="status">{m.translation_stale()}</p>
+					{/if}
+					{#if translationError}
+						<p role="alert">{translationError}</p>
 					{/if}
 					{#if override && !editingTranslation}
 						<p class="meta">{m.translation_edited_note()}</p>
@@ -487,9 +542,6 @@
 									onclick={() => (editingTranslation = false)}>{m.recipe_cancel()}</button
 								>
 							</div>
-							{#if translationError}
-								<p role="alert">{translationError}</p>
-							{/if}
 						</form>
 					{/if}
 				</div>

@@ -149,5 +149,9 @@
 	"cook_no_steps": "Aquesta recepta no té passos.",
 	"cook_ingredients_for_step": "Ingredients d’aquest pas",
 	"cook_remaining": "restant",
-	"cook_all_ingredients": "Tots els ingredients"
+	"cook_all_ingredients": "Tots els ingredients",
+	"line_delete_confirm": "Eliminar aquesta línia en tots els idiomes? Les seves notes també s'eliminen.",
+	"translation_line_empty": "Aquí una línia no pot estar buida. Per eliminar-la, buida-la en tocar-la a la recepta.",
+	"translation_line_count": "El nombre de línies ha de coincidir amb la recepta. Afegeix o treu línies a la mateixa pàgina de la recepta.",
+	"translation_misaligned": "Aquesta traducció editada ja no coincideix amb les línies de la recepta, així que no es mostra. Usa la traducció automàtica per començar de nou."
 }

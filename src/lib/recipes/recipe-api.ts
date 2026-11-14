@@ -116,3 +116,17 @@ export async function deleteOverride(recipeId: string, language: string): Promis
 	);
 	if (!res.ok && res.status !== 404) throw new Error(`translation reset failed: ${res.status}`);
 }
+
+/** Deletes one ingredient or step from the recipe in every language. */
+export async function deleteLine(
+	recipeId: string,
+	part: 'ingredients' | 'steps',
+	index: number
+): Promise<void> {
+	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/lines`, {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ part, index })
+	});
+	if (!res.ok) throw new Error(`line delete failed: ${res.status}`);
+}

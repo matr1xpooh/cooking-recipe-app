@@ -6,7 +6,9 @@ import {
 	headingText,
 	isHeading,
 	joinNote,
+	lineRange,
 	noteBlocks,
+	removeRange,
 	splitNote
 } from './ingredient-lines';
 import { fromTexts, toItems, type RecipeFields } from './translation-fields';
@@ -204,5 +206,24 @@ describe('placeIngredients', () => {
 				items: [{ item: { text: '1 cup flour', index: 4 }, notes: [] }]
 			}
 		]);
+	});
+});
+
+describe('deleting a line', () => {
+	it('takes the line and the notes written under it', () => {
+		const lines = ['2 eggs', '> Room temperature', '1 onion', '3 garlic'];
+		expect(lineRange(lines, 0)).toEqual({ start: 0, end: 2 });
+		expect(removeRange(lines, lineRange(lines, 0))).toEqual(['1 onion', '3 garlic']);
+	});
+
+	it('takes only the line when it has no notes', () => {
+		const lines = ['2 eggs', '1 onion', '3 garlic'];
+		expect(removeRange(lines, lineRange(lines, 1))).toEqual(['2 eggs', '3 garlic']);
+	});
+
+	it('takes the last line with its notes at the end of the list', () => {
+		const lines = ['2 eggs', '1 onion', '> Sweet'];
+		expect(removeRange(lines, lineRange(lines, 1))).toEqual(['2 eggs']);
+		expect(removeRange(['a', '> x'], lineRange(['a', '> x'], 0))).toEqual([]);
 	});
 });

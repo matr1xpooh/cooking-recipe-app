@@ -149,5 +149,9 @@
 	"cook_no_steps": "This recipe has no steps.",
 	"cook_ingredients_for_step": "Ingredients for this step",
 	"cook_remaining": "remaining",
-	"cook_all_ingredients": "All ingredients"
+	"cook_all_ingredients": "All ingredients",
+	"line_delete_confirm": "Delete this line in every language? Its notes go too.",
+	"translation_line_empty": "A line can't be empty here. To delete it, clear it when tapping the line on the recipe.",
+	"translation_line_count": "The number of lines must match the recipe. Add or delete lines on the recipe page itself.",
+	"translation_misaligned": "This edited translation no longer matches the recipe's lines, so it is not shown. Use machine translation to start again."
 }

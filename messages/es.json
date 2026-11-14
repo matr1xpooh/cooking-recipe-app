@@ -149,5 +149,9 @@
 	"cook_no_steps": "Esta receta no tiene pasos.",
 	"cook_ingredients_for_step": "Ingredientes de este paso",
 	"cook_remaining": "restante",
-	"cook_all_ingredients": "Todos los ingredientes"
+	"cook_all_ingredients": "Todos los ingredientes",
+	"line_delete_confirm": "¿Eliminar esta línea en todos los idiomas? Sus notas también se eliminan.",
+	"translation_line_empty": "Aquí una línea no puede estar vacía. Para eliminarla, vacíala al tocarla en la receta.",
+	"translation_line_count": "El número de líneas debe coincidir con la receta. Añade o quita líneas en la propia página de la receta.",
+	"translation_misaligned": "Esta traducción editada ya no coincide con las líneas de la receta, así que no se muestra. Usa la traducción automática para empezar de nuevo."
 }

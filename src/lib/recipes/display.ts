@@ -13,16 +13,29 @@ export interface Translated {
 }
 
 /**
- * The text to show in the site language: the hand-edited translation if there is one, else the
- * machine translation, else the original. A translation keeps the heading markers of the original
- * ingredient list.
+ * True when an edited translation has the same ingredient and step lines as the recipe. One that
+ * does not fit (a line was added or removed in the original) is not shown or edited.
+ */
+export function editedFits(recipe: Recipe, override: EditedTranslation | null): boolean {
+	return (
+		override !== null &&
+		override.fields.ingredients.length === recipe.ingredients.length &&
+		override.fields.steps.length === recipe.steps.length
+	);
+}
+
+/**
+ * The text to show in the site language: the hand-edited translation if it fits the recipe, else
+ * the machine translation, else the original. A translation keeps the heading markers of the
+ * original ingredient list.
  */
 export function shownFields(
 	recipe: Recipe,
 	translated: Translated | null,
 	override: EditedTranslation | null
 ): RecipeFields {
-	const source = override?.fields ?? translated?.fields;
+	const edited = editedFits(recipe, override) ? override?.fields : undefined;
+	const source = edited ?? translated?.fields;
 	if (!source) return fieldsOf(recipe);
 	return { ...source, ingredients: restoreHeadings(source.ingredients, recipe.ingredients) };
 }

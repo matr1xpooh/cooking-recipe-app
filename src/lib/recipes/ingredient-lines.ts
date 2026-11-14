@@ -180,3 +180,15 @@ function placeItem(items: PlacedItem[], line: string, index: number): void {
 		items.push({ item: { text: line, index }, notes: [] });
 	}
 }
+
+/** The lines a delete removes: the line at `index` and the note lines written under it. */
+export function lineRange(lines: string[], index: number): { start: number; end: number } {
+	let end = index + 1;
+	while (end < lines.length && isNote(lines[end])) end++;
+	return { start: index, end };
+}
+
+/** The list without the lines in the range. */
+export function removeRange(lines: string[], range: { start: number; end: number }): string[] {
+	return lines.filter((_, i) => i < range.start || i >= range.end);
+}
