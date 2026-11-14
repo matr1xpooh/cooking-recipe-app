@@ -32,6 +32,12 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 	cookies.delete(ATTEMPT_COOKIE, { path: '/' });
 	const code = url.searchParams.get('code');
 	if (!attempt || !code || url.searchParams.get('state') !== attempt.state) {
+		// Only the reason is logged: never the code, the state or the cookie.
+		console.warn('[sign-in] callback refused', {
+			attemptCookie: attempt !== null,
+			code: code !== null,
+			stateMatches: attempt !== null && url.searchParams.get('state') === attempt.state
+		});
 		redirect(303, '/signin?error=1');
 	}
 
@@ -50,7 +56,11 @@ export const GET: RequestHandler = async ({ cookies, url }) => {
 			secure: url.protocol === 'https:',
 			maxAge: SESSION_MAX_AGE_MS / 1000
 		});
-	} catch {
+	} catch (error) {
+		console.warn('[sign-in] callback failed', {
+			name: error instanceof Error ? error.name : typeof error,
+			message: error instanceof Error ? error.message.slice(0, 200) : ''
+		});
 		redirect(303, '/signin?error=1');
 	}
 	redirect(303, '/');

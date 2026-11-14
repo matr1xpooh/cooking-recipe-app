@@ -11,6 +11,8 @@
 	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
 	import TextSizeControl from '#lib/TextSizeControl.svelte';
 	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
+	import { m } from '#lib/paraglide/messages.js';
 	import SignOutButton from '#lib/SignOutButton.svelte';
 	import { localeChange } from '#lib/locale-change.svelte.js';
 	import type { LayoutProps } from './$types';
@@ -20,6 +22,8 @@
 
 	// The recipe list draws its own header (title, languages, sign-out) on the same line.
 	const ownHeader = $derived(page.route.id === '/recipes');
+	// On a recipe, "Recipes" and sign-out share one row below the languages.
+	const recipeView = $derived(page.route.id === '/recipes/[id]');
 
 	// Offline reading: the service worker is registered in production builds only.
 	onMount(() => {
@@ -40,10 +44,18 @@
 		<header class="site-header">
 			<LanguageSwitcher />
 			<TextSizeControl />
-			{#if data.showSignOut}
+			{#if data.showSignOut && !recipeView}
 				<SignOutButton />
 			{/if}
 		</header>
+		{#if recipeView}
+			<nav class="page-top" aria-label={m.recipes_title()}>
+				<a href={resolve('/recipes')}>← {m.recipes_title()}</a>
+				{#if data.showSignOut}
+					<SignOutButton />
+				{/if}
+			</nav>
+		{/if}
 	{/if}
 
 	{@render children()}

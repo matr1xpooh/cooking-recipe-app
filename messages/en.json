@@ -64,7 +64,7 @@
 	"tab_image": "Image",
 	"image_read_text": "Read text from image",
 	"image_empty": "No image yet. Choose a file or paste a screenshot.",
-	"ingredients_hint": "One ingredient per line. Start a line with # to make a heading, for example: # For the sauce. Start a line with > to add a note to the line above it.",
+	"ingredients_hint": "One ingredient per line. To group ingredients under a section name, start that line with # and the name, such as # Filling. The lines below it belong to that section. Start a line with > to add a note to the line above it.",
 	"error_save_failed": "Couldn't save the recipe. Check that the app's server is running, then try again.",
 	"error_load_failed": "Couldn't load your recipes. Check that the app's server is running.",
 	"category_meat": "Meat",

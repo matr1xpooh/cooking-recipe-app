@@ -6,7 +6,8 @@ import {
 	decodeEntities,
 	isYouTubeUrl,
 	pageTitle,
-	parseDescription
+	parseDescription,
+	sectionedIngredients
 } from './import';
 
 function page(jsonLd: string, head = '<title>Page</title>'): string {
@@ -315,5 +316,49 @@ describe('schema recipe with "ingredients" instead of "recipeIngredient"', () =>
   "ingredients": ["1 potato", "2 eggs"]
 }`);
 		expect(extractRecipe(html)?.ingredients).toEqual(['1 potato', '2 eggs']);
+	});
+});
+
+describe('ingredient sections', () => {
+	const jsonLd = (ingredients: string[]) =>
+		JSON.stringify({
+			'@type': 'Recipe',
+			name: 'Quiche',
+			recipeIngredient: ingredients,
+			recipeInstructions: ['Bake']
+		});
+
+	const sectioned = `<ul class="list-unstyled ingredients-list">
+		<li><h5>Potato base
+</h5></li><li><a href="javascript:;" class="fake-checkbox"><i class="fa fa-check"></i></a>1 egg
+</li><li><a href="javascript:;"><i></i></a>½ tsp salt, to taste
+</li><li><h5>Filling
+</h5></li><li><a href="javascript:;"><i></i></a>6 large eggs
+</li></ul>`;
+
+	it('marks the section names as headings when the items match the schema.org list', () => {
+		const html = `<html><body>${sectioned}</body>${''}<script type="application/ld+json">${jsonLd(['Potato base', '1 egg', '½ tsp salt, to taste', 'Filling', '6 large eggs'])}</script></html>`;
+		expect(extractRecipe(html)?.ingredients).toEqual([
+			'# Potato base',
+			'1 egg',
+			'½ tsp salt, to taste',
+			'# Filling',
+			'6 large eggs'
+		]);
+	});
+
+	it('keeps the flat list when the page items differ from the schema.org list', () => {
+		const html = `<html><body>${sectioned}</body><script type="application/ld+json">${jsonLd(['1 egg', '6 large eggs'])}</script></html>`;
+		expect(extractRecipe(html)?.ingredients).toEqual(['1 egg', '6 large eggs']);
+	});
+
+	it('keeps the flat list when the page has no section titles', () => {
+		const plain = `<ul class="ingredients"><li>1 egg</li><li>salt</li></ul>`;
+		const html = `<html><body>${plain}</body><script type="application/ld+json">${jsonLd(['1 egg', 'salt'])}</script></html>`;
+		expect(extractRecipe(html)?.ingredients).toEqual(['1 egg', 'salt']);
+	});
+
+	it('sectionedIngredients returns the flat list when there is no ingredient list', () => {
+		expect(sectionedIngredients('<p>nothing</p>', ['1 egg'])).toEqual(['1 egg']);
 	});
 });

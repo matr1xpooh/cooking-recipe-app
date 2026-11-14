@@ -177,9 +177,42 @@ export function extractRecipe(html: string): ImportedRecipe | null {
 		};
 		const image = imageUrlOf(node.image);
 		if (image) recipe.image = image;
+		recipe.ingredients = sectionedIngredients(html, recipe.ingredients);
 		if (recipe.ingredients.length > 0 || recipe.steps.length > 0) return recipe;
 	}
 	return null;
+}
+
+const INGREDIENT_LIST = /<ul[^>]*class="[^"]*ingredient[^"]*"[^>]*>([\s\S]*?)<\/ul>/i;
+const SECTION_TITLE = /<h[3-6][\s>]/i;
+
+/**
+ * Some pages group the ingredients under section names (for example "Potato base" and
+ * "Filling"). Schema.org data drops the names, so they are read from the page's own ingredient
+ * list and written as headings ("# Potato base"). The headings are used only when the page's
+ * list matches the schema.org list exactly; otherwise the list is kept flat.
+ */
+export function sectionedIngredients(html: string, flat: string[]): string[] {
+	const list = html.match(INGREDIENT_LIST)?.[1];
+	if (!list) return flat;
+	const entries = list
+		.split(/<li[\s>]/i)
+		.slice(1)
+		.map((item) => {
+			const body = item.split(/<\/li>/i)[0] ?? '';
+			return { heading: SECTION_TITLE.test(body), text: cleanText(body) };
+		})
+		.filter((entry) => entry.text.length > 0);
+	// The schema.org list keeps the section names as entries, so the whole list must match.
+	const expected = flat.map(cleanText);
+	if (
+		entries.length !== expected.length ||
+		entries.some((entry, i) => entry.text !== expected[i])
+	) {
+		return flat;
+	}
+	if (!entries.some((entry) => entry.heading)) return flat;
+	return entries.map((entry) => (entry.heading ? `# ${entry.text}` : entry.text));
 }
 
 /** The page's og:title or <title>, used as a fallback title. YouTube's " - YouTube" suffix is dropped. */

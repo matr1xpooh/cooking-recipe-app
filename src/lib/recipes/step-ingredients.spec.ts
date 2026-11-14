@@ -72,14 +72,35 @@ describe('ingredientsPerStep', () => {
 		]);
 	});
 
-	it('uses an ingredient under a heading only in a step that mentions the heading', () => {
+	it('matches an ingredient written with its amount first', () => {
+		const lines = ['6 large eggs', '2 tbsp melted butter', '1¼ cups – 300ml thickened cream'];
+		const perStep = ingredientsPerStep(
+			['Whisk the eggs.', 'Add the melted butter.', 'Stir in the thickened cream.'],
+			lines
+		);
+		expect(perStep[0]).toEqual([{ index: 0, remaining: false }]);
+		expect(perStep[1]).toEqual([{ index: 1, remaining: false }]);
+		expect(perStep[2]).toEqual([{ index: 2, remaining: false }]);
+	});
+
+	it('uses an ingredient under a heading in any step that names it', () => {
 		const lines = ['Соль 5 г', '# Вторая заправка', 'Горчица - 1 ч.л'];
 		const perStep = ingredientsPerStep(
 			['Добавляем горчицу и перемешиваем', 'Вторая заправка: добавляем горчицу'],
 			lines
 		);
-		expect(perStep[0]).toEqual([]);
-		expect(perStep[1]).toEqual([{ index: 2, remaining: false }]);
+		expect(perStep[0]).toEqual([{ index: 2, remaining: false }]);
+		expect(perStep[1]).toEqual([]);
+	});
+
+	it('uses a name under two headings only in a step that mentions its heading', () => {
+		const lines = ['# Первая', 'Горчица - 1 ч.л', '# Вторая', 'Горчица - 1 ч.л'];
+		const perStep = ingredientsPerStep(
+			['Первая: добавляем горчицу', 'Вторая: добавляем горчицу'],
+			lines
+		);
+		expect(perStep[0]).toEqual([{ index: 1, remaining: false }]);
+		expect(perStep[1]).toEqual([{ index: 3, remaining: false }]);
 	});
 
 	it('keeps the same name under two headings as two ingredients', () => {

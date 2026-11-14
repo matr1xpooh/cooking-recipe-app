@@ -374,8 +374,6 @@
 </svelte:head>
 
 <main>
-	<p class="back"><a href={resolve('/recipes')}>← {m.recipes_title()}</a></p>
-
 	{#if recipe && shown}
 		<article>
 			<h1>
@@ -398,12 +396,14 @@
 					{shown.title}
 				{/if}
 			</h1>
-			<p class="recipe-actions">
-				{#if shown.steps.length > 0}<a href={resolve('/recipes/[id]/cook', { id: recipe.id })}
+			{#if shown.steps.length > 0}
+				<p class="cook-row">
+					<a class="cook-button" href={resolve('/recipes/[id]/cook', { id: recipe.id })}
 						>{m.cook_open()}</a
 					>
-					<span aria-hidden="true">·</span>
-				{/if}
+				</p>
+			{/if}
+			<p class="recipe-actions">
 				{#if page.data.signedIn}<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}
 						>{m.recipe_edit()}</a
 					>{/if}

@@ -14,12 +14,25 @@ export interface StepIngredient {
  * "Яйца 4 шт." gives "Яйца".
  */
 export function ingredientName(line: string): string {
+	const words = line.trim().split(/\s+/);
+	// Lines written "2 eggs" or "1¼ cups – 300 ml cream" start with the amount: skip it.
+	let i = 0;
+	while (i < words.length && isAmountWord(words[i] ?? '')) i++;
 	const name: string[] = [];
-	for (const word of line.trim().split(/\s+/)) {
+	for (; i < words.length; i++) {
+		const word = words[i] ?? '';
 		if (/\d/.test(word)) break;
 		name.push(word);
+		if (word.endsWith(',')) break;
 	}
 	return name.join(' ');
+}
+
+const UNIT = /^(tsp|tbsp|cups?|g|kg|ml|l|lb|lbs|oz|pcs?|pieces?|cloves?|cans?|sticks?)\.?$/i;
+
+/** An amount or a unit at the start of an ingredient line, such as "2", "1¼", "–", "tbsp". */
+function isAmountWord(word: string): boolean {
+	return /\d/.test(word) || /^[–—-]$/.test(word) || /^[½¼¾⅓⅔⅛]$/.test(word) || UNIT.test(word);
 }
 
 function normalize(text: string): string {
@@ -89,8 +102,9 @@ function amountNear(toks: string[], index: number): boolean {
  * The ingredients each step uses, in list order, as positions in the ingredient list. Headings and
  * notes are skipped.
  *
- * An ingredient under a heading (such as "# Вторая заправка", the second dressing) is only used by a
- * step that mentions the heading. Other ingredients are used by any step that names them.
+ * When the same name sits under two headings (such as "горчица" in "# Вторая заправка" and in the
+ * first dressing), only a step that mentions the heading uses the one under it. Every other
+ * ingredient is used by any step that names it, whatever heading it sits under.
  *
  * An ingredient is shown at the first step that names it. A later step names it again as the same
  * item, so it is not shown again. It is shown again only when the step says "remaining" or gives a
@@ -109,6 +123,16 @@ export function ingredientsPerStep(steps: string[], ingredientLines: string[]): 
 		entries.push({ index, heading, line });
 	});
 
+	// A name under more than one heading is ambiguous (mustard in two dressings), so there the
+	// heading decides. Any other name is used by every step that names it.
+	const headingsOf = new Map<string, Set<string | null>>();
+	for (const entry of entries) {
+		const name = normalize(ingredientName(entry.line));
+		const set = headingsOf.get(name) ?? new Set<string | null>();
+		set.add(entry.heading);
+		headingsOf.set(name, set);
+	}
+
 	const seen = new Set<string>();
 	return steps.map((step) => {
 		const toks = tokens(step);
@@ -117,7 +141,9 @@ export function ingredientsPerStep(steps: string[], ingredientLines: string[]): 
 		for (const entry of entries) {
 			const parts = stems(ingredientName(entry.line));
 			if (parts.length === 0) continue;
-			if (entry.heading !== null && nameHits(toks, stems(entry.heading)).length === 0) continue;
+			const ambiguous = (headingsOf.get(normalize(ingredientName(entry.line)))?.size ?? 0) > 1;
+			if (ambiguous && entry.heading !== null && nameHits(toks, stems(entry.heading)).length === 0)
+				continue;
 			const hits = nameHits(toks, parts);
 			if (hits.length === 0) continue;
 			const key = `${entry.heading ?? ''}|${normalize(ingredientName(entry.line))}`;
