@@ -835,7 +835,10 @@ button.link-button {
 /* A line that is tapped to edit looks like the text around it, with a faint underline */
 button.editable,
 button.editable:hover:not(:disabled) {
-	display: inline;
+	/* Top-aligned, so a list number lines up with the first line of the text, not the last. */
+	display: inline-block;
+	vertical-align: top;
+	max-width: 100%;
 	min-height: 0;
 	padding: 0;
 	border: 0;
