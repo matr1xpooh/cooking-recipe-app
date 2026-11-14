@@ -325,6 +325,29 @@
 			translationError = m.error_save_failed();
 		}
 	}
+	/** The actions under the Ingredients heading, shown only when they apply. */
+	const toolLinks = $derived([
+		...(translated && !translated.failed
+			? [
+					{
+						label: showOriginal ? m.show_translation() : m.show_original(),
+						run: () => (showOriginal = !showOriginal)
+					}
+				]
+			: []),
+		...(page.data.signedIn && baseFields && !showOriginal && !editingTranslation
+			? [{ label: m.translation_edit_all(), run: startEditTranslation }]
+			: []),
+		...(override && page.data.signedIn
+			? [{ label: m.translation_reset(), run: autoTranslate }]
+			: [])
+	]);
+
+	/** Drops the hand edits and goes back to the automatic translation, after asking. */
+	async function autoTranslate() {
+		if (!window.confirm(m.translation_reset_confirm())) return;
+		await resetTranslation();
+	}
 </script>
 
 {#snippet lineEdit(part: EditPart, index: number, text: string, rich: boolean)}
@@ -375,41 +398,6 @@
 					{shown.title}
 				{/if}
 			</h1>
-			<section class="recipe-tags" aria-label={m.recipe_field_tags()}>
-				<div class="tag-list">
-					{#each recipe.tags as tag (tag)}
-						<span class="tag on">
-							{tagNames.label(tag)}
-							<button
-								type="button"
-								class="tag-remove"
-								hidden={!page.data.signedIn}
-								aria-label={m.tag_remove({ tag: tagNames.label(tag) })}
-								onclick={() => removeTag(tag)}>×</button
-							>
-						</span>
-					{/each}
-				</div>
-				{#if page.data.signedIn}
-					<div class="tag-add">
-						<input
-							type="text"
-							bind:value={newTag}
-							placeholder={m.tags_add_placeholder()}
-							aria-label={m.tags_add_placeholder()}
-							onkeydown={(event) => {
-								if (event.key === 'Enter' || event.key === ',' || event.key === ' ') {
-									event.preventDefault();
-									addTag();
-								}
-							}}
-						/>
-					</div>
-				{/if}
-				{#if tagLimitHit}
-					<p role="alert">{m.tags_limit({ n: MAX_TAGS_PER_RECIPE })}</p>
-				{/if}
-			</section>
 			<p class="recipe-actions">
 				{#if shown.steps.length > 0}<a href={resolve('/recipes/[id]/cook', { id: recipe.id })}
 						>{m.cook_open()}</a
@@ -457,96 +445,79 @@
 				</p>
 			{/if}
 
-			{#if !translating && recipe && isLanguage(locale)}
-				<div class="translation-tools">
-					<p class="tools-links">
-						{#if translated && !translated.failed}
-							<button
-								type="button"
-								class="link-button"
-								onclick={() => (showOriginal = !showOriginal)}
-							>
-								{showOriginal ? m.show_translation() : m.show_original()}
-							</button>
-						{/if}
-						{#if page.data.signedIn && baseFields && !showOriginal && !editingTranslation}
-							<button type="button" class="link-button" onclick={startEditTranslation}
-								>{m.translation_edit_all()}</button
-							>
-						{/if}
-						{#if override && page.data.signedIn}
-							<button type="button" class="link-button danger" onclick={resetTranslation}
-								>{m.translation_reset()}</button
-							>
-						{/if}
-					</p>
-					{#if translationMisaligned}
-						<p role="status">{m.translation_misaligned()}</p>
-					{:else if translationStale}
-						<p role="status">{m.translation_stale()}</p>
-					{/if}
-					{#if translationError}
-						<p role="alert">{translationError}</p>
-					{/if}
-					{#if override && !editingTranslation}
-						<p class="meta">{m.translation_edited_note()}</p>
-					{/if}
-					{#if editingTranslation && page.data.signedIn}
-						<form
-							class="translation-edit"
-							onsubmit={(event) => {
-								event.preventDefault();
-								saveTranslation();
-							}}
-						>
-							<div class="translation-columns">
-								<fieldset class="translation-side">
-									<legend>{m.translation_original()}</legend>
-									<label>
-										{m.recipe_field_title()}
-										<input type="text" value={recipe.title} readonly />
-									</label>
-									<label>
-										{m.recipe_field_ingredients()}
-										<textarea rows="6" value={recipe.ingredients.join('\n')} readonly></textarea>
-									</label>
-									<label>
-										{m.recipe_field_steps()}
-										<textarea rows="8" value={recipe.steps.join('\n')} readonly></textarea>
-									</label>
-								</fieldset>
-								<fieldset class="translation-side">
-									<legend>{m.translation_yours()}</legend>
-									<label>
-										{m.recipe_field_title()}
-										<input type="text" bind:value={translationDraft.title} />
-									</label>
-									<label>
-										{m.recipe_field_ingredients()}
-										<textarea rows="6" bind:value={translationDraft.ingredients}></textarea>
-									</label>
-									<label>
-										{m.recipe_field_steps()}
-										<textarea rows="8" bind:value={translationDraft.steps}></textarea>
-									</label>
-								</fieldset>
-							</div>
-							<div class="translation-actions">
-								<button type="submit">{m.translation_save()}</button>
-								<button
-									type="button"
-									class="link-button"
-									onclick={() => (editingTranslation = false)}>{m.recipe_cancel()}</button
-								>
-							</div>
-						</form>
-					{/if}
-				</div>
-			{/if}
-
 			<section>
 				<h2>{m.recipe_ingredients_heading()}</h2>
-				{#if canEdit}<p class="meta">{m.translation_tap_hint()}</p>{/if}
+				{#if !translating && recipe && isLanguage(locale)}
+					<div class="translation-tools">
+						{#if override && !editingTranslation}<p class="meta tools-status">
+								{m.translation_edited_note()}
+							</p>{/if}
+						{#if translationMisaligned}
+							<p role="status">{m.translation_misaligned()}</p>
+						{:else if translationStale}
+							<p role="status">{m.translation_stale()}</p>
+						{/if}
+						{#if translationError}
+							<p role="alert">{translationError}</p>
+						{/if}
+						<p class="tools-links">
+							{#each toolLinks as link, i (i)}
+								{#if i > 0}<span aria-hidden="true">|</span>{/if}
+								<button type="button" class="link-button" onclick={link.run}>{link.label}</button>
+							{/each}
+						</p>
+						{#if editingTranslation && page.data.signedIn}
+							<form
+								class="translation-edit"
+								onsubmit={(event) => {
+									event.preventDefault();
+									saveTranslation();
+								}}
+							>
+								<div class="translation-columns">
+									<fieldset class="translation-side">
+										<legend>{m.translation_original()}</legend>
+										<label>
+											{m.recipe_field_title()}
+											<input type="text" value={recipe.title} readonly />
+										</label>
+										<label>
+											{m.recipe_field_ingredients()}
+											<textarea rows="6" value={recipe.ingredients.join('\n')} readonly></textarea>
+										</label>
+										<label>
+											{m.recipe_field_steps()}
+											<textarea rows="8" value={recipe.steps.join('\n')} readonly></textarea>
+										</label>
+									</fieldset>
+									<fieldset class="translation-side">
+										<legend>{m.translation_yours()}</legend>
+										<label>
+											{m.recipe_field_title()}
+											<input type="text" bind:value={translationDraft.title} />
+										</label>
+										<label>
+											{m.recipe_field_ingredients()}
+											<textarea rows="6" bind:value={translationDraft.ingredients}></textarea>
+										</label>
+										<label>
+											{m.recipe_field_steps()}
+											<textarea rows="8" bind:value={translationDraft.steps}></textarea>
+										</label>
+									</fieldset>
+								</div>
+								<div class="translation-actions">
+									<button type="submit">{m.translation_save()}</button>
+									<button
+										type="button"
+										class="link-button"
+										onclick={() => (editingTranslation = false)}>{m.recipe_cancel()}</button
+									>
+								</div>
+							</form>
+						{/if}
+					</div>
+				{/if}
 				{#if imageUrls.length > 0}
 					<div class="tabs" role="tablist" aria-label={m.recipe_ingredients_heading()}>
 						<button
@@ -570,16 +541,6 @@
 				{#if imageUrls.length === 0 || ingredientsTab === 'text'}
 					<p class="meta">
 						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
-						{#if recipe.source === 'web' && recipe.sourceUrl}
-							·
-							<!-- eslint-disable svelte/no-navigation-without-resolve -->
-							<a
-								href={sourceHref(recipe.sourceUrl, recipe.sourceStart)}
-								target="_blank"
-								rel="noopener noreferrer">{m.recipe_open_source()}</a
-							>
-							<!-- eslint-enable svelte/no-navigation-without-resolve -->
-						{/if}
 					</p>
 					{#each placeIngredients(shown.ingredients) as group, g (g)}
 						{#if group.heading !== null}
@@ -641,6 +602,41 @@
 					</div>
 				</section>
 			{/if}
+			<section class="recipe-tags" aria-label={m.recipe_field_tags()}>
+				<div class="tag-list">
+					{#each recipe.tags as tag (tag)}
+						<span class="tag on">
+							{tagNames.label(tag)}
+							<button
+								type="button"
+								class="tag-remove"
+								hidden={!page.data.signedIn}
+								aria-label={m.tag_remove({ tag: tagNames.label(tag) })}
+								onclick={() => removeTag(tag)}>×</button
+							>
+						</span>
+					{/each}
+				</div>
+				{#if page.data.signedIn}
+					<div class="tag-add">
+						<input
+							type="text"
+							bind:value={newTag}
+							placeholder={m.tags_add_placeholder()}
+							aria-label={m.tags_add_placeholder()}
+							onkeydown={(event) => {
+								if (event.key === 'Enter' || event.key === ',' || event.key === ' ') {
+									event.preventDefault();
+									addTag();
+								}
+							}}
+						/>
+					</div>
+				{/if}
+				{#if tagLimitHit}
+					<p role="alert">{m.tags_limit({ n: MAX_TAGS_PER_RECIPE })}</p>
+				{/if}
+			</section>
 		</article>
 	{:else if loaded}
 		<h1>{m.recipe_not_found()}</h1>
