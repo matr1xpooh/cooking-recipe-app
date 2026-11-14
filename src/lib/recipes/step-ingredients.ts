@@ -54,13 +54,52 @@ function tokens(text: string): string[] {
 }
 
 /**
+ * Words that say how an ingredient is prepared, not what it is. They are left out of the name, so
+ * "grated Gruyère" is matched by "Gruyère", not by a step's "grate".
+ */
+const PREPARATION = new Set([
+	'grated',
+	'chopped',
+	'sliced',
+	'diced',
+	'minced',
+	'beaten',
+	'melted',
+	'fresh',
+	'freshly',
+	'cracked',
+	'halved',
+	'pitted',
+	'wilted',
+	'coarsely',
+	'finely',
+	'large',
+	'small',
+	'thickened',
+	'heavy',
+	'dried',
+	'extra',
+	'plus',
+	'taste',
+	'topping',
+	'rinsed',
+	'drained',
+	'crumbled',
+	'натертый',
+	'нарезанный',
+	'рубленый',
+	'измельченный',
+	'свежий'
+]);
+
+/**
  * Parts of a name that are looked for in a step. Only the first four letters of each word are
  * kept, so endings and related forms match: "масло" and "масла", "желток" and "желтки".
  * Words of three letters or fewer are kept whole. Short words such as "и" are skipped.
  */
 function stems(name: string): string[] {
 	return words(name)
-		.filter((w) => w.length >= 3)
+		.filter((w) => w.length >= 3 && !PREPARATION.has(w))
 		.map((w) => (w.length >= 4 ? w.slice(0, 4) : w));
 }
 

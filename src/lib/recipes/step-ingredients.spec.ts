@@ -72,6 +72,16 @@ describe('ingredientsPerStep', () => {
 		]);
 	});
 
+	it('does not match a preparation word such as "grated" to a step verb', () => {
+		const lines = ['1 cup – 120g grated Gruyère or Fontina'];
+		const perStep = ingredientsPerStep(
+			['Grate the potatoes and set aside.', 'Stir in the Gruyère.'],
+			lines
+		);
+		expect(perStep[0]).toEqual([]);
+		expect(perStep[1]).toEqual([{ index: 0, remaining: false }]);
+	});
+
 	it('matches an ingredient written with its amount first', () => {
 		const lines = ['6 large eggs', '2 tbsp melted butter', '1¼ cups – 300ml thickened cream'];
 		const perStep = ingredientsPerStep(
