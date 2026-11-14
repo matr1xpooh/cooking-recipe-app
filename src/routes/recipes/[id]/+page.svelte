@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -8,7 +8,13 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RichText from '#lib/recipes/RichText.svelte';
 	import { isLanguage } from '#lib/recipes/languages.js';
-	import { fieldsOf, sourceHash, type RecipeFields } from '#lib/recipes/translation-fields.js';
+	import {
+		decodeFieldsText,
+		fieldsOf,
+		replaceLine,
+		sourceHash,
+		type RecipeFields
+	} from '#lib/recipes/translation-fields.js';
 	import { deleteOverride, saveOverride, type EditedTranslation } from '#lib/recipes/recipe-api.js';
 	import { loadDisplay, shownFields, type Translated } from '#lib/recipes/display.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
@@ -21,8 +27,11 @@
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { keepScreenAwake } from '#lib/wake-lock.js';
-	import { attachNotes, groupIngredients } from '#lib/recipes/ingredient-lines.js';
+	import { placeIngredients, placeItems } from '#lib/recipes/ingredient-lines.js';
 	import NoteBlock from '#lib/recipes/NoteBlock.svelte';
+
+	/** The parts of a recipe that can be changed in place. */
+	type EditPart = 'title' | 'ingredients' | 'steps';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
@@ -44,6 +53,10 @@
 	let editingTranslation = $state(false);
 	let translationDraft = $state({ title: '', ingredients: '', steps: '', notes: '' });
 	let translationError = $state<string | null>(null);
+	/** The line being changed in place, and the text it started with. */
+	let editing = $state<{ part: EditPart; index: number } | null>(null);
+	let editDraft = $state('');
+	let editStart = '';
 
 	onMount(() => {
 		recipeStore.load();
@@ -147,6 +160,26 @@
 		recipe ? (showOriginal ? fieldsOf(recipe) : shownFields(recipe, translated, override)) : null
 	);
 
+	/**
+	 * The translation a saved edit starts from: the hand-edited one, else the machine
+	 * translation. Null when there is none to edit (signed out, translating, or failed).
+	 */
+	const baseFields = $derived<RecipeFields | null>(
+		recipe && (override || (translated && !translated.failed))
+			? shownFields(recipe, translated, override)
+			: null
+	);
+
+	/**
+	 * A saved translation is stamped with the original it was made from. An edited one keeps
+	 * its old stamp, so it stays flagged as out of date until it is reset.
+	 */
+	const baseHash = $derived(recipe ? (override ? override.hash : sourceHash(recipe)) : '');
+
+	const canEdit = $derived(
+		baseFields !== null && page.data.signedIn && !showOriginal && isLanguage(locale)
+	);
+
 	/** The original text changed after the edited translation was saved. */
 	const translationStale = $derived(
 		override !== null && recipe !== undefined && override.hash !== sourceHash(recipe)
@@ -172,6 +205,48 @@
 		editingTranslation = true;
 	}
 
+	/** Starts changing one line in place. */
+	async function startInline(part: EditPart, index: number, text: string) {
+		if (!canEdit) return;
+		editStart = text;
+		editDraft = text;
+		editing = { part, index };
+		await tick();
+		document.querySelector<HTMLElement>('.inline-edit')?.focus();
+	}
+
+	/** Enter saves the line (by leaving it), Escape drops the change. */
+	function inlineKey(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			editing = null;
+		} else if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			(event.currentTarget as HTMLElement).blur();
+		}
+	}
+
+	/**
+	 * Saves one changed line. The whole translation is sent, built from the stored list with
+	 * only this line changed, so its headings and notes stay where they are.
+	 */
+	async function commitInline() {
+		const current = editing;
+		editing = null;
+		if (!current || !baseFields || !recipe || !isLanguage(locale)) return;
+		const text = editDraft.trim();
+		if (text.length === 0 || text === editStart) return;
+		const fields = decodeFieldsText(replaceLine(baseFields, current.part, current.index, text));
+		const hash = baseHash;
+		try {
+			await saveOverride(recipe.id, locale, { hash, fields });
+			override = { hash, fields };
+			translationError = null;
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
+
 	async function saveTranslation() {
 		if (!recipe || !isLanguage(locale)) return;
 		const fields = {
@@ -180,7 +255,7 @@
 			steps: lines(translationDraft.steps),
 			notes: translationDraft.notes.trim()
 		};
-		const hash = sourceHash(recipe);
+		const hash = baseHash;
 		try {
 			await saveOverride(recipe.id, locale, { hash, fields });
 			override = { hash, fields };
@@ -202,6 +277,25 @@
 	}
 </script>
 
+{#snippet lineEdit(part: EditPart, index: number, text: string, rich: boolean)}
+	{#if editing?.part === part && editing.index === index}
+		<textarea
+			class="inline-edit"
+			rows="2"
+			bind:value={editDraft}
+			onblur={commitInline}
+			onkeydown={inlineKey}></textarea>
+	{:else if canEdit}
+		<button type="button" class="editable" onclick={() => startInline(part, index, text)}>
+			{#if rich}<RichText source={text} />{:else}{text}{/if}
+		</button>
+	{:else if rich}
+		<RichText source={text} />
+	{:else}
+		{text}
+	{/if}
+{/snippet}
+
 <svelte:head>
 	<title>{recipe?.title ?? m.recipes_title()}</title>
 </svelte:head>
@@ -211,7 +305,26 @@
 
 	{#if recipe && shown}
 		<article>
-			<h1>{shown.title}</h1>
+			<h1>
+				{#if editing?.part === 'title'}
+					<input
+						type="text"
+						class="inline-edit"
+						bind:value={editDraft}
+						aria-label={m.recipe_field_title()}
+						onblur={commitInline}
+						onkeydown={inlineKey}
+					/>
+				{:else if canEdit}
+					<button
+						type="button"
+						class="editable"
+						onclick={() => startInline('title', 0, shown.title)}>{shown.title}</button
+					>
+				{:else}
+					{shown.title}
+				{/if}
+			</h1>
 			<section class="recipe-tags" aria-label={m.recipe_field_tags()}>
 				<div class="tag-list">
 					{#each recipe.tags as tag (tag)}
@@ -235,14 +348,12 @@
 							placeholder={m.tags_add_placeholder()}
 							aria-label={m.tags_add_placeholder()}
 							onkeydown={(event) => {
-								if (event.key === 'Enter' || event.key === ',') {
+								if (event.key === 'Enter' || event.key === ',' || event.key === ' ') {
 									event.preventDefault();
 									addTag();
 								}
 							}}
 						/>
-						<button type="button" class="link-button" onclick={addTag}>{m.tags_add_button()}</button
-						>
 					</div>
 				{/if}
 				{#if tagLimitHit}
@@ -283,18 +394,6 @@
 						{m.delete_action()}
 					</button>
 				{/if}
-				{#if translated && !translated.failed && !translating}
-					<span aria-hidden="true">·</span>
-					<button type="button" class="link-button" onclick={() => (showOriginal = !showOriginal)}>
-						{showOriginal ? m.show_translation() : m.show_original()}
-					</button>
-				{/if}
-				{#if page.data.signedIn && !translating && recipe && isLanguage(locale) && !editingTranslation}
-					<span aria-hidden="true">·</span>
-					<button type="button" class="link-button" onclick={startEditTranslation}
-						>{m.translation_edit()}</button
-					>
-				{/if}
 			</p>
 			{#if actionError}
 				<p role="alert">{actionError}</p>
@@ -310,6 +409,30 @@
 
 			{#if !translating && recipe && isLanguage(locale)}
 				<div class="translation-tools">
+					{#if canEdit}
+						<p class="meta">{m.translation_tap_hint()}</p>
+					{/if}
+					<p class="tools-links">
+						{#if translated && !translated.failed}
+							<button
+								type="button"
+								class="link-button"
+								onclick={() => (showOriginal = !showOriginal)}
+							>
+								{showOriginal ? m.show_translation() : m.show_original()}
+							</button>
+						{/if}
+						{#if page.data.signedIn && baseFields && !showOriginal && !editingTranslation}
+							<button type="button" class="link-button" onclick={startEditTranslation}
+								>{m.translation_edit_all()}</button
+							>
+						{/if}
+						{#if override && page.data.signedIn}
+							<button type="button" class="link-button danger" onclick={resetTranslation}
+								>{m.translation_reset()}</button
+							>
+						{/if}
+					</p>
 					{#if translationStale}
 						<p role="status">{m.translation_stale()}</p>
 					{/if}
@@ -363,11 +486,6 @@
 									class="link-button"
 									onclick={() => (editingTranslation = false)}>{m.recipe_cancel()}</button
 								>
-								{#if override}
-									<button type="button" class="link-button danger" onclick={resetTranslation}
-										>{m.translation_reset()}</button
-									>
-								{/if}
 							</div>
 							{#if translationError}
 								<p role="alert">{translationError}</p>
@@ -413,16 +531,23 @@
 							<!-- eslint-enable svelte/no-navigation-without-resolve -->
 						{/if}
 					</p>
-					{#each groupIngredients(shown.ingredients) as group, g (g)}
+					{#each placeIngredients(shown.ingredients) as group, g (g)}
 						{#if group.heading !== null}
-							<h3 class="ingredient-heading">{group.heading}</h3>
+							<h3 class="ingredient-heading">
+								{@render lineEdit('ingredients', group.heading.index, group.heading.text, false)}
+							</h3>
 						{/if}
 						{#if group.items.length > 0}
 							<ul class="plain">
-								{#each attachNotes(group.items) as entry, i (i)}
+								{#each group.items as entry, i (i)}
 									<li class:note-only={entry.item === null}>
-										{entry.item ?? ''}{#if entry.notes.length > 0}<NoteBlock
-												notes={entry.notes}
+										{#if entry.item !== null}{@render lineEdit(
+												'ingredients',
+												entry.item.index,
+												entry.item.text,
+												false
+											)}{/if}{#if entry.notes.length > 0}<NoteBlock
+												notes={entry.notes.map((n) => n.note)}
 											/>{/if}
 									</li>
 								{/each}
@@ -442,11 +567,16 @@
 				<section>
 					<h2>{m.recipe_steps_heading()}</h2>
 					<ol>
-						{#each attachNotes(shown.steps) as entry, i (i)}
+						{#each placeItems(shown.steps) as entry, i (i)}
 							<li class:note-only={entry.item === null}>
-								{#if entry.item !== null}<RichText
-										source={entry.item}
-									/>{/if}{#if entry.notes.length > 0}<NoteBlock notes={entry.notes} />{/if}
+								{#if entry.item !== null}{@render lineEdit(
+										'steps',
+										entry.item.index,
+										entry.item.text,
+										true
+									)}{/if}{#if entry.notes.length > 0}<NoteBlock
+										notes={entry.notes.map((n) => n.note)}
+									/>{/if}
 							</li>
 						{/each}
 					</ol>

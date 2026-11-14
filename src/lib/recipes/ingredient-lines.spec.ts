@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
 	attachNotes,
+	placeIngredients,
 	groupIngredients,
 	headingText,
 	isHeading,
@@ -182,5 +183,26 @@ describe('translation keeps notes', () => {
 			steps: ['Взбейте.', '> Используйте антипригарную сковороду.'],
 			notes: ''
 		});
+	});
+});
+
+describe('placeIngredients', () => {
+	it('keeps each line at its position in the stored list', () => {
+		const groups = placeIngredients(['# Sauce', '2 eggs', '> - whisked', '# Base', '1 cup flour']);
+		expect(groups).toEqual([
+			{
+				heading: { text: 'Sauce', index: 0 },
+				items: [
+					{
+						item: { text: '2 eggs', index: 1 },
+						notes: [{ note: { bullet: true, text: 'whisked' }, index: 2 }]
+					}
+				]
+			},
+			{
+				heading: { text: 'Base', index: 3 },
+				items: [{ item: { text: '1 cup flour', index: 4 }, notes: [] }]
+			}
+		]);
 	});
 });

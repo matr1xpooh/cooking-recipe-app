@@ -603,13 +603,12 @@
 				placeholder={m.tags_add_placeholder()}
 				aria-label={m.tags_add_placeholder()}
 				onkeydown={(event) => {
-					if (event.key === 'Enter' || event.key === ',') {
+					if (event.key === 'Enter' || event.key === ',' || event.key === ' ') {
 						event.preventDefault();
 						addTypedTag();
 					}
 				}}
 			/>
-			<button type="button" class="link-button" onclick={addTypedTag}>{m.tags_add_button()}</button>
 		</div>
 		{#if tagError}
 			<p role="alert">{m.tags_limit({ n: MAX_TAGS_PER_RECIPE })}</p>

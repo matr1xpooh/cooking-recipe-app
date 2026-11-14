@@ -126,3 +126,57 @@ export function noteBlocks(notes: NoteLine[]): NoteBlock[] {
 	}
 	return blocks;
 }
+
+/** A line and its position in the stored list, so an edit can change exactly that line. */
+export interface Placed {
+	text: string;
+	index: number;
+}
+
+export interface PlacedItem {
+	/** The item, or null for notes that come before any item. */
+	item: Placed | null;
+	notes: { note: NoteLine; index: number }[];
+}
+
+export interface PlacedGroup {
+	heading: Placed | null;
+	items: PlacedItem[];
+}
+
+/** Like groupIngredients and attachNotes together, keeping each line's index in the list. */
+export function placeIngredients(lines: string[]): PlacedGroup[] {
+	const groups: PlacedGroup[] = [];
+	let current: PlacedGroup = { heading: null, items: [] };
+	const flush = () => {
+		if (current.heading !== null || current.items.length > 0) groups.push(current);
+	};
+	lines.forEach((line, index) => {
+		if (isHeading(line)) {
+			flush();
+			current = { heading: { text: headingText(line), index }, items: [] };
+		} else {
+			placeItem(current.items, line, index);
+		}
+	});
+	flush();
+	return groups;
+}
+
+/** Like attachNotes, keeping each line's index. */
+export function placeItems(lines: string[]): PlacedItem[] {
+	const items: PlacedItem[] = [];
+	lines.forEach((line, index) => placeItem(items, line, index));
+	return items;
+}
+
+function placeItem(items: PlacedItem[], line: string, index: number): void {
+	const note = splitNote(line);
+	if (note) {
+		const last = items[items.length - 1];
+		if (last) last.notes.push({ note, index });
+		else items.push({ item: null, notes: [{ note, index }] });
+	} else {
+		items.push({ item: { text: line, index }, notes: [] });
+	}
+}

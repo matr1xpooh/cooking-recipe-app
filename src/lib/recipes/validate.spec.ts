@@ -96,3 +96,42 @@ describe('decodeRecipeText', () => {
 		expect(decodeRecipeText(recipe)).toEqual(recipe);
 	});
 });
+
+describe('translation lines keep their place', () => {
+	it('replaces one stored line and keeps its heading and note markers', async () => {
+		const { replaceLine, displayText } = await import('./translation-fields');
+		const fields = {
+			title: 'T',
+			ingredients: ['# Sauce', '2 eggs', '> - whisked', '1 cup flour'],
+			steps: ['Mix', '> keep cool'],
+			notes: 'n'
+		};
+		const edited = replaceLine(fields, 'ingredients', 0, 'Dressing');
+		expect(edited.ingredients).toEqual(['# Dressing', '2 eggs', '> - whisked', '1 cup flour']);
+		expect(replaceLine(fields, 'ingredients', 2, 'beaten')).toEqual({
+			...fields,
+			ingredients: ['# Sauce', '2 eggs', '> - beaten', '1 cup flour']
+		});
+		expect(replaceLine(fields, 'steps', 1, 'chill well').steps).toEqual(['Mix', '> chill well']);
+		expect(displayText('# Sauce', true)).toBe('Sauce');
+		expect(displayText('> keep cool', false)).toBe('keep cool');
+	});
+
+	it('writing back what is shown changes nothing', async () => {
+		const { replaceLine, displayText } = await import('./translation-fields');
+		const fields = {
+			title: 'T',
+			ingredients: ['# Sauce', '2 eggs', '> - whisked'],
+			steps: ['Mix', '> keep cool'],
+			notes: 'n'
+		};
+		let out = fields;
+		fields.ingredients.forEach((line, i) => {
+			out = replaceLine(out, 'ingredients', i, displayText(line, true));
+		});
+		fields.steps.forEach((line, i) => {
+			out = replaceLine(out, 'steps', i, displayText(line, false));
+		});
+		expect(out).toEqual(fields);
+	});
+});

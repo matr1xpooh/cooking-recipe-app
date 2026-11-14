@@ -107,3 +107,34 @@ export function decodeFieldsText(fields: RecipeFields): RecipeFields {
 		notes: decodeEntities(fields.notes)
 	};
 }
+
+/** The part of a line a reader sees: a heading's words, a note's text, or the item itself. */
+export function displayText(line: string, isIngredients: boolean): string {
+	if (isIngredients && isHeading(line)) return headingText(line);
+	const note = splitNote(line);
+	return note ? note.text : line;
+}
+
+/**
+ * Replaces the text of one stored line and keeps its marker (heading or note), so the
+ * list keeps its shape: same length, same headings and notes, one line changed.
+ */
+export function replaceLine(
+	fields: RecipeFields,
+	part: 'title' | 'ingredients' | 'steps' | 'notes',
+	index: number,
+	text: string
+): RecipeFields {
+	if (part === 'title') return { ...fields, title: text };
+	if (part === 'notes') return { ...fields, notes: text };
+	const isIngredients = part === 'ingredients';
+	const list = [...fields[part]];
+	const line = list[index];
+	if (line === undefined) return fields;
+	if (isIngredients && isHeading(line)) list[index] = HEADING_MARKER + text;
+	else {
+		const note = splitNote(line);
+		list[index] = note ? joinNote({ bullet: note.bullet, text }) : text;
+	}
+	return { ...fields, [part]: list };
+}
