@@ -459,9 +459,6 @@
 
 			{#if !translating && recipe && isLanguage(locale)}
 				<div class="translation-tools">
-					{#if canEdit}
-						<p class="meta">{m.translation_tap_hint()}</p>
-					{/if}
 					<p class="tools-links">
 						{#if translated && !translated.failed}
 							<button
@@ -549,6 +546,7 @@
 
 			<section>
 				<h2>{m.recipe_ingredients_heading()}</h2>
+				{#if canEdit}<p class="meta">{m.translation_tap_hint()}</p>{/if}
 				{#if imageUrls.length > 0}
 					<div class="tabs" role="tablist" aria-label={m.recipe_ingredients_heading()}>
 						<button
