@@ -72,6 +72,12 @@ describe('ingredientsPerStep', () => {
 		]);
 	});
 
+	it('matches an optional ingredient written with filler words before the amount', () => {
+		const lines = ['Optionally, 4 strips of bacon cut in 2 cm squares and fried to crispness.'];
+		const perStep = ingredientsPerStep(['Stir in the bacon if using.'], lines);
+		expect(perStep[0]).toEqual([{ index: 0, remaining: false }]);
+	});
+
 	it('does not match a preparation word such as "grated" to a step verb', () => {
 		const lines = ['1 cup – 120g grated Gruyère or Fontina'];
 		const perStep = ingredientsPerStep(

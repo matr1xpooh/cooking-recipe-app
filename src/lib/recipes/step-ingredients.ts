@@ -32,8 +32,17 @@ const UNIT = /^(tsp|tbsp|cups?|g|kg|ml|l|lb|lbs|oz|pcs?|pieces?|cloves?|cans?|st
 
 /** An amount or a unit at the start of an ingredient line, such as "2", "1¼", "–", "tbsp". */
 function isAmountWord(word: string): boolean {
-	return /\d/.test(word) || /^[–—-]$/.test(word) || /^[½¼¾⅓⅔⅛]$/.test(word) || UNIT.test(word);
+	return (
+		/\d/.test(word) ||
+		/^[–—-]$/.test(word) ||
+		/^[½¼¾⅓⅔⅛]$/.test(word) ||
+		UNIT.test(word) ||
+		FILLER.test(word)
+	);
 }
+
+/** Words before the name that do not say what it is: "Optionally, 4 strips of bacon". */
+const FILLER = /^(optionally,?|about|some|of|a|an|strips?|slices?)$/i;
 
 function normalize(text: string): string {
 	return text.toLowerCase().replace(/ё/g, 'е');
