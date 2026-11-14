@@ -46,8 +46,13 @@ export async function translateFields(
 	const cached = cache.get(key, hash);
 	if (cached) return { fields: fromTexts(shape, cached), failed: false };
 
-	const translated = await postItems(items, target, fetchFn);
-	if (!translated) return { fields: shape, failed: true };
+	// The server takes at most BATCH_SIZE items per request, so a long recipe is sent in parts.
+	const translated: TranslatedItem[] = [];
+	for (let start = 0; start < items.length; start += BATCH_SIZE) {
+		const part = await postItems(items.slice(start, start + BATCH_SIZE), target, fetchFn);
+		if (!part) return { fields: shape, failed: true };
+		translated.push(...part);
+	}
 
 	const failed = translated.some((t) => t.failed);
 	const texts = translated.map((t) => t.text);

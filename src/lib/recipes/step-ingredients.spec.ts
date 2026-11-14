@@ -59,9 +59,44 @@ describe('ingredientsPerStep', () => {
 		expect(forStep('Melt the butter.', english)).toEqual([{ index: 0, remaining: false }]);
 	});
 
+	it('matches related forms, such as "желток" and "желтки"', () => {
+		expect(forStep('отделаем желтки от белков', ['Желток яйца - 2 шт'])).toEqual([
+			{ index: 0, remaining: false }
+		]);
+	});
+
+	it('shows an ingredient listed twice once, at its first step', () => {
+		const lines = ['Горчица - 1 ч.л', 'Горчица - 1 ч.л'];
+		expect(forStep('добавляем горчицу и перемешиваем', lines)).toEqual([
+			{ index: 0, remaining: false }
+		]);
+	});
+
+	it('uses an ingredient under a heading only in a step that mentions the heading', () => {
+		const lines = ['Соль 5 г', '# Вторая заправка', 'Горчица - 1 ч.л'];
+		const perStep = ingredientsPerStep(
+			['Добавляем горчицу и перемешиваем', 'Вторая заправка: добавляем горчицу'],
+			lines
+		);
+		expect(perStep[0]).toEqual([]);
+		expect(perStep[1]).toEqual([{ index: 2, remaining: false }]);
+	});
+
+	it('keeps the same name under two headings as two ingredients', () => {
+		const lines = ['Горчица - 1 ч.л', '# Вторая заправка', 'Горчица - 1 ч.л'];
+		const perStep = ingredientsPerStep(
+			['Добавляем горчицу', 'Вторая заправка: добавляем горчицу'],
+			lines
+		);
+		expect(perStep[0]).toEqual([{ index: 0, remaining: false }]);
+		expect(perStep[1]).toEqual([{ index: 2, remaining: false }]);
+	});
+
 	it('skips headings and notes in the ingredient list', () => {
 		const withHeading = ['# Sauce', '> a note', 'Butter 50 g'];
-		expect(forStep('Melt the butter.', withHeading)).toEqual([{ index: 2, remaining: false }]);
+		expect(forStep('Sauce: melt the butter.', withHeading)).toEqual([
+			{ index: 2, remaining: false }
+		]);
 	});
 
 	it('does not show an ingredient again when a later step names it as the same item', () => {

@@ -133,6 +133,22 @@ describe('translateFields / translateTitles', () => {
 		}) as typeof fetch;
 	}
 
+	it('sends a long recipe in parts of at most 40 items', async () => {
+		const cache = new TranslationCache(memory());
+		const calls: unknown[][] = [];
+		const long: RecipeFields = {
+			...shape,
+			ingredients: Array.from({ length: 45 }, (_, i) => `ingredient ${i}`),
+			steps: Array.from({ length: 10 }, (_, i) => `step ${i}`)
+		};
+		const out = await translateFields(long, 'r2', 'es', cache, fakeFetch(calls));
+		expect(calls.length).toBeGreaterThan(1);
+		expect(calls.every((c) => c.length <= 40)).toBe(true);
+		expect(out.failed).toBe(false);
+		expect(out.fields.ingredients[44]).toBe('INGREDIENT 44');
+		expect(out.fields.steps[9]).toBe('STEP 9');
+	});
+
 	it('translates once, then serves the second view from cache', async () => {
 		const cache = new TranslationCache(memory());
 		const calls: unknown[][] = [];

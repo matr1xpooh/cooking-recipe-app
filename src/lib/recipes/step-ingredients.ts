@@ -1,4 +1,4 @@
-import { isHeading, isNote } from './ingredient-lines.js';
+import { headingText, isHeading, isNote } from './ingredient-lines.js';
 
 /**
  * An ingredient used in a step: its position in the ingredient list, and whether the step says
@@ -41,13 +41,14 @@ function tokens(text: string): string[] {
 }
 
 /**
- * Parts of the name that are looked for in the step. Only the first five letters of each word
- * are kept, so endings such as "масло" and "масла" both match. Short words such as "и" are skipped.
+ * Parts of a name that are looked for in a step. Only the first four letters of each word are
+ * kept, so endings and related forms match: "масло" and "масла", "желток" and "желтки".
+ * Words of three letters or fewer are kept whole. Short words such as "и" are skipped.
  */
 function stems(name: string): string[] {
 	return words(name)
 		.filter((w) => w.length >= 3)
-		.map((w) => w.slice(0, 5));
+		.map((w) => (w.length >= 4 ? w.slice(0, 4) : w));
 }
 
 /**
@@ -66,7 +67,7 @@ export function mentionsRemaining(step: string): boolean {
 	return REMAINING.some((pattern) => pattern.test(step));
 }
 
-/** Indexes of the tokens that name one of the ingredient's stems. */
+/** Indexes of the tokens that name one of the stems. */
 function nameHits(toks: string[], parts: string[]): number[] {
 	const hits: number[] = [];
 	toks.forEach((token, i) => {
@@ -86,31 +87,49 @@ function amountNear(toks: string[], index: number): boolean {
 
 /**
  * The ingredients each step uses, in list order, as positions in the ingredient list. Headings and
- * notes are skipped. An ingredient is shown at the first step that names it. A later step names it
- * again as the same item, so it is not shown again. It is shown again only when the step says
- * "remaining" or gives a new amount next to the name.
+ * notes are skipped.
+ *
+ * An ingredient under a heading (such as "# Вторая заправка", the second dressing) is only used by a
+ * step that mentions the heading. Other ingredients are used by any step that names them.
+ *
+ * An ingredient is shown at the first step that names it. A later step names it again as the same
+ * item, so it is not shown again. It is shown again only when the step says "remaining" or gives a
+ * new amount next to the name. The same name under the same heading counts as one ingredient.
  */
 export function ingredientsPerStep(steps: string[], ingredientLines: string[]): StepIngredient[][] {
-	const seen = new Set<number>();
+	// Each ingredient line with the heading it sits under, if any.
+	const entries: { index: number; heading: string | null; line: string }[] = [];
+	let heading: string | null = null;
+	ingredientLines.forEach((line, index) => {
+		if (isHeading(line)) {
+			heading = normalize(headingText(line));
+			return;
+		}
+		if (isNote(line)) return;
+		entries.push({ index, heading, line });
+	});
+
+	const seen = new Set<string>();
 	return steps.map((step) => {
 		const toks = tokens(step);
 		const remaining = mentionsRemaining(step);
 		const used: StepIngredient[] = [];
-		ingredientLines.forEach((line, lineIndex) => {
-			if (isHeading(line) || isNote(line)) return;
-			const parts = stems(ingredientName(line));
-			if (parts.length === 0) return;
+		for (const entry of entries) {
+			const parts = stems(ingredientName(entry.line));
+			if (parts.length === 0) continue;
+			if (entry.heading !== null && nameHits(toks, stems(entry.heading)).length === 0) continue;
 			const hits = nameHits(toks, parts);
-			if (hits.length === 0) return;
-			if (!seen.has(lineIndex)) {
-				seen.add(lineIndex);
-				used.push({ index: lineIndex, remaining });
+			if (hits.length === 0) continue;
+			const key = `${entry.heading ?? ''}|${normalize(ingredientName(entry.line))}`;
+			if (!seen.has(key)) {
+				seen.add(key);
+				used.push({ index: entry.index, remaining });
 			} else if (remaining) {
-				used.push({ index: lineIndex, remaining: true });
+				used.push({ index: entry.index, remaining: true });
 			} else if (hits.some((i) => amountNear(toks, i))) {
-				used.push({ index: lineIndex, remaining: false });
+				used.push({ index: entry.index, remaining: false });
 			}
-		});
+		}
 		return used;
 	});
 }
