@@ -6,9 +6,7 @@ import type { CognitoConfig } from './cognito';
  */
 
 export const SESSION_COOKIE = 'recipes_session';
-export const ATTEMPT_COOKIE = 'recipes_signin';
 export const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000;
-export const ATTEMPT_MAX_AGE_MS = 10 * 60 * 1000;
 
 /** The user every request is treated as when auth is off (local development only). */
 export const LOCAL_USER = { sub: 'local' };

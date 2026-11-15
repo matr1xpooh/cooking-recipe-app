@@ -58,9 +58,11 @@ export default $config({
 			callbackUrls: [`${origin}/auth/callback`],
 			transform: {
 				client: (args) => {
-					// Authorization code with PKCE only: no implicit flow, no client secret.
+					// No implicit flow, no client secret.
 					args.allowedOauthFlows = ['code'];
 					args.generateSecret = false;
+					// The app's own sign-in form sends the email and password to Cognito's sign-in API.
+					args.explicitAuthFlows = ['ALLOW_USER_PASSWORD_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH'];
 					args.logoutUrls = [`${origin}/signin`];
 				}
 			}

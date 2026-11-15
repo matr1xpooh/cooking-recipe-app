@@ -27,15 +27,7 @@ async function apiRoutePaths(
 	return out;
 }
 
-/** The only API routes a signed-out visitor may read (GET). Anything new must be added here on purpose. */
-const PUBLIC_API_READS = [
-	'/api/recipes',
-	'/api/recipes/example',
-	'/api/recipes/example/images/example',
-	'/api/recipes/example/translations/example'
-];
-
-describe('every API route needs a signed-in user, except the recipe reads', () => {
+describe('every API route needs a signed-in user', () => {
 	it('finds the API routes', async () => {
 		const routes = await apiRoutePaths();
 		expect(routes.length).toBeGreaterThan(0);
@@ -50,16 +42,13 @@ describe('every API route needs a signed-in user, except the recipe reads', () =
 		}
 	});
 
-	it('opens to a signed-out reader only the listed recipe reads', async () => {
-		const opened: string[] = [];
+	it('opens no API route to a signed-out reader', async () => {
 		for (const pathname of await apiRoutePaths()) {
-			if (
-				decideAccess({ pathname, method: 'GET', signedIn: false, authDisabled: false }) === 'allow'
-			) {
-				opened.push(pathname);
-			}
+			expect(
+				decideAccess({ pathname, method: 'GET', signedIn: false, authDisabled: false }),
+				pathname
+			).toBe('unauthorized');
 		}
-		expect(opened.sort()).toEqual([...PUBLIC_API_READS].sort());
 	});
 
 	it('never lists an API route as public', async () => {

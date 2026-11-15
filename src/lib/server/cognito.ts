@@ -1,14 +1,8 @@
-import {
-	createHash,
-	createPublicKey,
-	randomBytes,
-	verify,
-	type JsonWebKey as NodeJsonWebKey
-} from 'node:crypto';
+import { createPublicKey, verify, type JsonWebKey as NodeJsonWebKey } from 'node:crypto';
 
 /**
- * Amazon Cognito hosted sign-in (OAuth 2.0 authorization code with PKCE). Verifies the
- * ID token's RS256 signature against the user pool's public keys, then its claims.
+ * Amazon Cognito: the ID token check (RS256 signature against the user pool's public keys,
+ * then its claims) and the hosted sign-out page.
  */
 
 export interface CognitoConfig {
@@ -28,38 +22,6 @@ export interface VerifiedUser {
 	email?: string;
 }
 
-function b64url(input: Buffer): string {
-	return input.toString('base64url');
-}
-
-/** A PKCE verifier, its S256 challenge, and a state value for one sign-in attempt. */
-export function newAttempt(): { state: string; verifier: string; challenge: string } {
-	const verifier = b64url(randomBytes(32));
-	return {
-		state: b64url(randomBytes(16)),
-		verifier,
-		challenge: b64url(createHash('sha256').update(verifier).digest())
-	};
-}
-
-export function authorizeUrl(
-	config: CognitoConfig,
-	redirectUri: string,
-	attempt: { state: string; challenge: string }
-): string {
-	const url = new URL('/oauth2/authorize', config.domain);
-	url.search = new URLSearchParams({
-		response_type: 'code',
-		client_id: config.clientId,
-		redirect_uri: redirectUri,
-		scope: 'openid email',
-		state: attempt.state,
-		code_challenge: attempt.challenge,
-		code_challenge_method: 'S256'
-	}).toString();
-	return url.toString();
-}
-
 export function logoutUrl(config: CognitoConfig, logoutUri: string): string {
 	const url = new URL('/logout', config.domain);
 	url.search = new URLSearchParams({
@@ -67,29 +29,6 @@ export function logoutUrl(config: CognitoConfig, logoutUri: string): string {
 		logout_uri: logoutUri
 	}).toString();
 	return url.toString();
-}
-
-/** Trades the authorization code for tokens and returns the ID token. */
-export async function exchangeCode(
-	config: CognitoConfig,
-	input: { code: string; verifier: string; redirectUri: string },
-	fetcher: typeof fetch = fetch
-): Promise<string> {
-	const response = await fetcher(new URL('/oauth2/token', config.domain), {
-		method: 'POST',
-		headers: { 'content-type': 'application/x-www-form-urlencoded' },
-		body: new URLSearchParams({
-			grant_type: 'authorization_code',
-			client_id: config.clientId,
-			code: input.code,
-			redirect_uri: input.redirectUri,
-			code_verifier: input.verifier
-		})
-	});
-	if (!response.ok) throw new Error(`token exchange failed: ${response.status}`);
-	const body = (await response.json()) as { id_token?: unknown };
-	if (typeof body.id_token !== 'string') throw new Error('no id_token in response');
-	return body.id_token;
 }
 
 export async function fetchJwks(

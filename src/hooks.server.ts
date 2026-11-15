@@ -54,7 +54,10 @@ const handleAuth: Handle = async ({ event, resolve }) => {
 			headers: { 'content-type': 'application/json' }
 		});
 	}
-	if (access === 'sign-in') redirect(303, '/signin');
+	if (access === 'sign-in') {
+		const next = encodeURIComponent(event.url.pathname + event.url.search);
+		redirect(303, `/signin?next=${next}`);
+	}
 	return resolve(event);
 };
 

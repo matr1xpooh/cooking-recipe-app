@@ -24,24 +24,20 @@ describe('decideAccess', () => {
 		expect(access('/api/recipes', 'POST')).toBe('unauthorized');
 		expect(access('/api/recipes/translate', 'POST')).toBe('unauthorized');
 		expect(access('/api/recipes/abc', 'DELETE')).toBe('unauthorized');
-		expect(access('/api/recipes/abc/translations/es', 'PUT')).toBe('unauthorized');
 		expect(access('/api/me/language', 'PUT')).toBe('unauthorized');
 	});
 
-	it('lets anyone read recipes: the list, a recipe, its photos and its edited translation', () => {
-		expect(access('/recipes')).toBe('allow');
-		expect(access('/recipes/abc')).toBe('allow');
-		expect(access('/api/recipes')).toBe('allow');
-		expect(access('/api/recipes/abc')).toBe('allow');
-		expect(access('/api/recipes/abc/images/img-1')).toBe('allow');
-		expect(access('/api/recipes/abc/translations/es')).toBe('allow');
-		expect(access('/api/recipes', 'HEAD')).toBe('allow');
+	it('sends a signed-out visitor to sign-in for recipes, not just editing pages', () => {
+		expect(access('/recipes')).toBe('sign-in');
+		expect(access('/recipes/abc')).toBe('sign-in');
+		expect(access('/recipes/abc/cook')).toBe('sign-in');
 	});
 
-	it('keeps the read exception to GET and HEAD only', () => {
-		expect(access('/api/recipes/abc', 'DELETE')).toBe('unauthorized');
-		expect(access('/api/recipes/abc/images/img-1', 'PUT')).toBe('unauthorized');
-		expect(access('/api/recipes/abc/translations/es', 'PUT')).toBe('unauthorized');
+	it('answers 401 for a signed-out read of the API', () => {
+		expect(access('/api/recipes')).toBe('unauthorized');
+		expect(access('/api/recipes/abc')).toBe('unauthorized');
+		expect(access('/api/recipes/abc/images/img-1')).toBe('unauthorized');
+		expect(access('/api/recipes/abc/translations/es')).toBe('unauthorized');
 	});
 
 	it('does not open the recipe names that are routes of their own', () => {
@@ -64,8 +60,6 @@ describe('decideAccess', () => {
 	it('leaves the sign-in flow and static files open', () => {
 		for (const pathname of [
 			'/signin',
-			'/auth/login',
-			'/auth/callback',
 			'/auth/logout',
 			'/manifest.webmanifest',
 			'/service-worker.js',

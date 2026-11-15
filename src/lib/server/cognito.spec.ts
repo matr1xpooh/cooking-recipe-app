@@ -1,6 +1,6 @@
-import { createHash, generateKeyPairSync, sign } from 'node:crypto';
+import { generateKeyPairSync, sign } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { authorizeUrl, newAttempt, verifyIdToken, type CognitoConfig, type Jwk } from './cognito';
+import { verifyIdToken, type CognitoConfig, type Jwk } from './cognito';
 
 const config: CognitoConfig = {
 	issuer: 'https://cognito-idp.eu-west-1.amazonaws.com/eu-west-1_TEST',
@@ -81,25 +81,5 @@ describe('verifyIdToken', () => {
 		expect(() => verifyIdToken(token({}, { kid: 'other' }), config, keys, NOW)).toThrow(
 			'unknown signing key'
 		);
-	});
-});
-
-describe('sign-in attempt', () => {
-	it('uses an S256 challenge that matches the verifier', () => {
-		const attempt = newAttempt();
-		const expected = createHash('sha256').update(attempt.verifier).digest('base64url');
-		expect(attempt.challenge).toBe(expected);
-		expect(attempt.verifier.length).toBeGreaterThanOrEqual(43);
-	});
-
-	it('builds the Cognito authorize URL with PKCE and state', () => {
-		const url = new URL(
-			authorizeUrl(config, 'https://app.example/auth/callback', { state: 's1', challenge: 'c1' })
-		);
-		expect(url.origin + url.pathname).toBe(`${config.domain}/oauth2/authorize`);
-		expect(url.searchParams.get('client_id')).toBe(config.clientId);
-		expect(url.searchParams.get('code_challenge_method')).toBe('S256');
-		expect(url.searchParams.get('state')).toBe('s1');
-		expect(url.searchParams.get('code_challenge')).toBe('c1');
 	});
 });
