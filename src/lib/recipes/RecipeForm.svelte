@@ -138,6 +138,7 @@
 		url_invalid: () => m.error_source_url_invalid(),
 		url_not_allowed: () => m.import_error_url_not_allowed(),
 		page_unreachable: () => m.import_error_page_unreachable(),
+		page_blocked: () => m.import_error_page_blocked(),
 		page_too_large: () => m.import_error_page_too_large(),
 		no_recipe_found: () => m.import_error_no_recipe_found(),
 		description_not_parsed: () => m.import_error_description_not_parsed()

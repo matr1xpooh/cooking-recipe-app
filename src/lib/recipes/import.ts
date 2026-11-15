@@ -3,6 +3,7 @@ export type ImportErrorKey =
 	| 'url_invalid'
 	| 'url_not_allowed'
 	| 'page_unreachable'
+	| 'page_blocked'
 	| 'page_too_large'
 	| 'no_recipe_found'
 	| 'description_not_parsed';

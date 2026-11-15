@@ -11,6 +11,7 @@ const STATUS: Record<ImportErrorKey, number> = {
 	url_invalid: 400,
 	url_not_allowed: 400,
 	page_unreachable: 502,
+	page_blocked: 502,
 	page_too_large: 413,
 	no_recipe_found: 422,
 	description_not_parsed: 422
@@ -144,7 +145,10 @@ async function fetchPublic(
 		}
 		if (!res.ok) {
 			await res.body?.cancel();
-			throw new ImportError('page_unreachable');
+			// A site that refuses the request (bot or region block) is not a broken address.
+			throw new ImportError(
+				res.status === 401 || res.status === 403 ? 'page_blocked' : 'page_unreachable'
+			);
 		}
 		return {
 			bytes: await readLimited(res, maxBytes),

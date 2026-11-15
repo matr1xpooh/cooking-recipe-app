@@ -1,4 +1,4 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import { fetchPublicPage, isPrivateAddress, ImportError, parseHttpUrl } from './recipe-import';
 
 describe('isPrivateAddress', () => {
@@ -54,6 +54,25 @@ describe('fetchPublicPage', () => {
 	it('rejects invalid URLs', async () => {
 		await expect(fetchPublicPage('javascript:alert(1)')).rejects.toMatchObject({
 			key: 'url_invalid'
+		});
+	});
+});
+
+describe('fetchPublicPage when the site refuses the request', () => {
+	afterEach(() => vi.unstubAllGlobals());
+
+	it.each([403, 401])('reports page_blocked for status %i', async (status) => {
+		vi.stubGlobal('fetch', async () => new Response('Forbidden', { status }));
+		// An IP literal is used so no DNS lookup is needed.
+		await expect(fetchPublicPage('https://93.184.216.34/recipe/')).rejects.toMatchObject({
+			key: 'page_blocked'
+		});
+	});
+
+	it('reports page_unreachable for other error statuses', async () => {
+		vi.stubGlobal('fetch', async () => new Response('Missing', { status: 404 }));
+		await expect(fetchPublicPage('https://93.184.216.34/recipe/')).rejects.toMatchObject({
+			key: 'page_unreachable'
 		});
 	});
 });
