@@ -9,7 +9,12 @@ import {
 	parseDescription,
 	type ImportedRecipe
 } from '#lib/recipes/import.js';
-import { fetchPublicPage, ImportError, parseHttpUrl } from '#lib/server/recipe-import.js';
+import {
+	fetchPublicPage,
+	ImportError,
+	parseHttpUrl,
+	YOUTUBE_CONSENT_COOKIE
+} from '#lib/server/recipe-import.js';
 import { getStore } from '#lib/server/store.js';
 import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 import { parseStart } from '#lib/recipes/recipe.js';
@@ -63,7 +68,10 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				{ status: 409 }
 			);
 		}
-		const html = await fetchPublicPage(target);
+		const html = await fetchPublicPage(
+			target,
+			isYouTubeUrl(pageUrl) ? YOUTUBE_CONSENT_COOKIE : undefined
+		);
 		const recipe = recipeFromPage(pageUrl, html);
 		// Pictures: the recipe's own, else the page's og:image. YouTube's image is a video
 		// thumbnail, so it is not used.

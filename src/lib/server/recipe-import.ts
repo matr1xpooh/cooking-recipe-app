@@ -119,7 +119,8 @@ async function readLimited(res: Response, maxBytes: number): Promise<Uint8Array>
 async function fetchPublic(
 	raw: string,
 	accept: string,
-	maxBytes: number
+	maxBytes: number,
+	cookie?: string
 ): Promise<{ bytes: Uint8Array; contentType: string | null }> {
 	let url = parseHttpUrl(raw);
 
@@ -131,7 +132,11 @@ async function fetchPublic(
 			res = await fetch(url, {
 				redirect: 'manual',
 				signal: AbortSignal.timeout(TIMEOUT_MS),
-				headers: { accept, 'user-agent': 'cooking-recipe-app (recipe import)' }
+				headers: {
+					accept,
+					'user-agent': 'cooking-recipe-app (recipe import)',
+					...(cookie ? { cookie } : {})
+				}
 			});
 		} catch {
 			throw new ImportError('page_unreachable');
@@ -159,9 +164,15 @@ async function fetchPublic(
 	throw new ImportError('page_unreachable');
 }
 
+/**
+ * Cookies that answer YouTube's consent page. The server runs in Europe, where YouTube shows
+ * that page before the video, and it has no description.
+ */
+export const YOUTUBE_CONSENT_COOKIE = 'CONSENT=YES+1; SOCS=CAI';
+
 /** Fetches a public web page's HTML. */
-export async function fetchPublicPage(raw: string): Promise<string> {
-	const { bytes } = await fetchPublic(raw, 'text/html,application/xhtml+xml', MAX_BYTES);
+export async function fetchPublicPage(raw: string, cookie?: string): Promise<string> {
+	const { bytes } = await fetchPublic(raw, 'text/html,application/xhtml+xml', MAX_BYTES, cookie);
 	return new TextDecoder().decode(bytes);
 }
 
