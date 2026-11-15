@@ -16,6 +16,7 @@ import {
 	YOUTUBE_CONSENT_COOKIE
 } from '#lib/server/recipe-import.js';
 import { getStore } from '#lib/server/store.js';
+import { fetchYouTubeVideo, youtubeVideoId } from '#lib/server/youtube-api.js';
 import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 import { parseStart } from '#lib/recipes/recipe.js';
 
@@ -67,6 +68,23 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 				{ error: 'duplicate', existing: { id: existing.id, title: existing.title } },
 				{ status: 409 }
 			);
+		}
+		// YouTube with an API key: the official API gives the description from any server.
+		// Without a key, the watch page is read as before.
+		const youtubeKey = process.env.YOUTUBE_API_KEY;
+		if (isYouTubeUrl(pageUrl) && youtubeKey) {
+			const id = youtubeVideoId(pageUrl);
+			if (!id) throw new ImportError('no_recipe_found');
+			const video = await fetchYouTubeVideo(id, youtubeKey);
+			if (video.description === null) throw new ImportError('no_recipe_found');
+			const parsed = parseDescription(video.description);
+			if (!parsed) throw new ImportError('description_not_parsed');
+			return json({
+				title: video.title,
+				ingredients: parsed.ingredients,
+				steps: parsed.steps,
+				imageUrl: null
+			});
 		}
 		const html = await fetchPublicPage(
 			target,

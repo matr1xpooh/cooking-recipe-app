@@ -74,6 +74,8 @@ export default $config({
 
 		// Session cookies are signed with this. Set it with `npx sst secret set SessionSecret`.
 		const sessionSecret = new sst.Secret('SessionSecret');
+		// YouTube Data API key, for reading video descriptions. Set with `npx sst secret set YouTubeApiKey <key>`.
+		const youtubeApiKey = new sst.Secret('YouTubeApiKey');
 
 		const site = new sst.aws.SvelteKit('Site', {
 			link: [table, bucket],
@@ -94,7 +96,8 @@ export default $config({
 				COGNITO_ISSUER: $interpolate`https://cognito-idp.${region}.amazonaws.com/${users.id}`,
 				COGNITO_DOMAIN: `https://${prefix}.auth.${region}.amazoncognito.com`,
 				COGNITO_CLIENT_ID: client.id,
-				SESSION_SECRET: sessionSecret.value
+				SESSION_SECRET: sessionSecret.value,
+				YOUTUBE_API_KEY: youtubeApiKey.value
 			}
 			// To serve the site from your own domain later, add:
 			// domain: { name: 'recipes.example.com', dns: sst.aws.dns() }
