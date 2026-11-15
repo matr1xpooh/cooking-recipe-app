@@ -7,7 +7,8 @@ import {
 	isYouTubeUrl,
 	pageTitle,
 	parseDescription,
-	sectionedIngredients
+	sectionedIngredients,
+	stepsFromPage
 } from './import';
 
 function page(jsonLd: string, head = '<title>Page</title>'): string {
@@ -360,5 +361,21 @@ describe('ingredient sections', () => {
 
 	it('sectionedIngredients returns the flat list when there is no ingredient list', () => {
 		expect(sectionedIngredients('<p>nothing</p>', ['1 egg'])).toEqual(['1 egg']);
+	});
+});
+
+describe('steps on the page', () => {
+	it('reads the steps from the page when the schema.org data has none', () => {
+		const html = `<html><body><ul class="list-unstyled steps-list">
+			<li><a href="x"><i></i></a> Step 1<div class="step-content"><p>Peel the onion.</p></div></li>
+			<li><a href="x"><i></i></a> Step 2<div class="step-content"><p>Fry it &amp; serve.</p></div></li>
+		</ul></body></html>`;
+		expect(stepsFromPage(html)).toEqual(['Peel the onion.', 'Fry it & serve.']);
+	});
+
+	it('is used by extractRecipe only when the schema.org data has no steps', () => {
+		const html = `<html><body><ul class="steps-list"><li>Step 1<p>From the page.</p></li></ul>
+			<script type="application/ld+json">${JSON.stringify({ '@type': 'Recipe', name: 'Soup', recipeIngredient: ['water'] })}</script></body></html>`;
+		expect(extractRecipe(html)?.steps).toEqual(['From the page.']);
 	});
 });

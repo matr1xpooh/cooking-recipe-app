@@ -11,6 +11,7 @@
 	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
 	import TextSizeControl from '#lib/TextSizeControl.svelte';
 	import { page } from '$app/state';
+	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import SignOutButton from '#lib/SignOutButton.svelte';
@@ -25,8 +26,12 @@
 	// On a recipe, "Recipes" and sign-out share one row below the languages.
 	const recipeView = $derived(page.route.id === '/recipes/[id]');
 
-	// Offline reading: the service worker is registered in production builds only.
 	onMount(() => {
+		// The sign-in state comes from the server on each page open. Saved pages and kept layout
+		// data can hold an older state (for example, after the session expired). Offline, the
+		// request fails and the state already shown stays.
+		invalidate('app:session').catch(() => {});
+		// Offline reading: the service worker is registered in production builds only.
 		if (!serviceWorkerRequested && !dev && navigator.onLine && 'serviceWorker' in navigator) {
 			serviceWorkerRequested = true;
 			navigator.serviceWorker.register('/service-worker.js').catch(() => {});

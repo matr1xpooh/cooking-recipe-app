@@ -178,9 +178,26 @@ export function extractRecipe(html: string): ImportedRecipe | null {
 		const image = imageUrlOf(node.image);
 		if (image) recipe.image = image;
 		recipe.ingredients = sectionedIngredients(html, recipe.ingredients);
+		if (recipe.steps.length === 0) recipe.steps = stepsFromPage(html);
 		if (recipe.ingredients.length > 0 || recipe.steps.length > 0) return recipe;
 	}
 	return null;
+}
+
+const STEP_LIST = /<ul[^>]*class="[^"]*step[^"]*"[^>]*>([\s\S]*?)<\/ul>/i;
+
+/**
+ * Steps from the page's own step list, for pages whose schema.org data has no steps. Each item's
+ * "Step 1" label is removed.
+ */
+export function stepsFromPage(html: string): string[] {
+	const list = html.match(STEP_LIST)?.[1];
+	if (!list) return [];
+	return list
+		.split(/<li[\s>]/i)
+		.slice(1)
+		.map((item) => cleanText(item.split(/<\/li>/i)[0] ?? '').replace(/^Step\s*\d+\s*/i, ''))
+		.filter((text) => text.length > 0);
 }
 
 const INGREDIENT_LIST = /<ul[^>]*class="[^"]*ingredient[^"]*"[^>]*>([\s\S]*?)<\/ul>/i;
