@@ -24,7 +24,16 @@ function recipeFromPage(url: URL, html: string): ImportedRecipe {
 
 	if (isYouTubeUrl(url)) {
 		const description = extractYouTubeDescription(html);
-		if (description === null) throw new ImportError('no_recipe_found');
+		if (description === null) {
+			// Logs only facts about the page, never its content or the video address.
+			console.warn('[import] youtube page without description', {
+				bytes: html.length,
+				playerData: html.includes('ytInitialPlayerResponse'),
+				shortDescription: html.includes('shortDescription'),
+				checkPage: /consent|captcha|unusual traffic|not a bot/i.test(html)
+			});
+			throw new ImportError('no_recipe_found');
+		}
 		const parsed = parseDescription(description);
 		if (!parsed) throw new ImportError('description_not_parsed');
 		return { title: '', ...parsed };
