@@ -589,7 +589,6 @@
 			<button
 				type="button"
 				class="add-slot"
-				class:start
 				aria-label={m.add_slot_label()}
 				title={m.add_slot_label()}
 				onclick={() => startAdd(part, at)}>+</button
