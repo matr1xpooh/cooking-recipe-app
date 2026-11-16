@@ -42,6 +42,8 @@
 	import { keepScreenAwake } from '#lib/wake-lock.js';
 	import {
 		isHeading,
+		HEADING_MARKER,
+		toNoteLine,
 		lineRange,
 		placeIngredients,
 		splitNote
@@ -72,7 +74,6 @@
 	let translating = $state(false);
 	let showOriginal = $state(false);
 	/** The tab the user chose; null until they choose, then images if there are any. */
-	let ingredientsTab = $state<'text' | 'image' | null>(null);
 	/** Photo changes in progress, and the reason the last one failed. */
 	let photoBusy = $state(false);
 	let photoError = $state<PhotoErrorKey | 'no_new_lines' | null>(null);
@@ -89,7 +90,13 @@
 	let editing = $state<{ part: EditPart; index: number; note: boolean } | null>(null);
 	let editDraft = $state('');
 	/** The line being added with a "+" (where it goes), and what has been typed for it. */
-	let adding = $state<{ part: 'ingredients' | 'steps'; at: number } | null>(null);
+	/** What a line added with "+" will be: a plain item, a tip or note under the line above, or a section name. */
+	type AddKind = 'item' | 'tip' | 'section';
+	let adding = $state<{
+		part: 'ingredients' | 'steps';
+		at: number;
+		kind: AddKind | 'choose';
+	} | null>(null);
 	let addDraft = $state('');
 	let openPhoto = $state<string | null>(null);
 	let showAddPhotos = $state(false);
@@ -103,7 +110,6 @@
 	});
 
 	const recipe = $derived(recipeStore.recipes.find((r) => r.id === page.params.id));
-	const tab = $derived(ingredientsTab ?? (recipe && recipe.images.length > 0 ? 'image' : 'text'));
 	// The site language is set by a page reload, so it is read once per page view.
 	const locale = getLocale();
 
@@ -468,7 +474,6 @@
 			const ids: string[] = [];
 			for (const file of accepted) ids.push(await uploadImage(recipe.id, file));
 			await recipeStore.update({ ...recipe, images: [...recipe.images, ...ids] });
-			ingredientsTab = 'image';
 			showAddPhotos = false;
 		} catch {
 			actionError = m.error_save_failed();
@@ -530,12 +535,33 @@
 			: [];
 	});
 
-	/** Opens a one-line box at a position in a list. */
-	async function startAdd(part: 'ingredients' | 'steps', at: number) {
-		adding = { part, at };
+	/** Shows the small menu of what to add at a position in a list. */
+	function startAdd(part: 'ingredients' | 'steps', at: number) {
+		adding = { part, at, kind: 'choose' };
+		addDraft = '';
+	}
+
+	/** Opens the one-line box for the chosen kind. */
+	async function chooseKind(kind: AddKind) {
+		if (!adding) return;
+		adding = { ...adding, kind };
 		addDraft = '';
 		await tick();
 		document.querySelector<HTMLElement>('.add-new')?.focus();
+	}
+
+	/** A tip or note goes under a line, so the line above must exist and must not be a section name. */
+	function canTip(part: 'ingredients' | 'steps', at: number): boolean {
+		const lines = part === 'steps' ? (recipe?.steps ?? []) : (recipe?.ingredients ?? []);
+		return at > 0 && !isHeading(lines[at - 1] ?? '');
+	}
+
+	/** Placeholder of the add box for the kind chosen. */
+	function addPlaceholder(part: 'ingredients' | 'steps', kind: AddKind | 'choose'): string {
+		if (kind === 'section') return m.add_section_placeholder();
+		if (kind === 'tip')
+			return part === 'steps' ? m.add_tip_placeholder() : m.add_note_placeholder();
+		return part === 'steps' ? m.add_step_placeholder() : m.add_ingredient_placeholder();
 	}
 
 	/** Adds the typed line at its position, in every language. Empty or cancelled adds nothing. */
@@ -546,7 +572,13 @@
 		addDraft = '';
 		if (!current || !recipe || text === '') return;
 		try {
-			await addLines(recipe.id, current.part, [text], current.at);
+			const line =
+				current.kind === 'tip'
+					? toNoteLine(text)
+					: current.kind === 'section'
+						? HEADING_MARKER + text
+						: text;
+			await addLines(recipe.id, current.part, [line], current.at);
 			translationError = null;
 			await recipeStore.load();
 			if (recipeStore.loadError) translationError = m.error_load_failed();
@@ -577,14 +609,33 @@
 {#snippet addSlot(part: 'ingredients' | 'steps', at: number)}
 	{#if page.data.signedIn}
 		{#if adding?.part === part && adding.at === at}
-			<textarea
-				class="inline-edit add-new"
-				rows="1"
-				placeholder={part === 'steps' ? m.add_step_placeholder() : m.add_ingredient_placeholder()}
-				aria-label={part === 'steps' ? m.add_step_placeholder() : m.add_ingredient_placeholder()}
-				bind:value={addDraft}
-				onblur={commitAdd}
-				onkeydown={addKey}></textarea>
+			{#if adding.kind === 'choose'}
+				<div class="add-kinds" role="group" aria-label={m.add_slot_label()}>
+					<button type="button" class="kind-chip" onclick={() => chooseKind('item')}
+						>{part === 'steps' ? m.add_kind_step() : m.add_kind_ingredient()}</button
+					>
+					{#if canTip(part, at)}
+						<button type="button" class="kind-chip" onclick={() => chooseKind('tip')}
+							>{part === 'steps' ? m.add_kind_tip() : m.add_kind_note()}</button
+						>
+					{/if}
+					<button type="button" class="kind-chip" onclick={() => chooseKind('section')}
+						>{m.add_kind_section()}</button
+					>
+					<button type="button" class="link-button" onclick={() => (adding = null)}
+						>{m.recipe_cancel()}</button
+					>
+				</div>
+			{:else}
+				<textarea
+					class="inline-edit add-new"
+					rows="1"
+					placeholder={addPlaceholder(part, adding.kind)}
+					aria-label={addPlaceholder(part, adding.kind)}
+					bind:value={addDraft}
+					onblur={commitAdd}
+					onkeydown={addKey}></textarea>
+			{/if}
 		{:else}
 			<button
 				type="button"
@@ -771,66 +822,6 @@
 					</div>
 				{/if}
 				{#if recipe.images.length > 0 || page.data.signedIn}
-					<div class="tabs" role="tablist" aria-label={m.recipe_ingredients_heading()}>
-						<button
-							type="button"
-							role="tab"
-							class="tab"
-							class:active={tab === 'text'}
-							aria-selected={tab === 'text'}
-							onclick={() => (ingredientsTab = 'text')}>{m.tab_text()}</button
-						>
-						<button
-							type="button"
-							role="tab"
-							class="tab"
-							class:active={tab === 'image'}
-							aria-selected={tab === 'image'}
-							onclick={() => (ingredientsTab = 'image')}>{m.tab_image()}</button
-						>
-					</div>
-				{/if}
-				{#if tab === 'text'}
-					<p class="meta">
-						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
-					</p>
-					{#each placeIngredients(shown.ingredients) as group, g (g)}
-						{#if group.heading !== null}
-							<h3 class="ingredient-heading">
-								{@render lineEdit('ingredients', group.heading.index, group.heading.text, false)}
-							</h3>
-							{#if group.items.length === 0}{@render addSlot(
-									'ingredients',
-									group.heading.index + 1
-								)}{/if}
-						{/if}
-						{#if group.items.length > 0}
-							<ul class="plain">
-								{#each group.items as entry, i (i)}
-									<li class:note-only={entry.item === null}>
-										{#if entry.item !== null}{@render lineEdit(
-												'ingredients',
-												entry.item.index,
-												entry.item.text,
-												false
-											)}{/if}{#if entry.notes.length > 0}<NoteBlock
-												notes={entry.notes.map((n) => n.note)}
-												indexes={entry.notes.map((n) => n.index)}
-												part="ingredients"
-												edit={lineEdit}
-											/>{/if}{#if entry.item !== null}{@render addSlot(
-												'ingredients',
-												lineRange(recipe.ingredients, entry.item.index).end
-											)}{/if}
-									</li>
-								{/each}
-							</ul>
-						{/if}
-					{/each}
-				{:else}
-					{#if recipe.images.length === 0}
-						<p class="meta">{m.image_empty()}</p>
-					{/if}
 					<div class="gallery stacked">
 						{#each photos as photo (photo.id)}
 							<figure class="gallery-item">
@@ -868,20 +859,18 @@
 						{/each}
 					</div>
 					{#if page.data.signedIn}
-						{#if photos.length === 0 || showAddPhotos}
+						{#if showAddPhotos}
 							<PhotoButtons
 								disabled={photoBusy}
 								onfiles={addPhotos}
 								onerror={(key) => (photoError = key)}
 							/>
-							{#if photos.length > 0}
-								<button type="button" class="link-button" onclick={() => (showAddPhotos = false)}
-									>{m.recipe_cancel()}</button
-								>
-							{/if}
+							<button type="button" class="link-button" onclick={() => (showAddPhotos = false)}
+								>{m.recipe_cancel()}</button
+							>
 						{:else}
 							<button type="button" class="link-button" onclick={() => (showAddPhotos = true)}
-								>{m.photo_add_more()}</button
+								>{photos.length === 0 ? m.photo_add_first() : m.photo_add_more()}</button
 							>
 						{/if}
 					{/if}
@@ -889,6 +878,42 @@
 						<p role="alert">{photoErrorMessages[photoError]()}</p>
 					{/if}
 				{/if}
+				<p class="meta">
+					{m.ingredients_source()}: {sourceLabels[recipe.source]()}
+				</p>
+				{#each placeIngredients(shown.ingredients) as group, g (g)}
+					{#if group.heading !== null}
+						<h3 class="ingredient-heading">
+							{@render lineEdit('ingredients', group.heading.index, group.heading.text, false)}
+						</h3>
+						{#if group.items.length === 0}{@render addSlot(
+								'ingredients',
+								group.heading.index + 1
+							)}{/if}
+					{/if}
+					{#if group.items.length > 0}
+						<ul class="plain">
+							{#each group.items as entry, i (i)}
+								<li class:note-only={entry.item === null}>
+									{#if entry.item !== null}{@render lineEdit(
+											'ingredients',
+											entry.item.index,
+											entry.item.text,
+											false
+										)}{/if}{#if entry.notes.length > 0}<NoteBlock
+											notes={entry.notes.map((n) => n.note)}
+											indexes={entry.notes.map((n) => n.index)}
+											part="ingredients"
+											edit={lineEdit}
+										/>{/if}{#if entry.item !== null}{@render addSlot(
+											'ingredients',
+											lineRange(recipe.ingredients, entry.item.index).end
+										)}{/if}
+								</li>
+							{/each}
+						</ul>
+					{/if}
+				{/each}
 			</section>
 
 			{#if shown.steps.length > 0 || page.data.signedIn}

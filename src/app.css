@@ -1210,3 +1210,22 @@ article li > .add-slot {
 	width: 100%;
 	margin-top: 0.4rem;
 }
+
+/* The menu that asks what to add: small chips, shown only while "+" is open */
+.add-kinds {
+	display: inline-flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.35rem;
+	margin: 0.2rem 0;
+}
+
+.kind-chip {
+	min-height: 2rem;
+	padding: 0.15rem 0.7rem;
+	border: 1px solid currentColor;
+	border-radius: 999px;
+	background: none;
+	font: inherit;
+	font-size: 0.9rem;
+}
