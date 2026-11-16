@@ -1168,6 +1168,25 @@ form > div:last-of-type a,
 }
 
 /* The small "+" that adds a line at its place in a list */
+/* A list item with a "+" keeps the "+" on its first line, at the right edge, whatever the text length */
+article li:has(> .add-slot) {
+	position: relative;
+	padding-right: 2.5rem;
+	/* One-line items are as tall as the "+", so neighbouring "+" buttons do not touch. */
+	min-height: 2.25rem;
+}
+
+article li > .add-slot {
+	position: absolute;
+	top: 0.1rem;
+	right: 0;
+	margin: 0;
+	/* The circle is 2rem; the general tap-target minimum must not stretch it into its neighbour. */
+	min-height: 2rem;
+	height: 2rem;
+	width: 2rem;
+}
+
 .add-slot {
 	display: inline-flex;
 	align-items: center;

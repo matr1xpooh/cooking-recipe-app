@@ -172,5 +172,8 @@
 	"add_slot_label": "Add here",
 	"photo_edit": "Edit",
 	"photo_done": "Done",
-	"photo_add_more": "Add more pictures"
+	"photo_add_more": "Add more pictures",
+	"line_make_tip": "Make it a tip",
+	"line_make_step": "Make it a step",
+	"line_make_ingredient": "Make it an ingredient"
 }

@@ -192,3 +192,14 @@ export function lineRange(lines: string[], index: number): { start: number; end:
 export function removeRange(lines: string[], range: { start: number; end: number }): string[] {
 	return lines.filter((_, i) => i < range.start || i >= range.end);
 }
+
+/** The line that makes a step into a note under the step above: "> " then the text. */
+export function toNoteLine(text: string): string {
+	return joinNote({ bullet: false, text });
+}
+
+/** The text of a note line, without its marker. Other lines are returned unchanged. */
+export function fromNoteLine(line: string): string {
+	const note = splitNote(line);
+	return note ? note.text : line;
+}

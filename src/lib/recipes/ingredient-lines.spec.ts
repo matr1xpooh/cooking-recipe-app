@@ -227,3 +227,12 @@ describe('deleting a line', () => {
 		expect(removeRange(['a', '> x'], lineRange(['a', '> x'], 0))).toEqual([]);
 	});
 });
+
+describe('toNoteLine and fromNoteLine', () => {
+	it('makes a line a note and takes the note marker away again', async () => {
+		const { toNoteLine, fromNoteLine } = await import('./ingredient-lines');
+		expect(toNoteLine('Use cold butter.')).toBe('> Use cold butter.');
+		expect(fromNoteLine('> Use cold butter.')).toBe('Use cold butter.');
+		expect(fromNoteLine('Plain step.')).toBe('Plain step.');
+	});
+});

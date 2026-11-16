@@ -17,6 +17,7 @@
 	} from '#lib/recipes/translation-fields.js';
 	import {
 		addLines,
+		setLineNote,
 		DuplicateRecipeError,
 		deleteImage,
 		uploadImage,
@@ -39,7 +40,12 @@
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { keepScreenAwake } from '#lib/wake-lock.js';
-	import { lineRange, placeIngredients } from '#lib/recipes/ingredient-lines.js';
+	import {
+		isHeading,
+		lineRange,
+		placeIngredients,
+		splitNote
+	} from '#lib/recipes/ingredient-lines.js';
 	import NoteBlock from '#lib/recipes/NoteBlock.svelte';
 	import PhotoButtons from '#lib/recipes/PhotoButtons.svelte';
 	import {
@@ -266,6 +272,39 @@
 	 * Saves one changed line. The whole translation is sent, built from the stored list with
 	 * only this line changed, so its headings and notes stay where they are.
 	 */
+	/** Whether a line can become a note of the line above, or a step again. Headings cannot; a step needs a line above it. */
+	function canToggleNote(part: EditPart, index: number): boolean {
+		if (!recipe || part === 'title') return false;
+		const line = recipe[part][index];
+		if (line === undefined || isHeading(line)) return false;
+		return index > 0 || splitNote(line) !== null;
+	}
+
+	/** The button label: a step becomes a tip, a note becomes a step (or an ingredient again). */
+	function noteLabel(part: EditPart, index: number): string {
+		const line = recipe && part !== 'title' ? recipe[part][index] : '';
+		if (line === undefined || splitNote(line) === null) return m.line_make_tip();
+		return part === 'steps' ? m.line_make_step() : m.line_make_ingredient();
+	}
+
+	/** Saves any typed text, then makes the line a note of the line above, or a step again. */
+	async function toggleNote() {
+		const current = editing;
+		if (!current || !recipe || current.part === 'title') return;
+		const line = recipe[current.part][current.index];
+		if (line === undefined || isHeading(line)) return;
+		const asNote = splitNote(line) === null;
+		await commitInline();
+		try {
+			await setLineNote(recipe.id, current.part, current.index, asNote);
+			translationError = null;
+			await recipeStore.load();
+			if (recipeStore.loadError) translationError = m.error_load_failed();
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
+
 	async function commitInline() {
 		const current = editing;
 		editing = null;
@@ -566,6 +605,14 @@
 			bind:value={editDraft}
 			onblur={commitInline}
 			onkeydown={inlineKey}></textarea>
+		{#if canToggleNote(part, index)}
+			<button
+				type="button"
+				class="link-button tip-toggle"
+				onmousedown={(event) => event.preventDefault()}
+				onclick={toggleNote}>{noteLabel(part, index)}</button
+			>
+		{/if}
 	{:else if canEdit}
 		<button type="button" class="editable" onclick={() => startInline(part, index, text, note)}>
 			{#if rich}<RichText source={text} />{:else}{text}{/if}

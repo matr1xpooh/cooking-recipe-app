@@ -4,6 +4,7 @@ import { isSafeId } from '#lib/server/recipe-data.js';
 import { getStore } from '#lib/server/store.js';
 import { removeLine, type LinePart } from '#lib/server/remove-line.js';
 import { addLines, type AddPart } from '#lib/server/add-lines.js';
+import { setLineNote, type NotePart } from '#lib/server/set-note.js';
 import { decodeEntities } from '#lib/recipes/import.js';
 import { MAX_TRANSLATED_TEXT } from '#lib/recipes/translation-fields.js';
 
@@ -53,5 +54,23 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	if (result === 'not_found') return json({ error: 'not_found' }, { status: 404 });
 	if (result === 'bad_index') return json({ error: 'line_invalid' }, { status: 400 });
 	if (result === 'too_many') return json({ error: 'line_limit' }, { status: 413 });
+	return new Response(null, { status: 204 });
+};
+
+/** PATCH /api/recipes/<id>/lines  body: { part, index, note } -> makes that line a note of the line above, or a step again */
+export const PATCH: RequestHandler = async ({ params, request }) => {
+	if (!isSafeId(params.id)) error(404, 'not found');
+	const body = await request.json().catch(() => null);
+	const part = body?.part;
+	if (
+		(part !== 'ingredients' && part !== 'steps') ||
+		typeof body?.index !== 'number' ||
+		typeof body?.note !== 'boolean'
+	) {
+		return json({ error: 'line_invalid' }, { status: 400 });
+	}
+	const result = await setLineNote(getStore(), params.id, part as NotePart, body.index, body.note);
+	if (result === 'not_found') return json({ error: 'not_found' }, { status: 404 });
+	if (result !== 'changed') return json({ error: 'line_invalid' }, { status: 400 });
 	return new Response(null, { status: 204 });
 };

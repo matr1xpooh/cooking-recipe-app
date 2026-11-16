@@ -1,3 +1,4 @@
+import { markTips } from './import';
 import { describe, it, expect } from 'vitest';
 import {
 	pageImage,
@@ -377,5 +378,35 @@ describe('steps on the page', () => {
 		const html = `<html><body><ul class="steps-list"><li>Step 1<p>From the page.</p></li></ul>
 			<script type="application/ld+json">${JSON.stringify({ '@type': 'Recipe', name: 'Soup', recipeIngredient: ['water'] })}</script></body></html>`;
 		expect(extractRecipe(html)?.steps).toEqual(['From the page.']);
+	});
+});
+
+describe('markTips', () => {
+	it('turns tip lines into notes of the step above, in several languages', () => {
+		expect(
+			markTips([
+				'Mix the flour.',
+				'Chef’s tip: use cold butter.',
+				'Bake.',
+				'Совет от шефа: «Сливки подойдут 35%».',
+				'Consejo: mide bien.',
+				'Serve.'
+			])
+		).toEqual([
+			'Mix the flour.',
+			'> Chef’s tip: use cold butter.',
+			'Bake.',
+			'> Совет от шефа: «Сливки подойдут 35%».',
+			'> Consejo: mide bien.',
+			'Serve.'
+		]);
+	});
+
+	it('leaves a tip with no step above it, and a line after a heading, as they are', () => {
+		expect(markTips(['Tip: first.', '# Dough', 'Tip: after heading.'])).toEqual([
+			'Tip: first.',
+			'# Dough',
+			'Tip: after heading.'
+		]);
 	});
 });

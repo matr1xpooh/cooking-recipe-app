@@ -172,5 +172,8 @@
 	"add_slot_label": "Afegeix aquí",
 	"photo_edit": "Edita",
 	"photo_done": "Fet",
-	"photo_add_more": "Afegeix més fotos"
+	"photo_add_more": "Afegeix més fotos",
+	"line_make_tip": "Fer-ne un consell",
+	"line_make_step": "Fer-ne un pas",
+	"line_make_ingredient": "Fer-ne un ingredient"
 }

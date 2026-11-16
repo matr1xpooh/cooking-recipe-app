@@ -172,5 +172,8 @@
 	"add_slot_label": "Добавить здесь",
 	"photo_edit": "Изменить",
 	"photo_done": "Готово",
-	"photo_add_more": "Добавить ещё фото"
+	"photo_add_more": "Добавить ещё фото",
+	"line_make_tip": "Сделать советом",
+	"line_make_step": "Сделать шагом",
+	"line_make_ingredient": "Сделать ингредиентом"
 }

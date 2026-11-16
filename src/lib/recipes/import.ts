@@ -313,3 +313,26 @@ export function parseDescription(text: string): { ingredients: string[]; steps: 
 	if (ingredients.length === 0 && steps.length === 0) return null;
 	return { ingredients, steps };
 }
+
+/**
+ * A line that starts with a tip label ("Tip:", "Chef's tip -", "Совет от шефа:", "Consejo:" and so
+ * on). Such a line is a note on the step above it, not a step of its own.
+ */
+const TIP_LABEL =
+	/^(chef['’]?s?\s+tips?|pro\s+tips?|tips?|совет(?:ы)?(?:\s+от\s+шефа)?|consejos?|trucos?|consells?)\s*[:\-–—]/i;
+
+/**
+ * Marks tip lines as notes ("> " in front) so they show under the step above. A tip on the first
+ * line, or straight after a heading, has no step above it and is left as it is.
+ */
+export function markTips(lines: string[]): string[] {
+	return lines.map((line, i) => {
+		const trimmed = line.trim();
+		if (i === 0 || isHeadingLine(lines[i - 1]) || !TIP_LABEL.test(trimmed)) return line;
+		return `> ${trimmed}`;
+	});
+}
+
+function isHeadingLine(line: string): boolean {
+	return line.trim().startsWith('# ');
+}

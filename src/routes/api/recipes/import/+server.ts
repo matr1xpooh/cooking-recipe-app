@@ -2,6 +2,7 @@ import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import {
 	extractRecipe,
+	markTips,
 	extractYouTubeDescription,
 	isYouTubeUrl,
 	pageImage,
@@ -82,7 +83,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 			return json({
 				title: video.title,
 				ingredients: parsed.ingredients,
-				steps: parsed.steps,
+				steps: markTips(parsed.steps),
 				imageUrl: null
 			});
 		}
@@ -97,7 +98,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		return json({
 			title: recipe.title || pageTitle(html),
 			ingredients: recipe.ingredients,
-			steps: recipe.steps,
+			steps: markTips(recipe.steps),
 			imageUrl: picture ? new URL(picture, pageUrl).toString() : null
 		});
 	} catch (error) {
