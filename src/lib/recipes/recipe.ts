@@ -130,31 +130,6 @@ export function hasErrors(errors: RecipeErrors): boolean {
 	return Object.keys(errors).length > 0;
 }
 
-/**
- * Applies an edit to an existing recipe. Only the editable fields change; id,
- * creation date, legacy notes and archive state are kept. Callers should run
- * validateRecipeInput first.
- */
-export function applyEdit(
-	recipe: Recipe,
-	input: RecipeInput,
-	source: IngredientSource,
-	images: string[]
-): Recipe {
-	const sourceUrl = input.sourceUrl.trim();
-	return {
-		...recipe,
-		source,
-		images,
-		tags: input.tags,
-		title: input.title.trim(),
-		sourceUrl: sourceUrl.length > 0 ? sourceUrl : null,
-		sourceStart: sourceUrl.length > 0 ? (parseStart(input.sourceStart) ?? null) : null,
-		ingredients: parseLines(input.ingredients),
-		steps: parseLines(input.steps)
-	};
-}
-
 /** Builds a Recipe from valid input. Callers should run validateRecipeInput first. */
 export function createRecipe(
 	input: RecipeInput,

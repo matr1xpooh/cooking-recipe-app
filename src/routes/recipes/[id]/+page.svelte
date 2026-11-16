@@ -554,9 +554,6 @@
 				</p>
 			{/if}
 			<p class="recipe-actions">
-				{#if page.data.signedIn}<a href={resolve('/recipes/[id]/edit', { id: recipe.id })}
-						>{m.recipe_edit()}</a
-					>{/if}
 				{#if recipe.sourceUrl}
 					<span aria-hidden="true">·</span>
 					<!-- External user-supplied URL: resolve() only applies to app routes. -->

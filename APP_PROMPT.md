@@ -19,7 +19,7 @@ A personal recipe book for a small group of known users (household, family, frie
 ### 3.1 Recipes
 
 - A recipe has: title, optional source URL (video or web page), optional video start time in seconds, ingredient list, ordered steps, notes, tags, and zero or more images.
-- Create, edit, archive, restore, and delete recipes. Delete asks for confirmation.
+- Create recipes, then edit them in place on the recipe page: the text, lines, notes, photos, and source link. Archive, restore, and delete. Delete asks for confirmation.
 - A link with a start time opens the video at that time.
 - Duplicate rule: two recipes are duplicates when source URL, start time, and title all match. Saving a duplicate is rejected and the existing recipe is shown. Several dishes from one video are allowed.
 
@@ -101,9 +101,9 @@ A personal recipe book for a small group of known users (household, family, frie
 ## 6. Screens
 
 1. **Recipe list** — title, with sign-out (or the sign-in icon for visitors) at the top right; language switch and text size; text links to add a recipe and manage tags; Active and Archived tabs; search; tag filters folded behind a Filters button, with Select beside it; cards with photo, title, tags.
-2. **Recipe page** — gallery, title, source link (with start time), ingredients, steps, inline notes, tags, language switch, edit.
-3. **New / edit recipe** — import from URL, import from photo, then the editable form.
-4. **Translation edit** — original and translation side by side, out-of-date flag, reset.
+2. **Recipe page** — gallery, title, source link (with start time), ingredients, steps, inline notes, tags, language switch. Signed in: edit in place, add ingredients and steps, manage photos.
+3. **New recipe** — import from URL, import from photo, then the editable form. There is no separate edit page.
+4. **Translation** — “View in original language” edits the original text; a hand-edited translation is flagged when the original changes, and “Reset my edits” discards it.
 5. **Tag manager** — list with counts, merge, remove.
 6. **Sign in** and **Install** pages.
 

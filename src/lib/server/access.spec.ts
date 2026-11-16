@@ -14,9 +14,9 @@ describe('decideAccess', () => {
 		expect(access('/api/recipes', 'POST', signedIn)).toBe('allow');
 	});
 
-	it('sends a signed-out visitor to sign-in for an editing page', () => {
+	it('sends a signed-out visitor to sign-in for a recipe page', () => {
 		expect(access('/recipes/new')).toBe('sign-in');
-		expect(access('/recipes/abc/edit')).toBe('sign-in');
+		expect(access('/recipes/abc')).toBe('sign-in');
 		expect(access('/tags')).toBe('sign-in');
 	});
 
@@ -48,8 +48,8 @@ describe('decideAccess', () => {
 		expect(access('/recipes/new')).toBe('sign-in');
 	});
 
-	it('does not open nested or editing paths under a recipe', () => {
-		expect(access('/recipes/abc/edit')).toBe('sign-in');
+	it('does not open nested paths under a recipe', () => {
+		expect(access('/recipes/abc/cook')).toBe('sign-in');
 		expect(access('/api/recipes/abc/images')).toBe('unauthorized');
 	});
 

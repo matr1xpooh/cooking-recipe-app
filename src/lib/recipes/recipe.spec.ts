@@ -8,7 +8,6 @@ import {
 	sourceHref,
 	normalizeTag,
 	normalizeTags,
-	applyEdit,
 	mergeIngredientLines,
 	createRecipe,
 	hasErrors,
@@ -104,50 +103,6 @@ describe('createRecipe', () => {
 			createdAt: new Date()
 		});
 		expect(recipe.sourceUrl).toBeNull();
-	});
-});
-
-describe('applyEdit', () => {
-	const original = createRecipe(
-		{
-			title: 'Soup',
-			sourceUrl: 'https://example.com/soup',
-			sourceStart: '',
-			ingredients: 'water',
-			steps: 'Boil',
-			tags: []
-		},
-		{ id: 'keep-me', createdAt: new Date('2026-01-01T00:00:00Z') }
-	);
-
-	it('replaces editable fields and keeps identity, date, notes and archive state', () => {
-		const edited = applyEdit(
-			{ ...original, notes: 'legacy', archived: true },
-			{
-				title: '  Stew ',
-				sourceUrl: '',
-				sourceStart: '',
-				ingredients: 'beef\n\nonion',
-				steps: '**Brown** it',
-				tags: []
-			},
-			'web',
-			['img-1']
-		);
-		expect(edited).toEqual({
-			id: 'keep-me',
-			title: 'Stew',
-			sourceUrl: null,
-			sourceStart: null,
-			ingredients: ['beef', 'onion'],
-			steps: ['**Brown** it'],
-			notes: 'legacy',
-			images: ['img-1'],
-			source: 'web',
-			tags: [],
-			createdAt: '2026-01-01T00:00:00.000Z',
-			archived: true
-		});
 	});
 });
 

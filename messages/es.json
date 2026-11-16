@@ -40,8 +40,6 @@
 	"translation_failed": "No se pudo traducir ahora.",
 	"show_original": "Ver en el idioma original",
 	"show_translation": "Ver traducida",
-	"recipe_edit": "Editar",
-	"recipe_edit_title": "Editar receta",
 	"ocr_scanning": "Leyendo la captura…",
 	"error_image_invalid": "Sube una imagen PNG o JPEG.",
 	"error_image_too_large": "La imagen es demasiado grande (límite de 5 MB).",

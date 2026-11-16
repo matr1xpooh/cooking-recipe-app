@@ -40,8 +40,6 @@
 	"translation_failed": "Сейчас не удалось перевести.",
 	"show_original": "Показать на языке оригинала",
 	"show_translation": "Показать перевод",
-	"recipe_edit": "Редактировать",
-	"recipe_edit_title": "Редактировать рецепт",
 	"ocr_scanning": "Читаем скриншот…",
 	"error_image_invalid": "Загрузите изображение PNG или JPEG.",
 	"error_image_too_large": "Изображение слишком большое (лимит 5 МБ).",

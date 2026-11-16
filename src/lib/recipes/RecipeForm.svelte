@@ -15,13 +15,11 @@
 		type RecipeInput
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
-	import { loadImage } from '#lib/recipes/image-store.js';
 	import { resolve } from '$app/paths';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { suggestTags } from '#lib/recipes/tag-suggest.js';
-	import { SvelteSet } from 'svelte/reactivity';
 	import NoteToolbar from './NoteToolbar.svelte';
 	import PhotoButtons from './PhotoButtons.svelte';
 	import { photoProblem, readImageText } from './photos.js';
@@ -32,8 +30,6 @@
 		initialSource = 'typed',
 		submitLabel,
 		cancelHref,
-		savedImageIds = [],
-		ownId,
 		onsave
 	}: {
 		/** Starting values. Read once when the form mounts. */
@@ -42,20 +38,8 @@
 		submitLabel: string;
 		/** Where Cancel goes. Already resolved by the caller. */
 		cancelHref: string;
-		/** Ids of the images already saved with the recipe, in order. */
-		savedImageIds?: string[];
-		/** The id of the recipe being edited: its saved images are loaded from it, and it is not reported as its own duplicate. */
-		ownId?: string;
-		/**
-		 * Called with valid input and the ingredient source, the images added in this form
-		 * (to upload), and the ids of the saved images to keep (the rest are removed).
-		 */
-		onsave: (
-			input: RecipeInput,
-			source: IngredientSource,
-			newImages: File[],
-			keptImageIds: string[]
-		) => void;
+		/** Called with valid input, the ingredient source, and the photos added in this form (to upload). */
+		onsave: (input: RecipeInput, source: IngredientSource, newImages: File[]) => void;
 	} = $props();
 
 	// The form edits its own copies of the starting values, read once on mount.
@@ -120,13 +104,9 @@
 	let scanning = $state(false);
 	let scanError = $state<string | null>(null);
 
-	/** Saved images still on the recipe. Removing one here removes it on save. */
-	// svelte-ignore state_referenced_locally
-	let keptIds = $state<string[]>([...savedImageIds]);
 	/** Images added in this form. Uploaded on save. */
 	let newFiles = $state<File[]>([]);
-	/** Display addresses for the saved and new images. */
-	let savedUrls = $state<Record<string, string>>({});
+	/** Display addresses for the new images. */
 	let newUrls = $state<string[]>([]);
 
 	const errorMessages: Record<RecipeErrorKey, () => string> = {
@@ -161,19 +141,6 @@
 		image: () => m.source_image()
 	};
 
-	// Saved images: load each one for display, once.
-	const loadedSaved = new SvelteSet<string>();
-	$effect(() => {
-		if (!ownId) return;
-		for (const id of keptIds) {
-			if (loadedSaved.has(id)) continue;
-			loadedSaved.add(id);
-			loadImage(ownId, id).then((blob) => {
-				if (blob) savedUrls = { ...savedUrls, [id]: URL.createObjectURL(blob) };
-			});
-		}
-	});
-
 	// New images: a display address for each, released when the list changes.
 	$effect(() => {
 		const urls = newFiles.map((file) => URL.createObjectURL(file));
@@ -181,23 +148,10 @@
 		return () => urls.forEach((url) => URL.revokeObjectURL(url));
 	});
 
-	/** Everything shown in the Image tab, saved images first. */
-	const gallery = $derived([
-		...keptIds.map((id) => ({
-			key: `saved-${id}`,
-			src: savedUrls[id] ?? '',
-			saved: true,
-			id,
-			index: 0
-		})),
-		...newFiles.map((_, index) => ({
-			key: `new-${index}`,
-			src: newUrls[index] ?? '',
-			saved: false,
-			id: '',
-			index
-		}))
-	]);
+	/** The photos added in this form, shown in the Image tab. */
+	const gallery = $derived(
+		newFiles.map((_, index) => ({ key: `new-${index}`, src: newUrls[index] ?? '', index }))
+	);
 
 	/** The non-empty ingredient lines, as they will be saved. */
 	function currentLines(): string[] {
@@ -247,7 +201,6 @@
 				`url=${encodeURIComponent(target)}`,
 				`start=${encodeURIComponent(input.sourceStart.trim())}`
 			];
-			if (ownId) query.push(`exceptId=${encodeURIComponent(ownId)}`);
 			const res = await fetch(`/api/recipes/import?${query.join('&')}`);
 			const body = await res.json();
 			if (res.status === 409) {
@@ -302,19 +255,16 @@
 		scanError = refused;
 	}
 
-	function removeGalleryItem(item: { saved: boolean; id: string; index: number }) {
-		if (item.saved) keptIds = keptIds.filter((id) => id !== item.id);
-		else newFiles = newFiles.filter((_, i) => i !== item.index);
+	function removeGalleryItem(item: { index: number }) {
+		newFiles = newFiles.filter((_, i) => i !== item.index);
 	}
-
-	/** The bytes of one gallery image, saved or new. */
-	async function blobOf(item: { saved: boolean; id: string; index: number }): Promise<Blob | null> {
-		if (!item.saved) return newFiles[item.index] ?? null;
-		return ownId ? loadImage(ownId, item.id) : null;
+	/** The bytes of one photo from this form. */
+	async function blobOf(item: { index: number }): Promise<Blob | null> {
+		return newFiles[item.index] ?? null;
 	}
 
 	/** Reads the text lines from one image and offers them for the text box. */
-	async function readText(item: { saved: boolean; id: string; index: number }) {
+	async function readText(item: { index: number }) {
 		const blob = await blobOf(item);
 		if (!blob) return;
 		scanError = null;
@@ -345,7 +295,7 @@
 		event.preventDefault();
 		errors = validateRecipeInput(input);
 		if (hasErrors(errors)) return;
-		onsave({ ...input, ingredients: currentLines().join('\n') }, source, newFiles, keptIds);
+		onsave({ ...input, ingredients: currentLines().join('\n') }, source, newFiles);
 	}
 </script>
 

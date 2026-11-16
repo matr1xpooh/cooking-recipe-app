@@ -6,7 +6,7 @@ The product brief is in [APP_PROMPT.md](APP_PROMPT.md). It is the standing spec 
 
 ## What it does
 
-- **Recipes:** create, edit, archive, restore and delete. Delete asks for confirmation. A video link can carry a start time and opens at that point.
+- **Recipes:** create once, then edit in place on the recipe page: the text, each ingredient and step, notes, photos, the source link and start time. Archive, restore and delete; delete asks for confirmation. A video link can carry a start time and opens at that point.
 - **Duplicates:** a recipe with the same source link, start time and title as an existing one is rejected, and the existing recipe is shown.
 - **Import from a web page or video description:** title, ingredients, steps and a picture are filled in. Credit, hashtag and sign-off lines are dropped. Private and loopback addresses are refused.
 - **Import from a photo:** AWS Textract reads ingredient lines from a screenshot or photo.
@@ -85,7 +85,7 @@ Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 src/
   hooks.server.ts        sign-in check for every request, language cookie
   routes/
-    recipes/             list, detail, new and edit pages
+    recipes/             list, detail and new pages
     tags/                tag manager
     api/                 JSON API: recipes, images, import, OCR, translation
     auth/                Cognito sign-in (login, callback, logout)
