@@ -167,5 +167,8 @@
 	"note_empty": "Una nota no pot estar buida. Escriu-hi alguna cosa o deixa-la com estava.",
 	"add_line": "Afegeix",
 	"add_ingredient_placeholder": "Afegeix un ingredient",
-	"add_step_placeholder": "Afegeix un pas"
+	"add_step_placeholder": "Afegeix un pas",
+	"source_change": "Canviar l’enllaç",
+	"source_add": "Afegeix un enllaç",
+	"source_save": "Desa l’enllaç"
 }

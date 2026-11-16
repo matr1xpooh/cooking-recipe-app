@@ -167,5 +167,8 @@
 	"note_empty": "Примечание не может быть пустым. Напишите что-нибудь или оставьте как было.",
 	"add_line": "Добавить",
 	"add_ingredient_placeholder": "Добавьте ингредиент",
-	"add_step_placeholder": "Добавьте шаг"
+	"add_step_placeholder": "Добавьте шаг",
+	"source_change": "Изменить ссылку",
+	"source_add": "Добавить ссылку",
+	"source_save": "Сохранить ссылку"
 }

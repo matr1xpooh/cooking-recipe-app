@@ -167,5 +167,8 @@
 	"note_empty": "Una nota no puede estar vacía. Escribe algo en ella o déjala como estaba.",
 	"add_line": "Añadir",
 	"add_ingredient_placeholder": "Añade un ingrediente",
-	"add_step_placeholder": "Añade un paso"
+	"add_step_placeholder": "Añade un paso",
+	"source_change": "Cambiar enlace",
+	"source_add": "Añadir enlace",
+	"source_save": "Guardar enlace"
 }

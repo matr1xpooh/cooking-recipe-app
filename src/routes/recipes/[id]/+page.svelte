@@ -17,6 +17,7 @@
 	} from '#lib/recipes/translation-fields.js';
 	import {
 		addLines,
+		DuplicateRecipeError,
 		deleteLine,
 		deleteOverride,
 		saveOverride,
@@ -27,6 +28,9 @@
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import {
 		MAX_TAGS_PER_RECIPE,
+		hasErrors,
+		parseStart,
+		validateRecipeInput,
 		formatStart,
 		normalizeTag,
 		sourceHref
@@ -57,6 +61,11 @@
 	/** The translation edited by hand, if there is one. It takes the place of the machine translation. */
 	let override = $state<EditedTranslation | null>(null);
 	let translationError = $state<string | null>(null);
+	/** The source link and start time, while they are being changed. */
+	let sourceEditing = $state(false);
+	let sourceDraft = $state({ url: '', start: '' });
+	let sourceError = $state<string | null>(null);
+	let sourceDuplicate = $state<{ id: string; title: string } | null>(null);
 	/** The line being changed in place, whether it is a note, and the text it started with. */
 	let editing = $state<{ part: EditPart; index: number; note: boolean } | null>(null);
 	let editDraft = $state('');
@@ -317,6 +326,49 @@
 		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : [])
 	]);
 
+	/** Opens the source link and start time for changing, filled with the current values. */
+	function startSourceEdit() {
+		if (!recipe) return;
+		sourceDraft = {
+			url: recipe.sourceUrl ?? '',
+			start: recipe.sourceStart === null ? '' : formatStart(recipe.sourceStart)
+		};
+		sourceError = null;
+		sourceDuplicate = null;
+		sourceEditing = true;
+	}
+
+	/** Saves a changed source link and start time, after the same checks as the add form. */
+	async function saveSource() {
+		if (!recipe) return;
+		const url = sourceDraft.url.trim();
+		const errors = validateRecipeInput({
+			title: recipe.title,
+			sourceUrl: url,
+			sourceStart: sourceDraft.start,
+			ingredients: '',
+			steps: '',
+			tags: []
+		});
+		if (hasErrors(errors)) {
+			sourceError = errors.sourceUrl ? m.error_source_url_invalid() : m.error_start_invalid();
+			return;
+		}
+		sourceError = null;
+		sourceDuplicate = null;
+		try {
+			await recipeStore.update({
+				...recipe,
+				sourceUrl: url.length > 0 ? url : null,
+				sourceStart: url.length > 0 ? (parseStart(sourceDraft.start) ?? null) : null
+			});
+			sourceEditing = false;
+		} catch (error) {
+			if (error instanceof DuplicateRecipeError) sourceDuplicate = error.existing;
+			else sourceError = m.error_save_failed();
+		}
+	}
+
 	/** Adds the line typed in a box to the end of its list, in every language. */
 	async function addLine(part: 'ingredients' | 'steps') {
 		if (!recipe) return;
@@ -413,7 +465,13 @@
 					{/if}
 				{/if}
 				<span aria-hidden="true">·</span>
-				{#if page.data.signedIn}<button type="button" class="link-button" onclick={toggleArchive}>
+				{#if page.data.signedIn}<button type="button" class="link-button" onclick={startSourceEdit}
+						>{recipe.sourceUrl ? m.source_change() : m.source_add()}</button
+					><span aria-hidden="true">·</span>{/if}{#if page.data.signedIn}<button
+						type="button"
+						class="link-button"
+						onclick={toggleArchive}
+					>
 						{recipe.archived ? m.restore_action() : m.archive_action()}
 					</button>
 				{/if}
@@ -424,6 +482,47 @@
 					</button>
 				{/if}
 			</p>
+			{#if sourceEditing && page.data.signedIn}
+				<form
+					class="source-edit"
+					onsubmit={(event) => {
+						event.preventDefault();
+						saveSource();
+					}}
+				>
+					<label>
+						{m.recipe_field_source_url()}
+						<input type="url" bind:value={sourceDraft.url} />
+					</label>
+					<label>
+						{m.recipe_field_start()}
+						<input
+							type="text"
+							inputmode="numeric"
+							placeholder="4:30"
+							bind:value={sourceDraft.start}
+						/>
+						<small>{m.recipe_start_hint()}</small>
+					</label>
+					{#if sourceError}
+						<p role="alert">{sourceError}</p>
+					{/if}
+					{#if sourceDuplicate}
+						<p role="alert">
+							{m.error_duplicate()}
+							<a href={resolve('/recipes/[id]', { id: sourceDuplicate.id })}
+								>{sourceDuplicate.title}</a
+							>
+						</p>
+					{/if}
+					<div class="source-actions">
+						<button type="submit">{m.source_save()}</button>
+						<button type="button" class="link-button" onclick={() => (sourceEditing = false)}
+							>{m.recipe_cancel()}</button
+						>
+					</div>
+				</form>
+			{/if}
 			{#if actionError}
 				<p role="alert">{actionError}</p>
 			{/if}

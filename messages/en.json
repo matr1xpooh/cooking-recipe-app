@@ -167,5 +167,8 @@
 	"note_empty": "A note can't be empty. Write something in it, or leave it as it was.",
 	"add_line": "Add",
 	"add_ingredient_placeholder": "Add an ingredient",
-	"add_step_placeholder": "Add a step"
+	"add_step_placeholder": "Add a step",
+	"source_change": "Change link",
+	"source_add": "Add link",
+	"source_save": "Save link"
 }
