@@ -164,5 +164,8 @@
 	"line_delete_confirm": "¿Eliminar esta línea en todos los idiomas? Sus notas también se eliminan.",
 	"translation_misaligned": "Esta traducción editada ya no coincide con las líneas de la receta, así que no se muestra. Usa la traducción automática para empezar de nuevo.",
 	"original_edit_note": "Texto original: los cambios aquí modifican la receta en todos los idiomas",
-	"note_empty": "Una nota no puede estar vacía. Escribe algo en ella o déjala como estaba."
+	"note_empty": "Una nota no puede estar vacía. Escribe algo en ella o déjala como estaba.",
+	"add_line": "Añadir",
+	"add_ingredient_placeholder": "Añade un ingrediente",
+	"add_step_placeholder": "Añade un paso"
 }

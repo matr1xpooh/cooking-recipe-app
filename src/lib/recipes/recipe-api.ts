@@ -130,3 +130,17 @@ export async function deleteLine(
 	});
 	if (!res.ok) throw new Error(`line delete failed: ${res.status}`);
 }
+
+/** Appends lines to an ingredient or step list, in the original and in aligned translations. */
+export async function addLines(
+	recipeId: string,
+	part: 'ingredients' | 'steps',
+	lines: string[]
+): Promise<void> {
+	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/lines`, {
+		method: 'PUT',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify({ part, lines })
+	});
+	if (!res.ok) throw new Error(`line add failed: ${res.status}`);
+}

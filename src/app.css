@@ -1166,3 +1166,15 @@ form > div:last-of-type a,
 	align-items: center;
 	min-height: 44px;
 }
+
+/* Add an ingredient or a step at the end of its list */
+.add-line {
+	display: flex;
+	gap: 0.5rem;
+	margin-top: 0.5rem;
+}
+
+.add-line input {
+	flex: 1;
+	min-width: 0;
+}

@@ -16,6 +16,7 @@
 		type RecipeFields
 	} from '#lib/recipes/translation-fields.js';
 	import {
+		addLines,
 		deleteLine,
 		deleteOverride,
 		saveOverride,
@@ -59,6 +60,9 @@
 	/** The line being changed in place, whether it is a note, and the text it started with. */
 	let editing = $state<{ part: EditPart; index: number; note: boolean } | null>(null);
 	let editDraft = $state('');
+	/** Lines typed in the add boxes under the ingredients and the steps. */
+	let newIngredient = $state('');
+	let newStep = $state('');
 	let editStart = '';
 
 	onMount(() => {
@@ -313,6 +317,23 @@
 		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : [])
 	]);
 
+	/** Adds the line typed in a box to the end of its list, in every language. */
+	async function addLine(part: 'ingredients' | 'steps') {
+		if (!recipe) return;
+		const text = (part === 'ingredients' ? newIngredient : newStep).trim();
+		if (text === '') return;
+		try {
+			await addLines(recipe.id, part, [text]);
+			if (part === 'ingredients') newIngredient = '';
+			else newStep = '';
+			translationError = null;
+			await recipeStore.load();
+			if (recipeStore.loadError) translationError = m.error_load_failed();
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
+
 	/** Discards the hand edits after asking, so the automatic translation is shown again. */
 	async function resetEdits() {
 		if (!window.confirm(m.translation_reset_confirm())) return;
@@ -491,6 +512,20 @@
 							</ul>
 						{/if}
 					{/each}
+					{#if page.data.signedIn}<form
+							class="add-line"
+							onsubmit={(event) => {
+								event.preventDefault();
+								addLine('ingredients');
+							}}
+						>
+							<input
+								type="text"
+								bind:value={newIngredient}
+								placeholder={m.add_ingredient_placeholder()}
+								aria-label={m.add_ingredient_placeholder()}
+							/><button type="submit" disabled={newIngredient.trim() === ''}>{m.add_line()}</button>
+						</form>{/if}
 				{:else if imageUrls.length > 0}
 					<div class="gallery stacked">
 						{#each imageUrls as url (url)}
@@ -500,7 +535,7 @@
 				{/if}
 			</section>
 
-			{#if shown.steps.length > 0}
+			{#if shown.steps.length > 0 || page.data.signedIn}
 				<section>
 					<h2>{m.recipe_steps_heading()}</h2>
 					<ol>
@@ -520,6 +555,20 @@
 							</li>
 						{/each}
 					</ol>
+					{#if page.data.signedIn}<form
+							class="add-line"
+							onsubmit={(event) => {
+								event.preventDefault();
+								addLine('steps');
+							}}
+						>
+							<input
+								type="text"
+								bind:value={newStep}
+								placeholder={m.add_step_placeholder()}
+								aria-label={m.add_step_placeholder()}
+							/><button type="submit" disabled={newStep.trim() === ''}>{m.add_line()}</button>
+						</form>{/if}
 				</section>
 			{/if}
 

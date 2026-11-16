@@ -164,5 +164,8 @@
 	"line_delete_confirm": "Eliminar aquesta línia en tots els idiomes? Les seves notes també s'eliminen.",
 	"translation_misaligned": "Aquesta traducció editada ja no coincideix amb les línies de la recepta, així que no es mostra. Usa la traducció automàtica per començar de nou.",
 	"original_edit_note": "Text original: els canvis aquí modifiquen la recepta en tots els idiomes",
-	"note_empty": "Una nota no pot estar buida. Escriu-hi alguna cosa o deixa-la com estava."
+	"note_empty": "Una nota no pot estar buida. Escriu-hi alguna cosa o deixa-la com estava.",
+	"add_line": "Afegeix",
+	"add_ingredient_placeholder": "Afegeix un ingredient",
+	"add_step_placeholder": "Afegeix un pas"
 }
