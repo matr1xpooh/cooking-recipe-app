@@ -45,8 +45,13 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	if ((part !== 'ingredients' && part !== 'steps') || lines === null) {
 		return json({ error: 'line_invalid' }, { status: 400 });
 	}
-	const result = await addLines(getStore(), params.id, part as AddPart, lines);
+	// Where to insert: the given position, or the end when none is given.
+	const at = body?.index === undefined ? undefined : body.index;
+	if (at !== undefined && typeof at !== 'number')
+		return json({ error: 'line_invalid' }, { status: 400 });
+	const result = await addLines(getStore(), params.id, part as AddPart, lines, at);
 	if (result === 'not_found') return json({ error: 'not_found' }, { status: 404 });
+	if (result === 'bad_index') return json({ error: 'line_invalid' }, { status: 400 });
 	if (result === 'too_many') return json({ error: 'line_limit' }, { status: 413 });
 	return new Response(null, { status: 204 });
 };

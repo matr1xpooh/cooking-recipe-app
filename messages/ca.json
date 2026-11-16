@@ -163,11 +163,14 @@
 	"translation_misaligned": "Aquesta traducció editada ja no coincideix amb les línies de la recepta, així que no es mostra. Usa la traducció automàtica per començar de nou.",
 	"original_edit_note": "Text original: els canvis aquí modifiquen la recepta en tots els idiomes",
 	"note_empty": "Una nota no pot estar buida. Escriu-hi alguna cosa o deixa-la com estava.",
-	"add_line": "Afegeix",
 	"add_ingredient_placeholder": "Afegeix un ingredient",
 	"add_step_placeholder": "Afegeix un pas",
 	"source_change": "Canviar l’enllaç",
 	"source_add": "Afegeix un enllaç",
 	"source_save": "Desa l’enllaç",
-	"photo_no_new_lines": "Totes les línies d’aquesta foto ja són a la recepta."
+	"photo_no_new_lines": "Totes les línies d’aquesta foto ja són a la recepta.",
+	"add_slot_label": "Afegeix aquí",
+	"photo_edit": "Edita",
+	"photo_done": "Fet",
+	"photo_add_more": "Afegeix més fotos"
 }

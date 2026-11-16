@@ -1,4 +1,4 @@
-import { attachNotes, type NoteLine } from './ingredient-lines.js';
+import { attachNotes, isHeading, type NoteLine } from './ingredient-lines.js';
 
 /** One step as the cook sees it: its text and the notes written under it. */
 export interface CookStep {
@@ -13,7 +13,9 @@ export interface CookStep {
 export function cookSteps(lines: string[]): CookStep[] {
 	const steps: CookStep[] = [];
 	for (const entry of attachNotes(lines)) {
-		if (entry.item !== null) steps.push({ text: entry.item, notes: entry.notes });
+		// A # line in the steps is a section heading, not a step.
+		if (entry.item !== null && !isHeading(entry.item))
+			steps.push({ text: entry.item, notes: entry.notes });
 	}
 	return steps;
 }

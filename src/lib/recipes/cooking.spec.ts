@@ -32,3 +32,13 @@ describe('clampStep', () => {
 		expect(clampStep(4, 0)).toBe(0);
 	});
 });
+
+describe('cookSteps and headings', () => {
+	it('skips a # line in the steps, since it is a heading', async () => {
+		const { cookSteps } = await import('./cooking');
+		expect(cookSteps(['Mix', '# Dough', 'Knead', '> rest a while']).map((s) => s.text)).toEqual([
+			'Mix',
+			'Knead'
+		]);
+	});
+});

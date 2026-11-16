@@ -1167,14 +1167,27 @@ form > div:last-of-type a,
 	min-height: 44px;
 }
 
-/* Add an ingredient or a step at the end of its list */
-.add-line {
-	display: flex;
-	gap: 0.5rem;
-	margin-top: 0.5rem;
+/* The small "+" that adds a line at its place in a list */
+.add-slot {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 1.6rem;
+	height: 1.6rem;
+	margin-inline-start: 0.4rem;
+	padding: 0;
+	border: 1px solid var(--control-border);
+	border-radius: 50%;
+	background: var(--surface);
+	color: var(--text);
+	font-size: 1rem;
+	line-height: 1;
+	vertical-align: middle;
+	cursor: pointer;
 }
 
-.add-line input {
-	flex: 1;
-	min-width: 0;
+.add-new {
+	display: block;
+	width: 100%;
+	margin-top: 0.4rem;
 }

@@ -135,12 +135,13 @@ export async function deleteLine(
 export async function addLines(
 	recipeId: string,
 	part: 'ingredients' | 'steps',
-	lines: string[]
+	lines: string[],
+	at?: number
 ): Promise<void> {
 	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/lines`, {
 		method: 'PUT',
 		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ part, lines })
+		body: JSON.stringify({ part, lines, index: at })
 	});
 	if (!res.ok) throw new Error(`line add failed: ${res.status}`);
 }

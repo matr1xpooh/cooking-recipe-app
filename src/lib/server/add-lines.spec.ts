@@ -91,3 +91,39 @@ describe('adding lines everywhere', () => {
 		expect(await addLines(store, 'nope', 'steps', ['x'])).toBe('not_found');
 	});
 });
+
+describe('inserting lines at a position', () => {
+	it('puts a new step in the middle and moves the later ones down', async () => {
+		const { store, saved } = fakeStore(recipe({ steps: ['Mix', 'Bake'] }));
+		expect(await addLines(store, 'r1', 'steps', ['Rest'], 1)).toBe('added');
+		expect(saved().steps).toEqual(['Mix', 'Rest', 'Bake']);
+	});
+
+	it('puts a new line at the start', async () => {
+		const { store, saved } = fakeStore(recipe({ steps: ['Mix', 'Bake'] }));
+		await addLines(store, 'r1', 'steps', ['Preheat'], 0);
+		expect(saved().steps).toEqual(['Preheat', 'Mix', 'Bake']);
+	});
+
+	it('inserts the same line at the same place in an aligned translation', async () => {
+		const start = recipe({ steps: ['Mix', 'Bake'] });
+		const stamp = sourceHash(start);
+		const translation = {
+			title: 'Cake',
+			ingredients: ['2 eggs'],
+			steps: ['Mezclar', 'Hornear'],
+			notes: ''
+		};
+		const { store, edits } = fakeStore(start, { es: { hash: stamp, fields: translation } });
+		await addLines(store, 'r1', 'steps', ['Reposar'], 1);
+		expect(edits.es?.fields.steps).toEqual(['Mezclar', 'Reposar', 'Hornear']);
+		expect(edits.es?.hash).toBe(stamp);
+	});
+
+	it('refuses a position outside the list', async () => {
+		const { store, saved } = fakeStore(recipe({ steps: ['Mix'] }));
+		expect(await addLines(store, 'r1', 'steps', ['x'], 5)).toBe('bad_index');
+		expect(await addLines(store, 'r1', 'steps', ['x'], -1)).toBe('bad_index');
+		expect(saved().steps).toEqual(['Mix']);
+	});
+});

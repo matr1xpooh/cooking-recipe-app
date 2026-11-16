@@ -26,7 +26,7 @@ export function fieldsOf(recipe: Recipe): RecipeFields {
  */
 function itemsOf(lines: string[], isIngredients: boolean): TranslateItem[] {
 	return lines.map((line) => {
-		if (isIngredients && isHeading(line)) return { text: headingText(line), styled: false };
+		if (isHeading(line)) return { text: headingText(line), styled: false };
 		const note = splitNote(line);
 		if (note) return { text: note.text, styled: true };
 		return { text: line, styled: !isIngredients };
@@ -47,15 +47,15 @@ export function toItems(fields: RecipeFields): TranslateItem[] {
 export function fromTexts(shape: RecipeFields, texts: string[]): RecipeFields {
 	let i = 0;
 	const next = () => texts[i++] ?? '';
-	const restore = (line: string, isIngredients: boolean): string => {
-		if (isIngredients && isHeading(line)) return HEADING_MARKER + next();
+	const restore = (line: string): string => {
+		if (isHeading(line)) return HEADING_MARKER + next();
 		const note = splitNote(line);
 		if (note) return joinNote({ bullet: note.bullet, text: next() });
 		return next();
 	};
 	const title = next();
-	const ingredients = shape.ingredients.map((line) => restore(line, true));
-	const steps = shape.steps.map((line) => restore(line, false));
+	const ingredients = shape.ingredients.map(restore);
+	const steps = shape.steps.map(restore);
 	const notes = next();
 	return { title, ingredients, steps, notes };
 }
@@ -109,8 +109,8 @@ export function decodeFieldsText(fields: RecipeFields): RecipeFields {
 }
 
 /** The part of a line a reader sees: a heading's words, a note's text, or the item itself. */
-export function displayText(line: string, isIngredients: boolean): string {
-	if (isIngredients && isHeading(line)) return headingText(line);
+export function displayText(line: string): string {
+	if (isHeading(line)) return headingText(line);
 	const note = splitNote(line);
 	return note ? note.text : line;
 }
@@ -127,11 +127,10 @@ export function replaceLine(
 ): RecipeFields {
 	if (part === 'title') return { ...fields, title: text };
 	if (part === 'notes') return { ...fields, notes: text };
-	const isIngredients = part === 'ingredients';
 	const list = [...fields[part]];
 	const line = list[index];
 	if (line === undefined) return fields;
-	if (isIngredients && isHeading(line)) list[index] = HEADING_MARKER + text;
+	if (isHeading(line)) list[index] = HEADING_MARKER + text;
 	else {
 		const note = splitNote(line);
 		list[index] = note ? joinNote({ bullet: note.bullet, text }) : text;

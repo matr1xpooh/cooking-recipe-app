@@ -113,8 +113,8 @@ describe('translation lines keep their place', () => {
 			ingredients: ['# Sauce', '2 eggs', '> - beaten', '1 cup flour']
 		});
 		expect(replaceLine(fields, 'steps', 1, 'chill well').steps).toEqual(['Mix', '> chill well']);
-		expect(displayText('# Sauce', true)).toBe('Sauce');
-		expect(displayText('> keep cool', false)).toBe('keep cool');
+		expect(displayText('# Sauce')).toBe('Sauce');
+		expect(displayText('> keep cool')).toBe('keep cool');
 	});
 
 	it('writing back what is shown changes nothing', async () => {
@@ -127,10 +127,10 @@ describe('translation lines keep their place', () => {
 		};
 		let out = fields;
 		fields.ingredients.forEach((line, i) => {
-			out = replaceLine(out, 'ingredients', i, displayText(line, true));
+			out = replaceLine(out, 'ingredients', i, displayText(line));
 		});
 		fields.steps.forEach((line, i) => {
-			out = replaceLine(out, 'steps', i, displayText(line, false));
+			out = replaceLine(out, 'steps', i, displayText(line));
 		});
 		expect(out).toEqual(fields);
 	});

@@ -163,11 +163,14 @@
 	"translation_misaligned": "This edited translation no longer matches the recipe's lines, so it is not shown. Use machine translation to start again.",
 	"original_edit_note": "Original text: edits here change the recipe in every language",
 	"note_empty": "A note can't be empty. Write something in it, or leave it as it was.",
-	"add_line": "Add",
 	"add_ingredient_placeholder": "Add an ingredient",
 	"add_step_placeholder": "Add a step",
 	"source_change": "Change link",
 	"source_add": "Add link",
 	"source_save": "Save link",
-	"photo_no_new_lines": "Every line in this photo is already in the recipe."
+	"photo_no_new_lines": "Every line in this photo is already in the recipe.",
+	"add_slot_label": "Add here",
+	"photo_edit": "Edit",
+	"photo_done": "Done",
+	"photo_add_more": "Add more pictures"
 }

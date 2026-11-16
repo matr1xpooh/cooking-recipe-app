@@ -39,7 +39,7 @@
 	} from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { keepScreenAwake } from '#lib/wake-lock.js';
-	import { placeIngredients, placeItems } from '#lib/recipes/ingredient-lines.js';
+	import { lineRange, placeIngredients } from '#lib/recipes/ingredient-lines.js';
 	import NoteBlock from '#lib/recipes/NoteBlock.svelte';
 	import PhotoButtons from '#lib/recipes/PhotoButtons.svelte';
 	import {
@@ -82,9 +82,11 @@
 	/** The line being changed in place, whether it is a note, and the text it started with. */
 	let editing = $state<{ part: EditPart; index: number; note: boolean } | null>(null);
 	let editDraft = $state('');
-	/** Lines typed in the add boxes under the ingredients and the steps. */
-	let newIngredient = $state('');
-	let newStep = $state('');
+	/** The line being added with a "+" (where it goes), and what has been typed for it. */
+	let adding = $state<{ part: 'ingredients' | 'steps'; at: number } | null>(null);
+	let addDraft = $state('');
+	let openPhoto = $state<string | null>(null);
+	let showAddPhotos = $state(false);
 	let editStart = '';
 
 	onMount(() => {
@@ -428,6 +430,7 @@
 			for (const file of accepted) ids.push(await uploadImage(recipe.id, file));
 			await recipeStore.update({ ...recipe, images: [...recipe.images, ...ids] });
 			ingredientsTab = 'image';
+			showAddPhotos = false;
 		} catch {
 			actionError = m.error_save_failed();
 		} finally {
@@ -476,20 +479,52 @@
 		}
 	}
 
-	/** Adds the line typed in a box to the end of its list, in every language. */
-	async function addLine(part: 'ingredients' | 'steps') {
-		if (!recipe) return;
-		const text = (part === 'ingredients' ? newIngredient : newStep).trim();
-		if (text === '') return;
+	/** The steps in groups under their headings, each group numbered from its first step. */
+	const stepGroups = $derived.by(() => {
+		let next = 1;
+		return shown
+			? placeIngredients(shown.steps).map((group) => {
+					const start = next;
+					next += group.items.filter((item) => item.item !== null).length;
+					return { ...group, start };
+				})
+			: [];
+	});
+
+	/** Opens a one-line box at a position in a list. */
+	async function startAdd(part: 'ingredients' | 'steps', at: number) {
+		adding = { part, at };
+		addDraft = '';
+		await tick();
+		document.querySelector<HTMLElement>('.add-new')?.focus();
+	}
+
+	/** Adds the typed line at its position, in every language. Empty or cancelled adds nothing. */
+	async function commitAdd() {
+		const current = adding;
+		adding = null;
+		const text = addDraft.trim();
+		addDraft = '';
+		if (!current || !recipe || text === '') return;
 		try {
-			await addLines(recipe.id, part, [text]);
-			if (part === 'ingredients') newIngredient = '';
-			else newStep = '';
+			await addLines(recipe.id, current.part, [text], current.at);
 			translationError = null;
 			await recipeStore.load();
 			if (recipeStore.loadError) translationError = m.error_load_failed();
 		} catch {
 			translationError = m.error_save_failed();
+		}
+	}
+
+	/** Enter saves the line (by leaving it), Escape drops it. */
+	function addKey(event: KeyboardEvent) {
+		if (event.key === 'Escape') {
+			event.preventDefault();
+			adding = null;
+			addDraft = '';
+		} else if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			(event.currentTarget as HTMLElement).blur();
 		}
 	}
 
@@ -499,6 +534,29 @@
 		await resetTranslation();
 	}
 </script>
+
+{#snippet addSlot(part: 'ingredients' | 'steps', at: number)}
+	{#if page.data.signedIn}
+		{#if adding?.part === part && adding.at === at}
+			<textarea
+				class="inline-edit add-new"
+				rows="1"
+				placeholder={part === 'steps' ? m.add_step_placeholder() : m.add_ingredient_placeholder()}
+				aria-label={part === 'steps' ? m.add_step_placeholder() : m.add_ingredient_placeholder()}
+				bind:value={addDraft}
+				onblur={commitAdd}
+				onkeydown={addKey}></textarea>
+		{:else}
+			<button
+				type="button"
+				class="add-slot"
+				aria-label={m.add_slot_label()}
+				title={m.add_slot_label()}
+				onclick={() => startAdd(part, at)}>+</button
+			>
+		{/if}
+	{/if}
+{/snippet}
 
 {#snippet lineEdit(part: EditPart, index: number, text: string, rich: boolean, note = false)}
 	{#if editing?.part === part && editing.index === index}
@@ -689,11 +747,16 @@
 					<p class="meta">
 						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
 					</p>
+					{@render addSlot('ingredients', 0)}
 					{#each placeIngredients(shown.ingredients) as group, g (g)}
 						{#if group.heading !== null}
 							<h3 class="ingredient-heading">
 								{@render lineEdit('ingredients', group.heading.index, group.heading.text, false)}
 							</h3>
+							{#if group.items.length === 0}{@render addSlot(
+									'ingredients',
+									group.heading.index + 1
+								)}{/if}
 						{/if}
 						{#if group.items.length > 0}
 							<ul class="plain">
@@ -709,26 +772,15 @@
 												indexes={entry.notes.map((n) => n.index)}
 												part="ingredients"
 												edit={lineEdit}
-											/>{/if}
+											/>{/if}{#if entry.item !== null}{@render addSlot(
+												'ingredients',
+												lineRange(recipe.ingredients, entry.item.index).end
+											)}{/if}
 									</li>
 								{/each}
 							</ul>
 						{/if}
 					{/each}
-					{#if page.data.signedIn}<form
-							class="add-line"
-							onsubmit={(event) => {
-								event.preventDefault();
-								addLine('ingredients');
-							}}
-						>
-							<input
-								type="text"
-								bind:value={newIngredient}
-								placeholder={m.add_ingredient_placeholder()}
-								aria-label={m.add_ingredient_placeholder()}
-							/><button type="submit" disabled={newIngredient.trim() === ''}>{m.add_line()}</button>
-						</form>{/if}
 				{:else}
 					{#if recipe.images.length === 0}
 						<p class="meta">{m.image_empty()}</p>
@@ -742,25 +794,50 @@
 										<button
 											type="button"
 											class="link-button"
-											disabled={photoBusy}
-											onclick={() => readPhoto(photo.id)}>{m.image_read_text()}</button
+											onclick={() => (openPhoto = openPhoto === photo.id ? null : photo.id)}
+											>{m.photo_edit()}</button
 										>
-										<button
-											type="button"
-											class="link-button danger"
-											onclick={() => removePhoto(photo.id)}>{m.image_remove()}</button
-										>
+										{#if openPhoto === photo.id}
+											<button
+												type="button"
+												class="link-button"
+												disabled={photoBusy}
+												onclick={() => readPhoto(photo.id)}>{m.image_read_text()}</button
+											>
+											<button
+												type="button"
+												class="link-button danger"
+												onclick={() => {
+													openPhoto = null;
+													removePhoto(photo.id);
+												}}>{m.image_remove()}</button
+											>
+											<button type="button" class="link-button" onclick={() => (openPhoto = null)}
+												>{m.photo_done()}</button
+											>
+										{/if}
 									</figcaption>
 								{/if}
 							</figure>
 						{/each}
 					</div>
 					{#if page.data.signedIn}
-						<PhotoButtons
-							disabled={photoBusy}
-							onfiles={addPhotos}
-							onerror={(key) => (photoError = key)}
-						/>
+						{#if photos.length === 0 || showAddPhotos}
+							<PhotoButtons
+								disabled={photoBusy}
+								onfiles={addPhotos}
+								onerror={(key) => (photoError = key)}
+							/>
+							{#if photos.length > 0}
+								<button type="button" class="link-button" onclick={() => (showAddPhotos = false)}
+									>{m.recipe_cancel()}</button
+								>
+							{/if}
+						{:else}
+							<button type="button" class="link-button" onclick={() => (showAddPhotos = true)}
+								>{m.photo_add_more()}</button
+							>
+						{/if}
 					{/if}
 					{#if photoError}
 						<p role="alert">{photoErrorMessages[photoError]()}</p>
@@ -771,37 +848,37 @@
 			{#if shown.steps.length > 0 || page.data.signedIn}
 				<section>
 					<h2>{m.recipe_steps_heading()}</h2>
-					<ol>
-						{#each placeItems(shown.steps) as entry, i (i)}
-							<li class:note-only={entry.item === null}>
-								{#if entry.item !== null}{@render lineEdit(
-										'steps',
-										entry.item.index,
-										entry.item.text,
-										true
-									)}{/if}{#if entry.notes.length > 0}<NoteBlock
-										notes={entry.notes.map((n) => n.note)}
-										indexes={entry.notes.map((n) => n.index)}
-										part="steps"
-										edit={lineEdit}
-									/>{/if}
-							</li>
-						{/each}
-					</ol>
-					{#if page.data.signedIn}<form
-							class="add-line"
-							onsubmit={(event) => {
-								event.preventDefault();
-								addLine('steps');
-							}}
-						>
-							<input
-								type="text"
-								bind:value={newStep}
-								placeholder={m.add_step_placeholder()}
-								aria-label={m.add_step_placeholder()}
-							/><button type="submit" disabled={newStep.trim() === ''}>{m.add_line()}</button>
-						</form>{/if}
+					{@render addSlot('steps', 0)}
+					{#each stepGroups as group, g (g)}
+						{#if group.heading !== null}
+							<h3 class="ingredient-heading">
+								{@render lineEdit('steps', group.heading.index, group.heading.text, true)}
+							</h3>
+							{#if group.items.length === 0}{@render addSlot('steps', group.heading.index + 1)}{/if}
+						{/if}
+						{#if group.items.length > 0}
+							<ol start={group.start}>
+								{#each group.items as entry, i (i)}
+									<li class:note-only={entry.item === null}>
+										{#if entry.item !== null}{@render lineEdit(
+												'steps',
+												entry.item.index,
+												entry.item.text,
+												true
+											)}{/if}{#if entry.notes.length > 0}<NoteBlock
+												notes={entry.notes.map((n) => n.note)}
+												indexes={entry.notes.map((n) => n.index)}
+												part="steps"
+												edit={lineEdit}
+											/>{/if}{#if entry.item !== null}{@render addSlot(
+												'steps',
+												lineRange(recipe.steps, entry.item.index).end
+											)}{/if}
+									</li>
+								{/each}
+							</ol>
+						{/if}
+					{/each}
 				</section>
 			{/if}
 

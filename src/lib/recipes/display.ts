@@ -37,7 +37,11 @@ export function shownFields(
 	const edited = editedFits(recipe, override) ? override?.fields : undefined;
 	const source = edited ?? translated?.fields;
 	if (!source) return fieldsOf(recipe);
-	return { ...source, ingredients: restoreHeadings(source.ingredients, recipe.ingredients) };
+	return {
+		...source,
+		ingredients: restoreHeadings(source.ingredients, recipe.ingredients),
+		steps: restoreHeadings(source.steps, recipe.steps)
+	};
 }
 
 /**
