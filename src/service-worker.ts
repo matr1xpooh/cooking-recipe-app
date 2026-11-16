@@ -55,6 +55,8 @@ sw.addEventListener('fetch', (event) => {
 	const url = new URL(request.url);
 	if (url.origin !== sw.location.origin) return;
 	if (url.pathname.startsWith('/auth/')) return;
+	// The sign-in page always comes from the server: a saved copy can show an old form.
+	if (url.pathname.startsWith('/signin')) return;
 
 	if (SHELL_SET.has(url.pathname)) {
 		event.respondWith(cacheFirst(request, SHELL));
