@@ -530,11 +530,6 @@
 			: [];
 	});
 
-	/** The first step is not a heading, so the start "+" goes on its line rather than above the list. */
-	const stepsStartInline = $derived(
-		stepGroups.length > 0 && stepGroups[0].heading === null && stepGroups[0].items[0]?.item != null
-	);
-
 	/** Opens a one-line box at a position in a list. */
 	async function startAdd(part: 'ingredients' | 'steps', at: number) {
 		adding = { part, at };
@@ -579,7 +574,7 @@
 	}
 </script>
 
-{#snippet addSlot(part: 'ingredients' | 'steps', at: number, start = false)}
+{#snippet addSlot(part: 'ingredients' | 'steps', at: number)}
 	{#if page.data.signedIn}
 		{#if adding?.part === part && adding.at === at}
 			<textarea
@@ -900,7 +895,7 @@
 			{#if shown.steps.length > 0 || page.data.signedIn}
 				<section>
 					<h2>{m.recipe_steps_heading()}</h2>
-					{#if !stepsStartInline}{@render addSlot('steps', 0)}{/if}
+					{#if stepGroups.length === 0}{@render addSlot('steps', 0)}{/if}
 					{#each stepGroups as group, g (g)}
 						{#if group.heading !== null}
 							<h3 class="ingredient-heading">
@@ -912,11 +907,6 @@
 							<ol start={group.start}>
 								{#each group.items as entry, i (i)}
 									<li class:note-only={entry.item === null}>
-										{#if g === 0 && i === 0 && stepsStartInline}{@render addSlot(
-												'steps',
-												0,
-												true
-											)}{/if}
 										{#if entry.item !== null}{@render lineEdit(
 												'steps',
 												entry.item.index,

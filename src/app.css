@@ -1176,16 +1176,6 @@ article li:has(> .add-slot) {
 	min-height: 2.25rem;
 }
 
-/* The first step's "+" goes in front of its text */
-article li:has(> .add-slot.start) {
-	padding-left: 2.5rem;
-}
-
-article li > .add-slot.start {
-	left: 0;
-	right: auto;
-}
-
 article li > .add-slot {
 	position: absolute;
 	top: 0.1rem;
