@@ -63,6 +63,15 @@ export default $config({
 					args.generateSecret = false;
 					// The app's own sign-in form sends the email and password to Cognito's sign-in API.
 					args.explicitAuthFlows = ['ALLOW_USER_PASSWORD_AUTH', 'ALLOW_REFRESH_TOKEN_AUTH'];
+					// The lifetimes the pool already has: one hour for access and ID tokens, 30 days to refresh.
+					args.accessTokenValidity = 60;
+					args.idTokenValidity = 60;
+					args.refreshTokenValidity = 30;
+					args.tokenValidityUnits = {
+						accessToken: 'minutes',
+						idToken: 'minutes',
+						refreshToken: 'days'
+					};
 					args.logoutUrls = [`${origin}/signin`];
 				}
 			}
