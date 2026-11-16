@@ -184,5 +184,16 @@
 	"photo_add_more": "Añadir más fotos",
 	"line_make_tip": "Hacer un consejo",
 	"line_make_step": "Hacer un paso",
-	"line_make_ingredient": "Hacer un ingrediente"
+	"line_make_ingredient": "Hacer un ingrediente",
+	"share_open": "Compartir",
+	"share_title": "Enviar esta receta",
+	"share_language": "Idioma",
+	"share_photos": "Incluir fotos",
+	"share_send": "Enviar",
+	"share_copy": "Copiar texto",
+	"share_copied": "Copiado",
+	"share_working": "Preparando…",
+	"share_translate_failed": "La traducción no está lista, así que se enviará el texto original.",
+	"share_no_photos": "Este teléfono no puede adjuntar fotos, así que solo se envió el texto.",
+	"share_failed": "No se pudo compartir. Prueba con Copiar texto."
 }

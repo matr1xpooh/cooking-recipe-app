@@ -7,6 +7,7 @@
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RichText from '#lib/recipes/RichText.svelte';
+	import ShareRecipe from '#lib/recipes/ShareRecipe.svelte';
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import {
 		decodeFieldsText,
@@ -100,6 +101,7 @@
 	let addDraft = $state('');
 	let openPhoto = $state<string | null>(null);
 	let showAddPhotos = $state(false);
+	let sharing = $state(false);
 	let editStart = '';
 
 	onMount(() => {
@@ -400,7 +402,8 @@
 					}
 				]
 			: []),
-		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : [])
+		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : []),
+		{ label: m.share_open(), run: () => (sharing = !sharing) }
 	]);
 
 	/** Opens the source link and start time for changing, filled with the current values. */
@@ -820,6 +823,14 @@
 							{/each}
 						</p>
 					</div>
+				{/if}
+				{#if sharing && recipe}
+					<ShareRecipe
+						{recipe}
+						{photos}
+						locale={isLanguage(locale) ? locale : 'en'}
+						signedIn={page.data.signedIn}
+					/>
 				{/if}
 				{#if recipe.images.length > 0 || page.data.signedIn}
 					<div class="gallery stacked">

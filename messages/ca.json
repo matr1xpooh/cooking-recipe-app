@@ -184,5 +184,16 @@
 	"photo_add_more": "Afegeix més fotos",
 	"line_make_tip": "Fer-ne un consell",
 	"line_make_step": "Fer-ne un pas",
-	"line_make_ingredient": "Fer-ne un ingredient"
+	"line_make_ingredient": "Fer-ne un ingredient",
+	"share_open": "Comparteix",
+	"share_title": "Envia aquesta recepta",
+	"share_language": "Idioma",
+	"share_photos": "Inclou fotos",
+	"share_send": "Envia",
+	"share_copy": "Copia el text",
+	"share_copied": "Copiat",
+	"share_working": "Preparant…",
+	"share_translate_failed": "La traducció no està a punt, així que s’enviarà el text original.",
+	"share_no_photos": "Aquest telèfon no pot adjuntar fotos, així que només s’ha enviat el text.",
+	"share_failed": "No s’ha pogut compartir. Prova Copia el text."
 }

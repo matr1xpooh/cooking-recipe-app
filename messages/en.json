@@ -184,5 +184,16 @@
 	"photo_add_more": "Add more pictures",
 	"line_make_tip": "Make it a tip",
 	"line_make_step": "Make it a step",
-	"line_make_ingredient": "Make it an ingredient"
+	"line_make_ingredient": "Make it an ingredient",
+	"share_open": "Share",
+	"share_title": "Send this recipe",
+	"share_language": "Language",
+	"share_photos": "Include photos",
+	"share_send": "Send",
+	"share_copy": "Copy text",
+	"share_copied": "Copied",
+	"share_working": "Preparing…",
+	"share_translate_failed": "The translation is not ready, so the original text will be sent.",
+	"share_no_photos": "This phone cannot attach photos, so only the text was sent.",
+	"share_failed": "Sharing did not work. Try Copy text."
 }
