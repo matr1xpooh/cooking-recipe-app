@@ -45,7 +45,7 @@ export const load: PageServerLoad = ({ locals, url }) => {
 
 export const actions: Actions = {
 	/** Email and password. Either starts the session, or asks for a new password first. */
-	default: async ({ request, cookies, url }) => {
+	signIn: async ({ request, cookies, url }) => {
 		const form = await request.formData();
 		const email = String(form.get('email') ?? '').trim();
 		const password = String(form.get('password') ?? '');
