@@ -170,5 +170,6 @@
 	"add_step_placeholder": "Afegeix un pas",
 	"source_change": "Canviar l’enllaç",
 	"source_add": "Afegeix un enllaç",
-	"source_save": "Desa l’enllaç"
+	"source_save": "Desa l’enllaç",
+	"photo_no_new_lines": "Totes les línies d’aquesta foto ja són a la recepta."
 }

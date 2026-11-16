@@ -18,6 +18,8 @@
 	import {
 		addLines,
 		DuplicateRecipeError,
+		deleteImage,
+		uploadImage,
 		deleteLine,
 		deleteOverride,
 		saveOverride,
@@ -39,6 +41,13 @@
 	import { keepScreenAwake } from '#lib/wake-lock.js';
 	import { placeIngredients, placeItems } from '#lib/recipes/ingredient-lines.js';
 	import NoteBlock from '#lib/recipes/NoteBlock.svelte';
+	import PhotoButtons from '#lib/recipes/PhotoButtons.svelte';
+	import {
+		newIngredientLines,
+		photoProblem,
+		readImageText,
+		type PhotoErrorKey
+	} from '#lib/recipes/photos.js';
 
 	/** The parts of a recipe that can be changed in place. */
 	type EditPart = 'title' | 'ingredients' | 'steps';
@@ -56,7 +65,11 @@
 	let translated = $state<Translated | null>(null);
 	let translating = $state(false);
 	let showOriginal = $state(false);
-	let ingredientsTab = $state<'text' | 'image'>('image');
+	/** The tab the user chose; null until they choose, then images if there are any. */
+	let ingredientsTab = $state<'text' | 'image' | null>(null);
+	/** Photo changes in progress, and the reason the last one failed. */
+	let photoBusy = $state(false);
+	let photoError = $state<PhotoErrorKey | 'no_new_lines' | null>(null);
 	let latestRequest = 0;
 	/** The translation edited by hand, if there is one. It takes the place of the machine translation. */
 	let override = $state<EditedTranslation | null>(null);
@@ -82,6 +95,7 @@
 	});
 
 	const recipe = $derived(recipeStore.recipes.find((r) => r.id === page.params.id));
+	const tab = $derived(ingredientsTab ?? (recipe && recipe.images.length > 0 ? 'image' : 'text'));
 	// The site language is set by a page reload, so it is read once per page view.
 	const locale = getLocale();
 
@@ -99,22 +113,38 @@
 		});
 	});
 
-	// The recipe's images are loaded from the server as object URLs, revoked when they change.
-	let imageUrls = $state<string[]>([]);
+	/** The recipe's photos with their object URLs. Reloaded only when the photo list changes. */
+	let photos = $state<{ id: string; url: string }[]>([]);
+	const photoKey = $derived(recipe ? `${recipe.id}|${recipe.images.join(',')}` : '');
 	$effect(() => {
-		const current = recipe;
-		if (!current || current.images.length === 0) return;
+		const key = photoKey;
+		if (!key) return;
+		const bar = key.indexOf('|');
+		const recipeId = key.slice(0, bar);
+		const ids = key
+			.slice(bar + 1)
+			.split(',')
+			.filter((id) => id !== '');
+		if (ids.length === 0) {
+			photos = [];
+			return;
+		}
 		let cancelled = false;
-		let urls: string[] = [];
-		Promise.all(current.images.map((id) => loadImage(current.id, id))).then((blobs) => {
+		const urls: string[] = [];
+		Promise.all(ids.map((id) => loadImage(recipeId, id))).then((blobs) => {
 			if (cancelled) return;
-			urls = blobs.flatMap((blob) => (blob ? [URL.createObjectURL(blob)] : []));
-			imageUrls = urls;
+			photos = ids.flatMap((id, i) => {
+				const blob = blobs[i];
+				if (!blob) return [];
+				const url = URL.createObjectURL(blob);
+				urls.push(url);
+				return [{ id, url }];
+			});
 		});
 		return () => {
 			cancelled = true;
 			urls.forEach((url) => URL.revokeObjectURL(url));
-			imageUrls = [];
+			photos = [];
 		};
 	});
 
@@ -369,6 +399,83 @@
 		}
 	}
 
+	const photoErrorMessages: Record<PhotoErrorKey | 'no_new_lines', () => string> = {
+		image_too_large: () => m.error_image_too_large(),
+		image_invalid: () => m.error_image_invalid(),
+		clipboard_unavailable: () => m.error_clipboard_unavailable(),
+		clipboard_denied: () => m.error_clipboard_denied(),
+		no_image_on_clipboard: () => m.error_no_image_on_clipboard(),
+		no_text_found: () => m.error_no_text_found(),
+		ocr_failed: () => m.error_ocr_failed(),
+		no_new_lines: () => m.photo_no_new_lines()
+	};
+
+	/** Adds photos to the recipe. Each is uploaded, then the recipe is saved with the new ids. */
+	async function addPhotos(files: File[]) {
+		if (!recipe) return;
+		photoError = null;
+		const accepted: File[] = [];
+		for (const file of files) {
+			const problem = photoProblem(file);
+			if (problem) photoError = problem;
+			else accepted.push(file);
+		}
+		if (accepted.length === 0) return;
+		actionError = null;
+		photoBusy = true;
+		try {
+			const ids: string[] = [];
+			for (const file of accepted) ids.push(await uploadImage(recipe.id, file));
+			await recipeStore.update({ ...recipe, images: [...recipe.images, ...ids] });
+			ingredientsTab = 'image';
+		} catch {
+			actionError = m.error_save_failed();
+		} finally {
+			photoBusy = false;
+		}
+	}
+
+	/** Removes a photo: the recipe is saved without it first, then the picture is deleted. */
+	async function removePhoto(id: string) {
+		if (!recipe) return;
+		actionError = null;
+		try {
+			await recipeStore.update({ ...recipe, images: recipe.images.filter((i) => i !== id) });
+			await deleteImage(recipe.id, id);
+		} catch {
+			actionError = m.error_save_failed();
+		}
+	}
+
+	/** Reads the ingredient lines from a photo and adds the ones the recipe does not have yet. */
+	async function readPhoto(id: string) {
+		if (!recipe) return;
+		photoError = null;
+		photoBusy = true;
+		try {
+			const blob = await loadImage(recipe.id, id);
+			const result = blob ? await readImageText(blob) : { error: 'ocr_failed' as const };
+			if ('error' in result) {
+				photoError = result.error;
+				return;
+			}
+			const lines = newIngredientLines(recipe.ingredients, result.lines);
+			if (lines.length === 0) {
+				photoError = 'no_new_lines';
+				return;
+			}
+			// The server takes at most 20 lines a request.
+			for (let i = 0; i < lines.length; i += 20) {
+				await addLines(recipe.id, 'ingredients', lines.slice(i, i + 20));
+			}
+			await recipeStore.load();
+		} catch {
+			actionError = m.error_save_failed();
+		} finally {
+			photoBusy = false;
+		}
+	}
+
 	/** Adds the line typed in a box to the end of its list, in every language. */
 	async function addLine(part: 'ingredients' | 'steps') {
 		if (!recipe) return;
@@ -561,27 +668,27 @@
 						</p>
 					</div>
 				{/if}
-				{#if imageUrls.length > 0}
+				{#if recipe.images.length > 0 || page.data.signedIn}
 					<div class="tabs" role="tablist" aria-label={m.recipe_ingredients_heading()}>
 						<button
 							type="button"
 							role="tab"
 							class="tab"
-							class:active={ingredientsTab === 'text'}
-							aria-selected={ingredientsTab === 'text'}
+							class:active={tab === 'text'}
+							aria-selected={tab === 'text'}
 							onclick={() => (ingredientsTab = 'text')}>{m.tab_text()}</button
 						>
 						<button
 							type="button"
 							role="tab"
 							class="tab"
-							class:active={ingredientsTab === 'image'}
-							aria-selected={ingredientsTab === 'image'}
+							class:active={tab === 'image'}
+							aria-selected={tab === 'image'}
 							onclick={() => (ingredientsTab = 'image')}>{m.tab_image()}</button
 						>
 					</div>
 				{/if}
-				{#if imageUrls.length === 0 || ingredientsTab === 'text'}
+				{#if tab === 'text'}
 					<p class="meta">
 						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
 					</p>
@@ -625,12 +732,42 @@
 								aria-label={m.add_ingredient_placeholder()}
 							/><button type="submit" disabled={newIngredient.trim() === ''}>{m.add_line()}</button>
 						</form>{/if}
-				{:else if imageUrls.length > 0}
+				{:else}
+					{#if recipe.images.length === 0}
+						<p class="meta">{m.image_empty()}</p>
+					{/if}
 					<div class="gallery stacked">
-						{#each imageUrls as url (url)}
-							<img class="preview" src={url} alt={m.recipe_screenshot_alt()} />
+						{#each photos as photo (photo.id)}
+							<figure class="gallery-item">
+								<img class="preview" src={photo.url} alt={m.recipe_screenshot_alt()} />
+								{#if page.data.signedIn}
+									<figcaption class="image-actions">
+										<button
+											type="button"
+											class="link-button"
+											disabled={photoBusy}
+											onclick={() => readPhoto(photo.id)}>{m.image_read_text()}</button
+										>
+										<button
+											type="button"
+											class="link-button danger"
+											onclick={() => removePhoto(photo.id)}>{m.image_remove()}</button
+										>
+									</figcaption>
+								{/if}
+							</figure>
 						{/each}
 					</div>
+					{#if page.data.signedIn}
+						<PhotoButtons
+							disabled={photoBusy}
+							onfiles={addPhotos}
+							onerror={(key) => (photoError = key)}
+						/>
+					{/if}
+					{#if photoError}
+						<p role="alert">{photoErrorMessages[photoError]()}</p>
+					{/if}
 				{/if}
 			</section>
 

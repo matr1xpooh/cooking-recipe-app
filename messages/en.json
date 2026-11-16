@@ -170,5 +170,6 @@
 	"add_step_placeholder": "Add a step",
 	"source_change": "Change link",
 	"source_add": "Add link",
-	"source_save": "Save link"
+	"source_save": "Save link",
+	"photo_no_new_lines": "Every line in this photo is already in the recipe."
 }

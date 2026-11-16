@@ -16,7 +16,6 @@
 	} from '#lib/recipes/recipe.js';
 	import type { ImportErrorKey } from '#lib/recipes/import.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
-	import { MAX_IMAGE_BYTES } from '#lib/recipes/screenshot.js';
 	import { resolve } from '$app/paths';
 	import { fetchPicture } from '#lib/recipes/recipe-api.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
@@ -24,6 +23,8 @@
 	import { suggestTags } from '#lib/recipes/tag-suggest.js';
 	import { SvelteSet } from 'svelte/reactivity';
 	import NoteToolbar from './NoteToolbar.svelte';
+	import PhotoButtons from './PhotoButtons.svelte';
+	import { photoProblem, readImageText } from './photos.js';
 	import { applyMarkup, type MarkupAction } from './markup-edit.js';
 
 	let {
@@ -273,14 +274,6 @@
 		}
 	}
 
-	/** Chosen with the file picker; several may be chosen at once. */
-	function onFilePicked(event: Event) {
-		const fileInput = event.currentTarget as HTMLInputElement;
-		const files = Array.from(fileInput.files ?? []);
-		if (files.length > 0) addImages(files);
-		fileInput.value = '';
-	}
-
 	/** An image on the clipboard (a Mac screenshot, for example) is added like a picked file. */
 	function onPaste(event: ClipboardEvent) {
 		const item = Array.from(event.clipboardData?.items ?? []).find(
@@ -300,8 +293,8 @@
 		const accepted: File[] = [];
 		let refused: 'image_too_large' | 'image_invalid' | null = null;
 		for (const file of files) {
-			if (file.size > MAX_IMAGE_BYTES) refused = 'image_too_large';
-			else if (file.type !== 'image/png' && file.type !== 'image/jpeg') refused = 'image_invalid';
+			const problem = photoProblem(file);
+			if (problem) refused = problem;
 			else accepted.push(file);
 		}
 		newFiles = [...newFiles, ...accepted];
@@ -312,31 +305,6 @@
 	function removeGalleryItem(item: { saved: boolean; id: string; index: number }) {
 		if (item.saved) keptIds = keptIds.filter((id) => id !== item.id);
 		else newFiles = newFiles.filter((_, i) => i !== item.index);
-	}
-
-	/**
-	 * Reads an image straight from the clipboard. This is the reliable route for a
-	 * screenshot; the file button opens the file picker instead.
-	 */
-	async function pasteFromClipboard() {
-		scanError = null;
-		if (!navigator.clipboard?.read) {
-			scanError = 'clipboard_unavailable';
-			return;
-		}
-		try {
-			for (const item of await navigator.clipboard.read()) {
-				const type = item.types.find((t) => t === 'image/png' || t === 'image/jpeg');
-				if (!type) continue;
-				const blob = await item.getType(type);
-				const extension = type === 'image/png' ? 'png' : 'jpg';
-				addImages([new File([blob], `clipboard.${extension}`, { type })]);
-				return;
-			}
-			scanError = 'no_image_on_clipboard';
-		} catch {
-			scanError = 'clipboard_denied';
-		}
 	}
 
 	/** The bytes of one gallery image, saved or new. */
@@ -352,18 +320,9 @@
 		scanError = null;
 		scanning = true;
 		try {
-			const body = new FormData();
-			body.append('image', blob, 'image.png');
-			const res = await fetch('/api/recipes/ocr', { method: 'POST', body });
-			const data = await res.json().catch(() => null);
-			if (!res.ok) {
-				scanError = data?.error ?? 'ocr_failed';
-				return;
-			}
-			const lines: string[] = Array.isArray(data?.ingredients) ? data.ingredients : [];
-			offerLines(lines, 'image');
-		} catch {
-			scanError = 'ocr_failed';
+			const result = await readImageText(blob);
+			if ('error' in result) scanError = result.error;
+			else offerLines(result.lines, 'image');
 		} finally {
 			scanning = false;
 		}
@@ -528,37 +487,11 @@
 					</div>
 				{/if}
 
-				<div class="image-actions">
-					<label class="file-button" class:busy={scanning}>
-						{m.photo_take()}
-						<!-- capture opens the camera on a phone; the size and type are checked on pick. -->
-						<input
-							type="file"
-							accept="image/*"
-							capture="environment"
-							disabled={scanning}
-							onchange={onFilePicked}
-						/>
-					</label>
-					<label class="file-button" class:busy={scanning}>
-						{m.photo_library()}
-						<input
-							type="file"
-							accept="image/png,image/jpeg"
-							multiple
-							disabled={scanning}
-							onchange={onFilePicked}
-						/>
-					</label>
-					<button
-						type="button"
-						class="file-button"
-						onclick={pasteFromClipboard}
-						disabled={scanning}
-					>
-						{m.clipboard_button()}
-					</button>
-				</div>
+				<PhotoButtons
+					disabled={scanning}
+					onfiles={addImages}
+					onerror={(key) => (scanError = key)}
+				/>
 			</div>
 		{/if}
 
