@@ -800,7 +800,6 @@
 					<p class="meta">
 						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
 					</p>
-					{@render addSlot('ingredients', 0)}
 					{#each placeIngredients(shown.ingredients) as group, g (g)}
 						{#if group.heading !== null}
 							<h3 class="ingredient-heading">
