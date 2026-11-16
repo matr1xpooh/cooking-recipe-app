@@ -1134,22 +1134,6 @@ button.tag.on,
 	font-size: 0.9rem;
 }
 
-.translation-edit {
-	display: grid;
-	gap: 0.75rem;
-	padding: 1rem;
-	background: var(--surface);
-	border: 1px solid var(--control-border);
-	border-radius: var(--radius);
-}
-
-.translation-actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: 0.75rem;
-	align-items: center;
-}
-
 /* Notes under an ingredient or step: a bar on the left, text in the normal colour */
 .item-notes {
 	margin: 0.25rem 0 0;
@@ -1171,39 +1155,6 @@ button.tag.on,
 /* A note with no item above it: no number, no bullet */
 li.note-only {
 	list-style: none;
-}
-
-/* Edit translation: the original beside the translation on wide screens, stacked on phones */
-.translation-columns {
-	display: grid;
-	gap: 1rem;
-}
-
-.translation-side {
-	display: grid;
-	gap: 0.75rem;
-	min-width: 0;
-	margin: 0;
-	padding: 0;
-	border: 0;
-}
-
-.translation-side legend {
-	padding: 0;
-	margin-bottom: 0.25rem;
-	font-weight: 600;
-}
-
-.translation-side textarea[readonly],
-.translation-side input[readonly] {
-	background: var(--bg);
-	color: var(--text);
-}
-
-@media (min-width: 48rem) {
-	.translation-columns {
-		grid-template-columns: 1fr 1fr;
-	}
 }
 
 /* Tap targets: links and the cancel link in forms are at least 44px tall */

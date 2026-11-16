@@ -55,11 +55,9 @@
 	let latestRequest = 0;
 	/** The translation edited by hand, if there is one. It takes the place of the machine translation. */
 	let override = $state<EditedTranslation | null>(null);
-	let editingTranslation = $state(false);
-	let translationDraft = $state({ title: '', ingredients: '', steps: '', notes: '' });
 	let translationError = $state<string | null>(null);
-	/** The line being changed in place, and the text it started with. */
-	let editing = $state<{ part: EditPart; index: number } | null>(null);
+	/** The line being changed in place, whether it is a note, and the text it started with. */
+	let editing = $state<{ part: EditPart; index: number; note: boolean } | null>(null);
 	let editDraft = $state('');
 	let editStart = '';
 
@@ -183,8 +181,9 @@
 		recipe ? (override && editedFits(recipe, override) ? override.hash : sourceHash(recipe)) : ''
 	);
 
+	/** Signed in: a tap changes the original (while showing it) or this language's translation. */
 	const canEdit = $derived(
-		baseFields !== null && page.data.signedIn && !showOriginal && isLanguage(locale)
+		page.data.signedIn && isLanguage(locale) && (showOriginal || baseFields !== null)
 	);
 
 	/** The original text changed after the edited translation was saved. */
@@ -197,35 +196,12 @@
 		override !== null && recipe !== undefined && !editedFits(recipe, override)
 	);
 
-	/**
-	 * The lines of a text box, one per line. Blank lines at the end are dropped; a blank line in the
-	 * middle is kept, so the save can refuse it.
-	 */
-	function rawLines(text: string): string[] {
-		const list = text.split('\n').map((line) => line.trim());
-		while (list.length > 0 && list[list.length - 1] === '') list.pop();
-		return list;
-	}
-
-	function startEditTranslation() {
-		if (!shown) return;
-		showOriginal = false;
-		translationDraft = {
-			title: shown.title,
-			ingredients: shown.ingredients.join('\n'),
-			steps: shown.steps.join('\n'),
-			notes: shown.notes
-		};
-		translationError = null;
-		editingTranslation = true;
-	}
-
 	/** Starts changing one line in place. */
-	async function startInline(part: EditPart, index: number, text: string) {
+	async function startInline(part: EditPart, index: number, text: string, note = false) {
 		if (!canEdit) return;
 		editStart = text;
 		editDraft = text;
-		editing = { part, index };
+		editing = { part, index, note };
 		await tick();
 		document.querySelector<HTMLElement>('.inline-edit')?.focus();
 	}
@@ -252,10 +228,19 @@
 		const text = editDraft.trim();
 		if (text === editStart) return;
 		if (text.length === 0) {
+			// A note is not deleted by emptying it: its delete would take the notes below it too.
+			if (current.note) {
+				translationError = m.note_empty();
+				return;
+			}
 			// Emptying an ingredient or step deletes it, in every language, once the user confirms.
 			if (current.part !== 'title' && window.confirm(m.line_delete_confirm())) {
 				await removeLine(current.part, current.index);
 			}
+			return;
+		}
+		if (showOriginal) {
+			await saveOriginal(replaceLine(fieldsOf(recipe), current.part, current.index, text));
 			return;
 		}
 		if (!baseFields || !isLanguage(locale)) return;
@@ -283,48 +268,38 @@
 		}
 	}
 
-	async function saveTranslation() {
-		if (!recipe || !baseFields || !isLanguage(locale)) return;
-		const fields = {
-			title: translationDraft.title.trim(),
-			ingredients: rawLines(translationDraft.ingredients),
-			steps: rawLines(translationDraft.steps),
-			notes: translationDraft.notes.trim()
-		};
-		// A line can only be removed or added on the recipe, so the counts must stay the same.
-		const blank =
-			fields.title === '' || [...fields.ingredients, ...fields.steps].some((line) => line === '');
-		if (blank) {
-			translationError = m.translation_line_empty();
-			return;
-		}
-		if (
-			fields.ingredients.length !== baseFields.ingredients.length ||
-			fields.steps.length !== baseFields.steps.length
-		) {
-			translationError = m.translation_line_count();
-			return;
-		}
-		const hash = baseHash;
+	/**
+	 * Saves the original recipe text, as shown while "View in original language" is on. Other
+	 * languages' edited translations are then flagged as out of date.
+	 */
+	async function saveOriginal(changed: RecipeFields) {
+		if (!recipe) return;
+		const fields = decodeFieldsText(changed);
 		try {
-			await saveOverride(recipe.id, locale, { hash, fields });
-			override = { hash, fields };
-			editingTranslation = false;
+			await recipeStore.update({
+				...recipe,
+				title: fields.title,
+				ingredients: fields.ingredients,
+				steps: fields.steps,
+				notes: fields.notes
+			});
+			translationError = null;
 		} catch {
 			translationError = m.error_save_failed();
 		}
 	}
 
+	/** Drops this language's hand edits, so the automatic translation is shown again. */
 	async function resetTranslation() {
 		if (!recipe || !isLanguage(locale)) return;
 		try {
 			await deleteOverride(recipe.id, locale);
 			override = null;
-			editingTranslation = false;
 		} catch {
 			translationError = m.error_save_failed();
 		}
 	}
+
 	/** The actions under the Ingredients heading, shown only when they apply. */
 	const toolLinks = $derived([
 		...(translated && !translated.failed
@@ -335,22 +310,17 @@
 					}
 				]
 			: []),
-		...(page.data.signedIn && baseFields && !showOriginal && !editingTranslation
-			? [{ label: m.translation_edit_all(), run: startEditTranslation }]
-			: []),
-		...(override && page.data.signedIn
-			? [{ label: m.translation_reset(), run: autoTranslate }]
-			: [])
+		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : [])
 	]);
 
-	/** Drops the hand edits and goes back to the automatic translation, after asking. */
-	async function autoTranslate() {
+	/** Discards the hand edits after asking, so the automatic translation is shown again. */
+	async function resetEdits() {
 		if (!window.confirm(m.translation_reset_confirm())) return;
 		await resetTranslation();
 	}
 </script>
 
-{#snippet lineEdit(part: EditPart, index: number, text: string, rich: boolean)}
+{#snippet lineEdit(part: EditPart, index: number, text: string, rich: boolean, note = false)}
 	{#if editing?.part === part && editing.index === index}
 		<textarea
 			class="inline-edit"
@@ -359,7 +329,7 @@
 			onblur={commitInline}
 			onkeydown={inlineKey}></textarea>
 	{:else if canEdit}
-		<button type="button" class="editable" onclick={() => startInline(part, index, text)}>
+		<button type="button" class="editable" onclick={() => startInline(part, index, text, note)}>
 			{#if rich}<RichText source={text} />{:else}{text}{/if}
 		</button>
 	{:else if rich}
@@ -449,7 +419,10 @@
 				<h2>{m.recipe_ingredients_heading()}</h2>
 				{#if !translating && recipe && isLanguage(locale)}
 					<div class="translation-tools">
-						{#if override && !editingTranslation}<p class="meta tools-status">
+						{#if showOriginal && page.data.signedIn}<p class="meta tools-status">
+								{m.original_edit_note()}
+							</p>{/if}
+						{#if override}<p class="meta tools-status">
 								{m.translation_edited_note()}
 							</p>{/if}
 						{#if translationMisaligned}
@@ -466,56 +439,6 @@
 								<button type="button" class="link-button" onclick={link.run}>{link.label}</button>
 							{/each}
 						</p>
-						{#if editingTranslation && page.data.signedIn}
-							<form
-								class="translation-edit"
-								onsubmit={(event) => {
-									event.preventDefault();
-									saveTranslation();
-								}}
-							>
-								<div class="translation-columns">
-									<fieldset class="translation-side">
-										<legend>{m.translation_original()}</legend>
-										<label>
-											{m.recipe_field_title()}
-											<input type="text" value={recipe.title} readonly />
-										</label>
-										<label>
-											{m.recipe_field_ingredients()}
-											<textarea rows="6" value={recipe.ingredients.join('\n')} readonly></textarea>
-										</label>
-										<label>
-											{m.recipe_field_steps()}
-											<textarea rows="8" value={recipe.steps.join('\n')} readonly></textarea>
-										</label>
-									</fieldset>
-									<fieldset class="translation-side">
-										<legend>{m.translation_yours()}</legend>
-										<label>
-											{m.recipe_field_title()}
-											<input type="text" bind:value={translationDraft.title} />
-										</label>
-										<label>
-											{m.recipe_field_ingredients()}
-											<textarea rows="6" bind:value={translationDraft.ingredients}></textarea>
-										</label>
-										<label>
-											{m.recipe_field_steps()}
-											<textarea rows="8" bind:value={translationDraft.steps}></textarea>
-										</label>
-									</fieldset>
-								</div>
-								<div class="translation-actions">
-									<button type="submit">{m.translation_save()}</button>
-									<button
-										type="button"
-										class="link-button"
-										onclick={() => (editingTranslation = false)}>{m.recipe_cancel()}</button
-									>
-								</div>
-							</form>
-						{/if}
 					</div>
 				{/if}
 				{#if imageUrls.length > 0}
@@ -559,6 +482,9 @@
 												false
 											)}{/if}{#if entry.notes.length > 0}<NoteBlock
 												notes={entry.notes.map((n) => n.note)}
+												indexes={entry.notes.map((n) => n.index)}
+												part="ingredients"
+												edit={lineEdit}
 											/>{/if}
 									</li>
 								{/each}
@@ -587,6 +513,9 @@
 										true
 									)}{/if}{#if entry.notes.length > 0}<NoteBlock
 										notes={entry.notes.map((n) => n.note)}
+										indexes={entry.notes.map((n) => n.index)}
+										part="steps"
+										edit={lineEdit}
 									/>{/if}
 							</li>
 						{/each}
