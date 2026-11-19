@@ -8,6 +8,7 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import RichText from '#lib/recipes/RichText.svelte';
 	import ShareRecipe from '#lib/recipes/ShareRecipe.svelte';
+	import { addToShoppingList } from '#lib/recipes/shopping-store.js';
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import {
 		decodeFieldsText,
@@ -403,8 +404,16 @@
 				]
 			: []),
 		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : []),
-		{ label: m.share_open(), run: () => (sharing = !sharing) }
+		{ label: m.share_open(), run: () => (sharing = !sharing) },
+		...(page.data.signedIn ? [{ label: m.shopping_add(), run: addToShopping }] : [])
 	]);
+
+	/** Adds this recipe to the list being built, and opens the list. */
+	function addToShopping() {
+		if (!recipe) return;
+		addToShoppingList([recipe.id]);
+		goto(resolve('/shopping'));
+	}
 
 	/** Opens the source link and start time for changing, filled with the current values. */
 	function startSourceEdit() {

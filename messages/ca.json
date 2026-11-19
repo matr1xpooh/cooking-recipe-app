@@ -211,5 +211,9 @@
 	"unit_kg": "kg",
 	"unit_ml": "ml",
 	"unit_l": "l",
-	"unit_pcs": "u"
+	"unit_pcs": "u",
+	"select_hint": "Mantén premuda una recepta per triar-ne diverses.",
+	"shopping_add": "Afegeix a la llista de la compra",
+	"shopping_remove_recipe": "Treu {title}",
+	"shopping_clear_list": "Buida la llista"
 }

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { page } from '$app/state';
+	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
@@ -8,44 +8,17 @@
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import {
 		buildShoppingList,
-		SHOPPING_STORAGE_KEY,
 		formatAmounts,
 		shoppingToText,
 		type AmountUnits,
 		type ShoppingItem
 	} from '#lib/recipes/shopping.js';
-
-	interface Saved {
-		ids: string[];
-		have: string[];
-	}
-
-	function strings(value: unknown): string[] {
-		return Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
-	}
-
-	function readSaved(): Saved | null {
-		try {
-			const raw = localStorage.getItem(SHOPPING_STORAGE_KEY);
-			if (!raw) return null;
-			const value: unknown = JSON.parse(raw);
-			if (typeof value !== 'object' || value === null) return null;
-			return {
-				ids: strings((value as { ids?: unknown }).ids),
-				have: strings((value as { have?: unknown }).have)
-			};
-		} catch {
-			return null;
-		}
-	}
-
-	function writeSaved(saved: Saved): void {
-		try {
-			localStorage.setItem(SHOPPING_STORAGE_KEY, JSON.stringify(saved));
-		} catch {
-			// Storage can be full or blocked; the list still works until the page is closed.
-		}
-	}
+	import {
+		clearShoppingList,
+		readShoppingList,
+		removeFromShoppingList,
+		writeShoppingList
+	} from '#lib/recipes/shopping-store.js';
 
 	let ids = $state<string[]>([]);
 	let have = $state<string[]>([]);
@@ -84,28 +57,40 @@
 	}
 
 	onMount(() => {
-		const saved = readSaved();
-		const fromLink = page.url.searchParams.get('ids');
-		ids = fromLink ? fromLink.split(',').filter((id) => id.length > 0) : (saved?.ids ?? []);
-		// Ticks belong to one list: a new list starts with none.
-		const same =
-			saved !== null &&
-			saved.ids.length === ids.length &&
-			saved.ids.every((id) => ids.includes(id));
-		have = same ? (saved?.have ?? []) : [];
-		writeSaved({ ids, have });
+		const saved = readShoppingList();
+		ids = saved.ids;
+		have = saved.have;
 		void build();
 	});
 
 	function toggle(key: string): void {
 		have = have.includes(key) ? have.filter((k) => k !== key) : [...have, key];
-		writeSaved({ ids, have });
+		writeShoppingList({ ids, have });
 	}
 
 	function clearTicks(): void {
 		have = [];
-		writeSaved({ ids, have });
+		writeShoppingList({ ids, have });
 	}
+
+	/** Takes one recipe off the list and rebuilds the totals from the rest. */
+	function removeRecipe(id: string): void {
+		ids = removeFromShoppingList(id).ids;
+		void build();
+	}
+
+	function clearList(): void {
+		const saved = clearShoppingList();
+		ids = saved.ids;
+		have = saved.have;
+		items = [];
+		notTranslated = [];
+	}
+
+	/** The recipes on the list, for the chips at the top. Ones that no longer exist are left out. */
+	const listed = $derived(
+		ids.map((id) => recipeStore.recipes.find((r) => r.id === id)).filter((r) => r !== undefined)
+	);
 
 	/* Ticked items stay where they are, crossed out, so they can be unticked. */
 	const toBuy = $derived(items.filter((i) => !i.toTaste));
@@ -160,8 +145,31 @@
 	{#if loading}
 		<p role="status">{m.shopping_loading()}</p>
 	{:else if ids.length === 0}
-		<p>{m.shopping_empty()}</p>
+		<p>
+			{m.shopping_empty()} <a href={resolve('/recipes')}>{m.recipes_title()}</a>
+		</p>
 	{:else}
+		{#if listed.length > 0}
+			<ul class="listed">
+				{#each listed as recipe (recipe.id)}
+					<li>
+						<span>{recipe.title}</span>
+						<button
+							type="button"
+							class="link-button"
+							aria-label={m.shopping_remove_recipe({ title: recipe.title })}
+							onclick={() => removeRecipe(recipe.id)}>×</button
+						>
+					</li>
+				{/each}
+			</ul>
+			<p class="shop-actions">
+				<button type="button" class="link-button danger" onclick={clearList}
+					>{m.shopping_clear_list()}</button
+				>
+			</p>
+		{/if}
+
 		{#if notTranslated.length > 0}
 			<p class="meta">{m.shopping_not_translated()} {notTranslated.join(', ')}</p>
 		{/if}
@@ -198,6 +206,24 @@
 </main>
 
 <style>
+	/* The recipes on the list, as chips with a remove button */
+	.listed {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		margin: 0 0 0.6rem;
+	}
+
+	.listed li {
+		display: flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.2rem 0.6rem;
+		border: 1px solid var(--control-border);
+		border-radius: 999px;
+		background: none;
+	}
+
 	.shop-list {
 		list-style: none;
 		padding: 0;

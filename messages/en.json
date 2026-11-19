@@ -211,5 +211,9 @@
 	"unit_kg": "kg",
 	"unit_ml": "ml",
 	"unit_l": "l",
-	"unit_pcs": "pcs"
+	"unit_pcs": "pcs",
+	"select_hint": "Press and hold a recipe to select several.",
+	"shopping_add": "Add to shopping list",
+	"shopping_remove_recipe": "Remove {title}",
+	"shopping_clear_list": "Clear list"
 }

@@ -211,5 +211,9 @@
 	"unit_kg": "кг",
 	"unit_ml": "мл",
 	"unit_l": "л",
-	"unit_pcs": "шт."
+	"unit_pcs": "шт.",
+	"select_hint": "Нажмите и удерживайте рецепт, чтобы выбрать несколько.",
+	"shopping_add": "Добавить в список покупок",
+	"shopping_remove_recipe": "Убрать «{title}»",
+	"shopping_clear_list": "Очистить список"
 }

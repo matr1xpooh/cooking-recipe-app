@@ -211,5 +211,9 @@
 	"unit_kg": "kg",
 	"unit_ml": "ml",
 	"unit_l": "l",
-	"unit_pcs": "uds"
+	"unit_pcs": "uds",
+	"select_hint": "Mantén pulsada una receta para elegir varias.",
+	"shopping_add": "Añadir a la lista de la compra",
+	"shopping_remove_recipe": "Quitar {title}",
+	"shopping_clear_list": "Vaciar la lista"
 }

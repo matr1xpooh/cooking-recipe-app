@@ -2,7 +2,8 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { SHOPPING_STORAGE_KEY } from '#lib/recipes/shopping.js';
+	import { addToShoppingList } from '#lib/recipes/shopping-store.js';
+	import { longPress } from '#lib/long-press.js';
 	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
@@ -19,7 +20,17 @@
 	import TextSizeControl from '#lib/TextSizeControl.svelte';
 	import SignOutButton from '#lib/SignOutButton.svelte';
 
-	onMount(() => recipeStore.load());
+	/** Set once the user has selected a recipe by holding it; the hint is then not shown. */
+	const HINT_KEY = 'recipe-select-hint';
+
+	onMount(() => {
+		try {
+			hintSeen = localStorage.getItem(HINT_KEY) === '1';
+		} catch {
+			hintSeen = false;
+		}
+		return recipeStore.load();
+	});
 
 	/** Each card shows the recipe's first photo. Loaded once per recipe, released when the page closes. */
 	let thumbs = $state<Record<string, string>>({});
@@ -71,6 +82,7 @@
 	const selected = new SvelteSet<string>();
 	let busy = $state(false);
 	let actionError = $state<string | null>(null);
+	let hintSeen = $state(true);
 
 	const inView = $derived(recipeStore.recipes.filter((r) => r.archived === (view === 'archive')));
 
@@ -113,9 +125,36 @@
 		else filters.add(tag);
 	}
 
-	function toggleSelecting() {
-		selecting = !selecting;
-		if (!selecting) selected.clear();
+	/** Selection starts with a press and hold on a recipe; that recipe is the first one selected. */
+	function startSelecting(id: string) {
+		if (selecting) return;
+		selecting = true;
+		selected.add(id);
+		hintSeen = true;
+		try {
+			localStorage.setItem(HINT_KEY, '1');
+		} catch {
+			// Storage blocked: the hint may show again next time.
+		}
+	}
+
+	function stopSelecting() {
+		selecting = false;
+		selected.clear();
+	}
+
+	const allVisibleSelected = $derived(
+		visible.length > 0 && visible.every((r) => selected.has(r.id))
+	);
+
+	function toggleAllVisible() {
+		if (allVisibleSelected) deselectAll();
+		else selectAllVisible();
+	}
+
+	/** Escape leaves selection mode. */
+	function onKey(event: KeyboardEvent) {
+		if (event.key === 'Escape' && selecting) stopSelecting();
 	}
 
 	function toggle(id: string) {
@@ -149,12 +188,7 @@
 
 	/** Opens the shopping list for the selected recipes. */
 	function shopSelected() {
-		// The shopping page reads the chosen ids from here; a new list starts with nothing ticked.
-		try {
-			localStorage.setItem(SHOPPING_STORAGE_KEY, JSON.stringify({ ids: ids(), have: [] }));
-		} catch {
-			// Storage blocked: the list opens empty.
-		}
+		addToShoppingList(ids());
 		goto(resolve('/shopping'));
 	}
 
@@ -176,6 +210,15 @@
 <svelte:head>
 	<title>{m.recipes_title()}</title>
 </svelte:head>
+
+<svelte:window onkeydown={onKey} />
+
+{#snippet rowTitle(recipe: { id: string; title: string })}
+	{#if thumbs[recipe.id]}
+		<img class="thumb" src={thumbs[recipe.id]} alt="" />
+	{/if}
+	<strong>{titles[recipe.id] ?? recipe.title}</strong>
+{/snippet}
 
 <main>
 	<header class="list-header">
@@ -261,14 +304,6 @@
 				{filtersOpen ? '▴' : '▾'}</button
 			>
 		{/if}
-		{#if visible.length > 0 && page.data.signedIn}
-			<button
-				type="button"
-				class="chip select-chip"
-				aria-pressed={selecting}
-				onclick={toggleSelecting}>{selecting ? m.select_done() : m.select_mode()}</button
-			>
-		{/if}
 	</div>
 
 	{#if filtersOpen && counts.length > 0}
@@ -296,26 +331,41 @@
 		<p class="meta">{m.archive_note()}</p>
 	{/if}
 
-	{#if selecting && visible.length > 0 && page.data.signedIn}
+	<!-- The action bar is only here while recipes are being selected -->
+	{#if selecting && page.data.signedIn}
 		<div class="bulk-bar">
-			<button type="button" class="link-button" onclick={selectAllVisible}>{m.select_all()}</button>
-			<button type="button" class="link-button" onclick={deselectAll}>{m.deselect_all()}</button>
-			{#if selected.size > 0}
-				<span>{m.selected_count({ n: selected.size })}</span>
-				{#if view === 'recipes'}
-					<button type="button" class="chip" onclick={shopSelected}>{m.shopping_action()}</button>
-					<button type="button" class="chip" disabled={busy} onclick={archiveSelected}
-						>{m.archive_action()}</button
-					>
-				{:else}
-					<button type="button" class="chip" disabled={busy} onclick={restoreSelected}
-						>{m.restore_action()}</button
-					>
-					<button type="button" class="chip danger" disabled={busy} onclick={deleteSelected}
-						>{m.delete_action()}</button
-					>
-				{/if}
+			<span role="status">{m.selected_count({ n: selected.size })}</span>
+			<button
+				type="button"
+				class="link-button"
+				disabled={visible.length === 0}
+				onclick={toggleAllVisible}>{allVisibleSelected ? m.deselect_all() : m.select_all()}</button
+			>
+			{#if view === 'recipes'}
+				<button type="button" class="chip" disabled={selected.size === 0} onclick={shopSelected}
+					>{m.shopping_action()}</button
+				>
+				<button
+					type="button"
+					class="chip"
+					disabled={busy || selected.size === 0}
+					onclick={archiveSelected}>{m.archive_action()}</button
+				>
+			{:else}
+				<button
+					type="button"
+					class="chip"
+					disabled={busy || selected.size === 0}
+					onclick={restoreSelected}>{m.restore_action()}</button
+				>
+				<button
+					type="button"
+					class="chip danger"
+					disabled={busy || selected.size === 0}
+					onclick={deleteSelected}>{m.delete_action()}</button
+				>
 			{/if}
+			<button type="button" class="link-button" onclick={stopSelecting}>{m.select_done()}</button>
 		</div>
 	{/if}
 	{#if actionError}
@@ -335,25 +385,48 @@
 	{:else}
 		<ul>
 			{#each visible as recipe (recipe.id)}
-				<li class="recipe-row" class:selecting>
-					{#if selecting}
-						<input
-							type="checkbox"
-							class="select"
-							checked={selected.has(recipe.id)}
-							onchange={() => toggle(recipe.id)}
-							aria-label={recipe.title}
-						/>
-					{/if}
-					<a class="card-link" href={resolve('/recipes/[id]', { id: recipe.id })}>
-						{#if thumbs[recipe.id]}
-							<img class="thumb" src={thumbs[recipe.id]} alt="" />
-						{/if}
-						<strong>{titles[recipe.id] ?? recipe.title}</strong>
-					</a>
-					<span class="meta">{recipe.tags.map((t) => tagNames.label(t)).join(', ')}</span>
-				</li>
+				{#if selecting}
+					<!-- While selecting the whole row is one checkbox label: no link can open by accident -->
+					<li class="recipe-row selecting">
+						<label class="card-link pick">
+							<input
+								type="checkbox"
+								class="select"
+								checked={selected.has(recipe.id)}
+								onchange={() => toggle(recipe.id)}
+							/>
+							{@render rowTitle(recipe)}
+						</label>
+						<span class="meta">{recipe.tags.map((t) => tagNames.label(t)).join(', ')}</span>
+					</li>
+				{:else}
+					<li
+						class="recipe-row"
+						use:longPress={{
+							enabled: page.data.signedIn,
+							onPress: () => startSelecting(recipe.id)
+						}}
+					>
+						<a
+							class="card-link"
+							href={resolve('/recipes/[id]', { id: recipe.id })}
+							onkeydown={(event) => {
+								// Space selects, as holding does with a finger or mouse
+								if (event.key === ' ' && page.data.signedIn) {
+									event.preventDefault();
+									startSelecting(recipe.id);
+								}
+							}}
+						>
+							{@render rowTitle(recipe)}
+						</a>
+						<span class="meta">{recipe.tags.map((t) => tagNames.label(t)).join(', ')}</span>
+					</li>
+				{/if}
 			{/each}
 		</ul>
+		{#if !hintSeen && page.data.signedIn && !selecting}
+			<p class="meta select-hint">{m.select_hint()}</p>
+		{/if}
 	{/if}
 </main>
