@@ -24,6 +24,8 @@
 	let have = $state<string[]>([]);
 	let items = $state<ShoppingItem[]>([]);
 	let notTranslated = $state<string[]>([]);
+	/** Each recipe's title in the site language, for the chips. */
+	let titles = $state<Record<string, string>>({});
 	let loading = $state(true);
 	let message = $state<'copied' | 'failed' | null>(null);
 
@@ -50,6 +52,7 @@
 				fields = shownFields(recipe, null, null);
 			}
 			lists.push({ id, title: fields.title, lines: fields.ingredients });
+			titles[id] = fields.title;
 		}
 		items = buildShoppingList(lists);
 		notTranslated = failed;
@@ -153,11 +156,11 @@
 			<ul class="listed">
 				{#each listed as recipe (recipe.id)}
 					<li>
-						<span>{recipe.title}</span>
+						<span>{titles[recipe.id] ?? recipe.title}</span>
 						<button
 							type="button"
 							class="link-button"
-							aria-label={m.shopping_remove_recipe({ title: recipe.title })}
+							aria-label={m.shopping_remove_recipe({ title: titles[recipe.id] ?? recipe.title })}
 							onclick={() => removeRecipe(recipe.id)}>×</button
 						>
 					</li>
