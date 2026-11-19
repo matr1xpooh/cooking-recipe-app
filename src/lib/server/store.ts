@@ -1,11 +1,13 @@
 import type { Recipe } from '#lib/recipes/recipe.js';
 import type { Language } from '#lib/recipes/languages.js';
+import type { GlossaryRule } from '#lib/recipes/glossary.js';
 import type { ImageType } from '#lib/recipes/screenshot.js';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { S3Client } from '@aws-sdk/client-s3';
 import * as files from './recipe-data';
 import * as overrides from './translation-overrides';
+import * as glossary from './glossary-file';
 import type { TranslationOverride } from './translation-overrides';
 import * as state from './state-file';
 import type { TranslationCacheStore } from './translate';
@@ -39,6 +41,10 @@ export interface RecipeStore extends TranslationCacheStore {
 	setOverride(recipeId: string, language: Language, override: TranslationOverride): Promise<void>;
 	deleteOverride(recipeId: string, language: Language): Promise<void>;
 	removeOverridesFor(recipeId: string): Promise<void>;
+	/** Translation fixes, applied to machine translations for every recipe. */
+	listGlossary(): Promise<GlossaryRule[]>;
+	saveGlossaryRule(rule: GlossaryRule): Promise<void>;
+	deleteGlossaryRule(id: string): Promise<boolean>;
 	getUserLanguage(userSub: string): Promise<Language | undefined>;
 	setUserLanguage(userSub: string, language: Language): Promise<void>;
 }
@@ -58,6 +64,9 @@ export const fileStore: RecipeStore = {
 	setOverride: overrides.setOverride,
 	deleteOverride: overrides.deleteOverride,
 	removeOverridesFor: overrides.removeOverridesFor,
+	listGlossary: glossary.listGlossary,
+	saveGlossaryRule: glossary.saveGlossaryRule,
+	deleteGlossaryRule: glossary.deleteGlossaryRule,
 	getCachedTranslation: state.getCachedTranslation,
 	setCachedTranslation: state.setCachedTranslation,
 	getUserLanguage: state.getUserLanguage,

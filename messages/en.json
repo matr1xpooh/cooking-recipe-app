@@ -215,5 +215,12 @@
 	"select_hint": "Press and hold a recipe to select several.",
 	"shopping_add": "Add to shopping list",
 	"shopping_remove_recipe": "Remove {title}",
-	"shopping_clear_list": "Clear list"
+	"shopping_clear_list": "Clear list",
+	"glossary_title": "Translation fixes",
+	"glossary_hint": "Each fix replaces a word before a recipe is translated, so it applies to every recipe in that language.",
+	"glossary_empty": "No translation fixes yet. Fix a word in a translated ingredient and the app will offer to remember it.",
+	"glossary_remove": "Remove the fix for {from}",
+	"glossary_remember": "Use \"{to}\" for \"{from}\" in every recipe?",
+	"glossary_unit_volume": "measured by volume",
+	"glossary_unit_weight": "measured by weight"
 }

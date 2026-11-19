@@ -160,3 +160,26 @@ export async function setLineNote(
 	});
 	if (!res.ok) throw new Error(`line note change failed: ${res.status}`);
 }
+
+/** Translation fixes, from the server. */
+export async function fetchGlossary(): Promise<import('./glossary').GlossaryRule[]> {
+	const res = await fetch('/api/glossary');
+	if (!res.ok) throw new Error(`glossary load failed: ${res.status}`);
+	return res.json();
+}
+
+export async function saveGlossaryRule(
+	rule: Omit<import('./glossary').GlossaryRule, 'id'>
+): Promise<void> {
+	const res = await fetch('/api/glossary', {
+		method: 'POST',
+		headers: { 'content-type': 'application/json' },
+		body: JSON.stringify(rule)
+	});
+	if (!res.ok) throw new Error(`glossary save failed: ${res.status}`);
+}
+
+export async function deleteGlossaryRule(id: string): Promise<void> {
+	const res = await fetch(`/api/glossary/${encodeURIComponent(id)}`, { method: 'DELETE' });
+	if (!res.ok && res.status !== 404) throw new Error(`glossary delete failed: ${res.status}`);
+}

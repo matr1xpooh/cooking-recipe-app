@@ -215,5 +215,12 @@
 	"select_hint": "Mantén premuda una recepta per triar-ne diverses.",
 	"shopping_add": "Afegeix a la llista de la compra",
 	"shopping_remove_recipe": "Treu {title}",
-	"shopping_clear_list": "Buida la llista"
+	"shopping_clear_list": "Buida la llista",
+	"glossary_title": "Correccions de traducció",
+	"glossary_hint": "Cada correcció canvia una paraula abans de traduir una recepta, així que s'aplica a totes les receptes d'aquest idioma.",
+	"glossary_empty": "Encara no hi ha correccions. Si corregeixes una paraula en un ingredient traduït, l'app oferirà recordar-la.",
+	"glossary_remove": "Treure la correcció de {from}",
+	"glossary_remember": "Usar \"{to}\" per a \"{from}\" en totes les receptes?",
+	"glossary_unit_volume": "mesurat per volum",
+	"glossary_unit_weight": "mesurat per pes"
 }

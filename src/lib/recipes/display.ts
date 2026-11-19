@@ -1,7 +1,8 @@
 import type { Recipe } from './recipe.js';
 import type { Language } from './languages.js';
 import { restoreHeadings } from './ingredient-lines.js';
-import { fetchOverride, type EditedTranslation } from './recipe-api.js';
+import { fetchGlossary, fetchOverride, type EditedTranslation } from './recipe-api.js';
+import { applyGlossary, type GlossaryRule } from './glossary.js';
 import { translateFields } from './translate-client.js';
 import { translationCache } from './translation-cache.js';
 import { fieldsOf, type RecipeFields } from './translation-fields.js';
@@ -44,9 +45,23 @@ export function shownFields(
 	};
 }
 
+/** The translation fixes, loaded once and kept until they change. An unreachable server gives none. */
+let glossary: Promise<GlossaryRule[]> | null = null;
+
+function loadGlossary(): Promise<GlossaryRule[]> {
+	glossary ??= fetchGlossary().catch(() => []);
+	return glossary;
+}
+
+/** Call after a fix is added or removed, so the next translation uses the change. */
+export function forgetGlossary(): void {
+	glossary = null;
+}
+
 /**
  * Loads the machine translation and the hand-edited translation of a recipe. Machine translation
- * is a signed-in feature; a visitor gets the original text.
+ * is a signed-in feature; a visitor gets the original text. Translation fixes replace their words
+ * in the ingredient lines before the text is translated.
  */
 export async function loadDisplay(
 	recipe: Recipe,
@@ -55,7 +70,19 @@ export async function loadDisplay(
 ): Promise<{ translated: Translated | null; override: EditedTranslation | null }> {
 	const [translated, override] = await Promise.all([
 		signedIn
-			? translateFields(fieldsOf(recipe), recipe.id, locale, translationCache)
+			? loadGlossary().then((rules) => {
+					const shape = fieldsOf(recipe);
+					const ingredients = applyGlossary(shape.ingredients, rules, locale);
+					return translateFields(
+						{ ...shape, ingredients },
+						recipe.id,
+						locale,
+						translationCache
+					).then(
+						// A failed translation falls back to the original text, not the text with fixes applied.
+						(result) => (result.failed ? { fields: shape, failed: true } : result)
+					);
+				})
 			: Promise.resolve(null),
 		fetchOverride(recipe.id, locale).catch(() => null)
 	]);

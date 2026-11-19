@@ -15,6 +15,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { randomUUID } from 'node:crypto';
 import type { Recipe } from '#lib/recipes/recipe.js';
+import type { GlossaryRule } from '#lib/recipes/glossary.js';
 import { isLanguage, type Language } from '#lib/recipes/languages.js';
 import { isRecipe, normalizeRecipe } from '#lib/recipes/validate.js';
 import { sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
@@ -29,6 +30,7 @@ import { matchByUrl, matchSame } from './recipe-match';
  *   RECIPE#<id>  / TRANS#<lang> edited translation JSON in `data`
  *   CACHE#<key>  / TEXT         one machine translation, text in `data`
  *   USER#<sub>   / PROFILE      the user's language, in `language`
+ *   GLOSSARY     / RULE#<id>    one translation fix, JSON in `data`
  * Images: <recipe id>/<image id>.png or .jpg in the bucket.
  * Written against the AWS SDK clients passed in, so tests can use a fake.
  */
@@ -43,6 +45,24 @@ export interface AwsStoreConfig {
 const IMAGE_EXTENSIONS: Record<ImageType, string> = { 'image/png': 'png', 'image/jpeg': 'jpg' };
 const RECIPES_PARTITION = 'RECIPES';
 const RECIPES_INDEX = 'gsi1';
+
+const GLOSSARY_PARTITION = 'GLOSSARY';
+
+/** A stored translation fix, or null when the item is not one. */
+function parseRule(raw: unknown): GlossaryRule | null {
+	if (typeof raw !== 'string') return null;
+	try {
+		const rule = JSON.parse(raw) as GlossaryRule;
+		return typeof rule.id === 'string' &&
+			isLanguage(rule.language) &&
+			typeof rule.source === 'string' &&
+			typeof rule.target === 'string'
+			? rule
+			: null;
+	} catch {
+		return null;
+	}
+}
 
 const recipeKey = (id: string) => ({ pk: `RECIPE#${id}`, sk: 'META' });
 const translationKey = (id: string, language: Language) => ({
@@ -225,6 +245,47 @@ export function createAwsStore(config: AwsStoreConfig): RecipeStore {
 				}
 				startKey = page.LastEvaluatedKey;
 			} while (startKey);
+		},
+
+		async listGlossary() {
+			const rules: GlossaryRule[] = [];
+			let startKey: Record<string, unknown> | undefined;
+			do {
+				const page = await dynamo.send(
+					new QueryCommand({
+						TableName: table,
+						KeyConditionExpression: 'pk = :p AND begins_with(sk, :t)',
+						ExpressionAttributeValues: { ':p': GLOSSARY_PARTITION, ':t': 'RULE#' },
+						ExclusiveStartKey: startKey
+					})
+				);
+				for (const item of page.Items ?? []) {
+					const rule = parseRule(item.data);
+					if (rule) rules.push(rule);
+				}
+				startKey = page.LastEvaluatedKey;
+			} while (startKey);
+			return rules;
+		},
+
+		async saveGlossaryRule(rule) {
+			await dynamo.send(
+				new PutCommand({
+					TableName: table,
+					Item: { pk: GLOSSARY_PARTITION, sk: `RULE#${rule.id}`, data: JSON.stringify(rule) }
+				})
+			);
+		},
+
+		async deleteGlossaryRule(id) {
+			const result = await dynamo.send(
+				new DeleteCommand({
+					TableName: table,
+					Key: { pk: GLOSSARY_PARTITION, sk: `RULE#${id}` },
+					ReturnValues: 'ALL_OLD'
+				})
+			);
+			return result.Attributes !== undefined;
 		},
 
 		async getCachedTranslation(key) {

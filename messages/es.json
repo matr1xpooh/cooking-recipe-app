@@ -215,5 +215,12 @@
 	"select_hint": "Mantén pulsada una receta para elegir varias.",
 	"shopping_add": "Añadir a la lista de la compra",
 	"shopping_remove_recipe": "Quitar {title}",
-	"shopping_clear_list": "Vaciar la lista"
+	"shopping_clear_list": "Vaciar la lista",
+	"glossary_title": "Correcciones de traducción",
+	"glossary_hint": "Cada corrección cambia una palabra antes de traducir una receta, así que se aplica a todas las recetas de ese idioma.",
+	"glossary_empty": "Todavía no hay correcciones. Si corriges una palabra en un ingrediente traducido, la app ofrecerá recordarla.",
+	"glossary_remove": "Quitar la corrección de {from}",
+	"glossary_remember": "¿Usar \"{to}\" para \"{from}\" en todas las recetas?",
+	"glossary_unit_volume": "medido por volumen",
+	"glossary_unit_weight": "medido por peso"
 }

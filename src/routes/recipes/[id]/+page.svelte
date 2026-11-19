@@ -25,10 +25,18 @@
 		uploadImage,
 		deleteLine,
 		deleteOverride,
+		saveGlossaryRule,
 		saveOverride,
 		type EditedTranslation
 	} from '#lib/recipes/recipe-api.js';
-	import { editedFits, loadDisplay, shownFields, type Translated } from '#lib/recipes/display.js';
+	import { fixFromEdit } from '#lib/recipes/glossary.js';
+	import {
+		editedFits,
+		forgetGlossary,
+		loadDisplay,
+		shownFields,
+		type Translated
+	} from '#lib/recipes/display.js';
 	import type { IngredientSource } from '#lib/recipes/recipe.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import {
@@ -44,6 +52,7 @@
 	import { keepScreenAwake } from '#lib/wake-lock.js';
 	import {
 		isHeading,
+		isNote,
 		HEADING_MARKER,
 		toNoteLine,
 		lineRange,
@@ -343,6 +352,25 @@
 			await saveOverride(recipe.id, locale, { hash, fields });
 			override = { hash, fields };
 			translationError = null;
+			await offerFix(current.part, current.index, editStart, text);
+		} catch {
+			translationError = m.error_save_failed();
+		}
+	}
+
+	/**
+	 * When a translated ingredient's name was corrected by hand, offers to use that correction in
+	 * every recipe in this language. Other recipes pick it up the next time they are translated.
+	 */
+	async function offerFix(part: EditPart, index: number, shownBefore: string, text: string) {
+		if (part !== 'ingredients' || !recipe || !isLanguage(locale)) return;
+		const original = recipe.ingredients[index];
+		if (original === undefined || isHeading(original) || isNote(original)) return;
+		const fix = fixFromEdit(original, shownBefore, text);
+		if (!fix || !window.confirm(m.glossary_remember({ from: fix.source, to: fix.target }))) return;
+		try {
+			await saveGlossaryRule({ language: locale, ...fix });
+			forgetGlossary();
 		} catch {
 			translationError = m.error_save_failed();
 		}
