@@ -192,7 +192,7 @@ main > header > a.icon-link:hover {
 	display: flex;
 	align-items: center;
 	gap: 0.5rem;
-	margin: 0.75rem 0 0;
+	margin: 0.75rem 0;
 }
 
 .search-row .chip {
