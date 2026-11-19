@@ -187,11 +187,25 @@ main > header > a.icon-link:hover {
 }
 
 /* Folded filters, with Select on the same row in its own colour */
-.filter-row {
+/* The search field and the Filters button share one row */
+.search-row {
 	display: flex;
-	flex-wrap: wrap;
-	gap: 0.4rem;
+	align-items: center;
+	gap: 0.5rem;
 	margin: 0.75rem 0 0;
+}
+
+.search-row .chip {
+	flex: none;
+}
+
+/* Small note beside a heading, such as "Edited translation" */
+.edited-tag {
+	margin-left: 0.5rem;
+	font-size: 0.8rem;
+	font-weight: 400;
+	opacity: 0.75;
+	white-space: nowrap;
 }
 
 /* Less-used actions on the recipe list: plain text links, so the list comes first */
@@ -1083,7 +1097,8 @@ button.tag.on,
 
 /* Name search on the recipe list */
 .search {
-	margin: 0.75rem 0 0;
+	flex: 1;
+	min-width: 0;
 }
 
 .search input {

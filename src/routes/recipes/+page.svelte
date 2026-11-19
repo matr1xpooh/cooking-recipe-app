@@ -283,16 +283,15 @@
 		</div>
 	{/if}
 
-	<div class="search">
-		<input
-			type="search"
-			bind:value={query}
-			placeholder={m.search_placeholder()}
-			aria-label={m.search_placeholder()}
-		/>
-	</div>
-
-	<div class="filter-row">
+	<div class="search-row">
+		<div class="search">
+			<input
+				type="search"
+				bind:value={query}
+				placeholder={m.search_placeholder()}
+				aria-label={m.search_placeholder()}
+			/>
+		</div>
 		{#if counts.length > 0}
 			<button
 				type="button"

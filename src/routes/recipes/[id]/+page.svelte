@@ -808,14 +808,14 @@
 			{/if}
 
 			<section>
-				<h2>{m.recipe_ingredients_heading()}</h2>
+				<h2>
+					{m.recipe_ingredients_heading()}{#if override && !translating && recipe && isLanguage(locale)}
+						<span class="edited-tag">{m.translation_edited_note()}</span>{/if}
+				</h2>
 				{#if !translating && recipe && isLanguage(locale)}
 					<div class="translation-tools">
 						{#if showOriginal && page.data.signedIn}<p class="meta tools-status">
 								{m.original_edit_note()}
-							</p>{/if}
-						{#if override}<p class="meta tools-status">
-								{m.translation_edited_note()}
 							</p>{/if}
 						{#if translationMisaligned}
 							<p role="status">{m.translation_misaligned()}</p>
