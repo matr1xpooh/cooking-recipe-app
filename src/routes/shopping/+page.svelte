@@ -211,9 +211,15 @@
 		margin: 0 0 1rem;
 	}
 
-	.shop-list li {
-		padding: 0.4rem 0;
+	/* Plain rows, not the recipe-card look that the global list items have */
+	.shop-list li,
+	.shop-list li:hover {
+		display: block;
+		padding: 0.5rem 0;
+		background: none;
+		border: none;
 		border-bottom: 1px solid currentColor;
+		border-radius: 0;
 	}
 
 	.shop-row {
@@ -223,8 +229,20 @@
 		min-height: 2.5rem;
 	}
 
+	/* The global input rule makes every input full width and 44px tall */
+	.shop-row input[type='checkbox'] {
+		flex: none;
+		width: 1.4rem;
+		height: 1.4rem;
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+	}
+
 	.shop-name {
 		flex: 1;
+		min-width: 0;
+		overflow-wrap: anywhere;
 	}
 
 	.shop-amount {
