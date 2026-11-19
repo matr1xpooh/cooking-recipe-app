@@ -195,5 +195,21 @@
 	"share_working": "Preparando…",
 	"share_translate_failed": "La traducción no está lista, así que se enviará el texto original.",
 	"share_no_photos": "Este teléfono no puede adjuntar fotos, así que solo se envió el texto.",
-	"share_failed": "No se pudo compartir. Prueba con Copiar texto."
+	"share_failed": "No se pudo compartir. Prueba con Copiar texto.",
+	"shopping_action": "Lista de la compra",
+	"shopping_title": "Lista de la compra",
+	"shopping_have": "Ya lo tengo",
+	"shopping_have_group": "En casa",
+	"shopping_as_needed": "Según sea necesario",
+	"shopping_share": "Compartir lista",
+	"shopping_clear": "Quitar marcas",
+	"shopping_loading": "Preparando la lista…",
+	"shopping_empty": "Elige recetas primero.",
+	"shopping_nothing": "Nada que comprar.",
+	"shopping_not_translated": "Sin traducir, así que estas líneas puede que no se unan con otras recetas:",
+	"unit_g": "g",
+	"unit_kg": "kg",
+	"unit_ml": "ml",
+	"unit_l": "l",
+	"unit_pcs": "uds"
 }

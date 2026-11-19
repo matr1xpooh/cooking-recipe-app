@@ -195,5 +195,21 @@
 	"share_working": "Preparing…",
 	"share_translate_failed": "The translation is not ready, so the original text will be sent.",
 	"share_no_photos": "This phone cannot attach photos, so only the text was sent.",
-	"share_failed": "Sharing did not work. Try Copy text."
+	"share_failed": "Sharing did not work. Try Copy text.",
+	"shopping_action": "Shopping list",
+	"shopping_title": "Shopping list",
+	"shopping_have": "I have it",
+	"shopping_have_group": "At home",
+	"shopping_as_needed": "As needed",
+	"shopping_share": "Share list",
+	"shopping_clear": "Clear ticks",
+	"shopping_loading": "Preparing the list…",
+	"shopping_empty": "Choose recipes first.",
+	"shopping_nothing": "Nothing to buy.",
+	"shopping_not_translated": "Not translated, so these lines may not join other recipes:",
+	"unit_g": "g",
+	"unit_kg": "kg",
+	"unit_ml": "ml",
+	"unit_l": "l",
+	"unit_pcs": "pcs"
 }

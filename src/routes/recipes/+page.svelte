@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onDestroy, onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { SHOPPING_STORAGE_KEY } from '#lib/recipes/shopping.js';
 	import { page } from '$app/state';
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
@@ -144,6 +146,17 @@
 	}
 
 	const ids = () => [...selected];
+
+	/** Opens the shopping list for the selected recipes. */
+	function shopSelected() {
+		// The shopping page reads the chosen ids from here; a new list starts with nothing ticked.
+		try {
+			localStorage.setItem(SHOPPING_STORAGE_KEY, JSON.stringify({ ids: ids(), have: [] }));
+		} catch {
+			// Storage blocked: the list opens empty.
+		}
+		goto(resolve('/shopping'));
+	}
 
 	function archiveSelected() {
 		return run(() => recipeStore.setArchived(ids(), true));
@@ -290,6 +303,7 @@
 			{#if selected.size > 0}
 				<span>{m.selected_count({ n: selected.size })}</span>
 				{#if view === 'recipes'}
+					<button type="button" class="chip" onclick={shopSelected}>{m.shopping_action()}</button>
 					<button type="button" class="chip" disabled={busy} onclick={archiveSelected}
 						>{m.archive_action()}</button
 					>

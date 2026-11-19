@@ -195,5 +195,21 @@
 	"share_working": "Preparant…",
 	"share_translate_failed": "La traducció no està a punt, així que s’enviarà el text original.",
 	"share_no_photos": "Aquest telèfon no pot adjuntar fotos, així que només s’ha enviat el text.",
-	"share_failed": "No s’ha pogut compartir. Prova Copia el text."
+	"share_failed": "No s’ha pogut compartir. Prova Copia el text.",
+	"shopping_action": "Llista de la compra",
+	"shopping_title": "Llista de la compra",
+	"shopping_have": "Ja ho tinc",
+	"shopping_have_group": "A casa",
+	"shopping_as_needed": "Segons calgui",
+	"shopping_share": "Comparteix la llista",
+	"shopping_clear": "Treu les marques",
+	"shopping_loading": "Preparant la llista…",
+	"shopping_empty": "Tria primer les receptes.",
+	"shopping_nothing": "Res per comprar.",
+	"shopping_not_translated": "Sense traduir, així que aquestes línies potser no s’uneixen amb altres receptes:",
+	"unit_g": "g",
+	"unit_kg": "kg",
+	"unit_ml": "ml",
+	"unit_l": "l",
+	"unit_pcs": "u"
 }
