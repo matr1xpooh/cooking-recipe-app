@@ -107,9 +107,9 @@
 		writeSaved({ ids, have });
 	}
 
-	const toBuy = $derived(items.filter((i) => !have.includes(i.key) && !i.toTaste));
-	const asNeeded = $derived(items.filter((i) => !have.includes(i.key) && i.toTaste));
-	const atHome = $derived(items.filter((i) => have.includes(i.key)));
+	/* Ticked items stay where they are, crossed out, so they can be unticked. */
+	const toBuy = $derived(items.filter((i) => !i.toTaste));
+	const asNeeded = $derived(items.filter((i) => i.toTaste));
 
 	async function share(): Promise<void> {
 		message = null;
@@ -132,12 +132,12 @@
 	<title>{m.shopping_title()}</title>
 </svelte:head>
 
-{#snippet row(item: ShoppingItem, checked: boolean)}
-	<li>
+{#snippet row(item: ShoppingItem)}
+	<li class:done={have.includes(item.key)}>
 		<label class="shop-row">
 			<input
 				type="checkbox"
-				{checked}
+				checked={have.includes(item.key)}
 				aria-label={m.shopping_have()}
 				onchange={() => toggle(item.key)}
 			/>
@@ -166,27 +166,20 @@
 			<p class="meta">{m.shopping_not_translated()} {notTranslated.join(', ')}</p>
 		{/if}
 
-		{#if toBuy.length === 0 && asNeeded.length === 0 && atHome.length === 0}
+		{#if toBuy.length === 0 && asNeeded.length === 0}
 			<p>{m.shopping_nothing()}</p>
 		{/if}
 
 		{#if toBuy.length > 0}
 			<ul class="shop-list">
-				{#each toBuy as item (item.key)}{@render row(item, false)}{/each}
+				{#each toBuy as item (item.key)}{@render row(item)}{/each}
 			</ul>
 		{/if}
 
 		{#if asNeeded.length > 0}
 			<h2>{m.shopping_as_needed()}</h2>
 			<ul class="shop-list">
-				{#each asNeeded as item (item.key)}{@render row(item, false)}{/each}
-			</ul>
-		{/if}
-
-		{#if atHome.length > 0}
-			<h2>{m.shopping_have_group()}</h2>
-			<ul class="shop-list">
-				{#each atHome as item (item.key)}{@render row(item, true)}{/each}
+				{#each asNeeded as item (item.key)}{@render row(item)}{/each}
 			</ul>
 		{/if}
 
@@ -243,6 +236,13 @@
 		flex: 1;
 		min-width: 0;
 		overflow-wrap: anywhere;
+	}
+
+	/* A ticked item is crossed out; unticking it brings it back */
+	.shop-list li.done .shop-name,
+	.shop-list li.done .shop-amount {
+		text-decoration: line-through;
+		opacity: 0.55;
 	}
 
 	.shop-amount {
