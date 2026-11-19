@@ -1,6 +1,6 @@
 import type { KeyValueStorage } from './store.svelte';
 
-export const TRANSLATION_CACHE_KEY = 'recipe-translations.v1';
+export const TRANSLATION_CACHE_KEY = 'recipe-translations.v2';
 
 /** Oldest entries are dropped beyond this, so the cache can't grow without bound. */
 export const MAX_CACHE_ENTRIES = 200;

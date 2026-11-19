@@ -38,13 +38,28 @@ export const MAX_ITEM_CHARS = 4000;
 export const MAX_TOTAL_CHARS = 20000;
 const CONCURRENCY = 4;
 
+/**
+ * Translate’s text, or the input unchanged when Translate detected that it is already in the
+ * target language. Translating same-language text rewrites short lines (“Яйца 4 шт.” came back as
+ * “Лицо 60 г”), so the original is kept instead.
+ */
+export function translatedOrOriginal(
+	input: TranslateCallInput,
+	out: { TranslatedText?: string; SourceLanguageCode?: string }
+): string {
+	if (out.SourceLanguageCode && out.SourceLanguageCode === input.TargetLanguageCode) {
+		return input.Text;
+	}
+	return out.TranslatedText ?? '';
+}
+
 // Created once per process. Credentials come from the default AWS chain
 // (environment variables, then ~/.aws profiles, then instance or container roles).
 let client: TranslateClient | undefined;
 const awsCall: TranslateCall = async (input) => {
 	client ??= new TranslateClient({ region: process.env.AWS_REGION ?? 'us-east-1' });
 	const out = await client.send(new TranslateTextCommand(input));
-	return out.TranslatedText ?? '';
+	return translatedOrOriginal(input, out);
 };
 
 function checkLimits(items: TranslateItem[]): void {
@@ -63,13 +78,16 @@ export interface TranslationCacheStore {
 	setCachedTranslation(key: string, text: string): Promise<void>;
 }
 
+/** Bump when translations are wrong, so stored results are made again. Version 2: same-language text is kept. */
+const CACHE_VERSION = 2;
+
 /**
  * Cache key for one item: a SHA-256 of the target, the style flag and the text. Two
  * recipes with the same sentence share one translation; any change to the text misses.
  */
 export function cacheKeyFor(item: TranslateItem, target: Language): string {
 	const digest = createHash('sha256')
-		.update(JSON.stringify([target, item.styled, item.text]))
+		.update(JSON.stringify([CACHE_VERSION, target, item.styled, item.text]))
 		.digest('hex');
 	return `tr:${digest}`;
 }

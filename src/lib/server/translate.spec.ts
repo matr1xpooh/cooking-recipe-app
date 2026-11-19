@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
 	translateItems,
 	TranslateError,
+	translatedOrOriginal,
 	MAX_ITEMS,
 	MAX_ITEM_CHARS,
 	type TranslateCall,
@@ -89,5 +90,33 @@ describe('translateItems', () => {
 		});
 		const big = [{ text: 'x'.repeat(MAX_ITEM_CHARS + 1), styled: false }];
 		await expect(translateItems(big, 'es', fakeCall())).rejects.toBeInstanceOf(TranslateError);
+	});
+});
+
+describe('translatedOrOriginal', () => {
+	const input = {
+		Text: 'Яйца 4 шт.',
+		ContentType: 'text/plain' as const,
+		SourceLanguageCode: 'auto',
+		TargetLanguageCode: 'ru'
+	};
+
+	it('keeps the original when Translate detected the target language', () => {
+		expect(
+			translatedOrOriginal(input, { TranslatedText: 'Лицо 60 г', SourceLanguageCode: 'ru' })
+		).toBe('Яйца 4 шт.');
+	});
+
+	it('uses the translation when the source is a different language', () => {
+		expect(
+			translatedOrOriginal(
+				{ ...input, Text: 'Eggs 4 pcs' },
+				{ TranslatedText: 'Яйца 4 шт.', SourceLanguageCode: 'en' }
+			)
+		).toBe('Яйца 4 шт.');
+	});
+
+	it('returns an empty string when Translate gave no text and no detection', () => {
+		expect(translatedOrOriginal(input, {})).toBe('');
 	});
 });
