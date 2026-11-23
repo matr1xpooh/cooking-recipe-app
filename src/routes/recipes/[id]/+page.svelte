@@ -855,12 +855,13 @@
 						</p>
 					</div>
 				{/if}
-				{#if sharing && recipe}
+				{#if sharing && recipe && shown}
 					<ShareRecipe
 						{recipe}
+						fields={shown}
+						translateFailed={translated?.failed === true}
 						{photos}
 						locale={isLanguage(locale) ? locale : 'en'}
-						signedIn={page.data.signedIn}
 					/>
 				{/if}
 				{#if recipe.images.length > 0 || page.data.signedIn}
