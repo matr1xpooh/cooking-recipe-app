@@ -621,6 +621,30 @@ summary {
 	min-height: 44px;
 }
 
+/* Cooking is the main use of a recipe: one large button under the title */
+.cook-row {
+	margin: 0.25rem 0 1rem;
+}
+
+.cook-button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 44px;
+	padding: 0 1.5rem;
+	background: var(--accent);
+	color: #fff;
+	border-radius: var(--radius);
+	font-weight: 600;
+	text-decoration: none;
+}
+
+.cook-button:hover,
+.cook-button:focus-visible {
+	background: var(--accent-hover);
+	color: #fff;
+}
+
 /* The sign-out form is a bare button, not a form panel */
 .site-header form {
 	display: block;
