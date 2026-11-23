@@ -882,6 +882,14 @@
 											>
 											<button
 												type="button"
+												class="link-button"
+												onclick={() => {
+													openPhoto = null;
+													showAddPhotos = true;
+												}}>{m.photo_add_more()}</button
+											>
+											<button
+												type="button"
 												class="link-button danger"
 												onclick={() => {
 													openPhoto = null;
@@ -907,9 +915,9 @@
 							<button type="button" class="link-button" onclick={() => (showAddPhotos = false)}
 								>{m.recipe_cancel()}</button
 							>
-						{:else}
+						{:else if photos.length === 0}
 							<button type="button" class="link-button" onclick={() => (showAddPhotos = true)}
-								>{photos.length === 0 ? m.photo_add_first() : m.photo_add_more()}</button
+								>{m.photo_add_first()}</button
 							>
 						{/if}
 					{/if}
