@@ -742,14 +742,10 @@
 					{shown.title}
 				{/if}
 			</h1>
-			{#if shown.steps.length > 0}
-				<p class="cook-row">
-					<a class="cook-button" href={resolve('/recipes/[id]/cook', { id: recipe.id })}
-						>{m.cook_open()}</a
-					>
-				</p>
-			{/if}
 			<p class="recipe-actions">
+				{#if shown.steps.length > 0}
+					<a href={resolve('/recipes/[id]/cook', { id: recipe.id })}>{m.cook_open()}</a>
+				{/if}
 				{#if recipe.sourceUrl}
 					<!-- External user-supplied URL: resolve() only applies to app routes. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->

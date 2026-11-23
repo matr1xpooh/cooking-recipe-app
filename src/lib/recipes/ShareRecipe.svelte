@@ -102,7 +102,9 @@
 <div class="share-panel">
 	<p class="meta">{m.share_title()}</p>
 	<div class="share-row">
-		<button type="button" onclick={send} disabled={busy}>{m.share_send()}</button>
+		<button type="button" class="link-button" onclick={send} disabled={busy}
+			>{m.share_send()}</button
+		>
 		<button type="button" class="link-button" onclick={copy} disabled={busy}
 			>{m.share_copy()}</button
 		>
