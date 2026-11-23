@@ -155,10 +155,28 @@
 		gap: 0.4rem;
 	}
 
+	/* The label is one line of text with a native-size checkbox beside it */
 	.share-photos {
 		display: flex;
 		align-items: center;
-		gap: 0.4rem;
+		gap: 0.5rem;
+		font-weight: 400;
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	/* Undoes the page-wide input style (full width, 44px box) for this checkbox */
+	.share-photos input {
+		flex: none;
+		width: 1.1rem;
+		height: 1.1rem;
+		min-height: 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		border-radius: 0;
+		background: none;
+		accent-color: var(--accent);
 	}
 
 	.kind-chip.active {

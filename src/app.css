@@ -672,7 +672,7 @@ summary {
 	display: flex;
 	flex-wrap: wrap;
 	align-items: center;
-	gap: 0.5rem;
+	gap: 0.25rem 1.25rem;
 	margin: -0.5rem 0 1rem;
 }
 
@@ -885,14 +885,18 @@ input.select {
 	font-size: 0.85rem;
 }
 
-/* Actions on a recipe are text links, like Edit and Open source */
-button.link-button {
+/* Actions on a recipe are text links, like Edit and Open source: one size, weight and underline */
+button.link-button,
+.recipe-actions a {
 	padding: 0;
 	border: 0;
 	border-radius: 0;
 	background: none;
-	font-weight: 500;
+	font-size: 1rem;
+	font-weight: 600;
 	text-decoration: underline;
+	text-decoration-thickness: 1px;
+	text-underline-offset: 0.3em;
 }
 
 /* A line that is tapped to edit looks like the text around it, with a faint underline */
@@ -1153,9 +1157,8 @@ button.tag.on,
 .tools-links {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: baseline;
-	gap: 0.25rem 0.5rem;
-	font-size: 0.9rem;
+	align-items: center;
+	gap: 0.25rem 1.25rem;
 }
 
 /* Notes under an ingredient or step: a bar on the left, text in the normal colour */

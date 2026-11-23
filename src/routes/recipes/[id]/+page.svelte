@@ -751,7 +751,6 @@
 			{/if}
 			<p class="recipe-actions">
 				{#if recipe.sourceUrl}
-					<span aria-hidden="true">·</span>
 					<!-- External user-supplied URL: resolve() only applies to app routes. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
@@ -764,19 +763,15 @@
 						<small>{m.recipe_starts_at({ time: formatStart(recipe.sourceStart) })}</small>
 					{/if}
 				{/if}
-				<span aria-hidden="true">·</span>
-				{#if page.data.signedIn}<button type="button" class="link-button" onclick={startSourceEdit}
-						>{recipe.sourceUrl ? m.source_change() : m.source_add()}</button
-					><span aria-hidden="true">·</span>{/if}{#if page.data.signedIn}<button
-						type="button"
-						class="link-button"
-						onclick={toggleArchive}
-					>
+				{#if page.data.signedIn}
+					<button type="button" class="link-button" onclick={startSourceEdit}>
+						{recipe.sourceUrl ? m.source_change() : m.source_add()}
+					</button>
+					<button type="button" class="link-button" onclick={toggleArchive}>
 						{recipe.archived ? m.restore_action() : m.archive_action()}
 					</button>
 				{/if}
 				{#if recipe.archived && page.data.signedIn}
-					<span aria-hidden="true">·</span>
 					<button type="button" class="link-button danger" onclick={deleteThis}>
 						{m.delete_action()}
 					</button>
@@ -855,7 +850,6 @@
 						{/if}
 						<p class="tools-links">
 							{#each toolLinks as link, i (i)}
-								{#if i > 0}<span aria-hidden="true">|</span>{/if}
 								<button type="button" class="link-button" onclick={link.run}>{link.label}</button>
 							{/each}
 						</p>
