@@ -1,6 +1,6 @@
 # Recipes
 
-A personal recipe book for a small group of known users (household, family, friends). Save recipes from videos and web pages, keep your own notes and photos with them, and read every recipe in your language. Built for use on a phone in the kitchen.
+A personal recipe book, built as a mobile app. Save recipes from videos, web pages or screenshots, keep your own notes and photos with them, cook through them step by step, and build a shopping list from them. Read every recipe in Catalan, Spanish, English or Russian, and share one as text with its photos.
 
 The product brief is in [APP_PROMPT.md](APP_PROMPT.md). It is the standing spec for this repository.
 
