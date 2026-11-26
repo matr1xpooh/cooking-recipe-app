@@ -11,6 +11,8 @@ import { sveltekit } from '@sveltejs/kit/vite';
  * the deploy, STORE=file for a local build. Dev and tests default to the local file store.
  */
 function configuredStore(command: 'build' | 'serve', mode: string): 'file' | 'aws' | undefined {
+	// Tests always use the file store, whatever STORE says for the build that runs them.
+	if (mode === 'test') return 'file';
 	const env = { ...loadEnv(mode, process.cwd(), ''), ...process.env };
 	const kind = env.STORE;
 	if (kind === 'file' || kind === 'aws') return kind;
