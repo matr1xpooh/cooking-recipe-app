@@ -84,7 +84,7 @@ A personal recipe book for a small group of known users (household, family, frie
 
 ### 4.3 Storage abstraction
 
-- All persistence goes through one interface, `RecipeStore` in `src/lib/server/store.ts`. Routes depend on the interface only. Implementations: local filesystem (development, wraps `src/lib/server/recipe-data.ts` and `translation-overrides.ts`) and DynamoDB + S3 (deployed), selected by the `STORE` environment variable.
+- All persistence goes through one interface, `RecipeStore` in `src/lib/server/store.ts`. Routes depend on the interface only. Implementations: local filesystem (development, wraps `src/lib/server/recipe-data.ts` and `translation-overrides.ts`) and DynamoDB + S3 (deployed), chosen when the app is built (`STORE` in `vite.config.ts`), so a deployed build contains no local-file code.
 - A one-off script (`scripts/migrate-to-aws.ts`) migrates `data/recipes.json`, `data/translations.json`, and `data/images/**` into DynamoDB and S3. Run for production on 2026-11-13: 46 recipes, their photos and 2 edited translations.
 - The machine-translation cache is on the server, in DynamoDB, keyed by a hash of the original text and the target language. A translation is only made once for everyone.
 

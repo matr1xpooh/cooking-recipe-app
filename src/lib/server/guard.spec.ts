@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { decideAccess, isPublicPath } from './access';
-import { fileStore, getStore } from './store';
+import { awsStore, fileStore, getStore } from './store';
 
 /**
  * Checks that must hold before the app goes to AWS. They read the code's shape, so a
@@ -58,10 +58,9 @@ describe('every API route needs a signed-in user', () => {
 	});
 });
 
-describe('STORE=aws never touches the local data folder', () => {
+describe('the AWS store never touches the local data folder', () => {
 	const saved = { ...process.env };
 	beforeEach(() => {
-		process.env.STORE = 'aws';
 		process.env.TABLE_NAME = 'guard-table';
 		process.env.BUCKET_NAME = 'guard-bucket';
 		process.env.RECIPE_DATA_DIR = path.resolve('does-not-exist-guard');
@@ -71,12 +70,17 @@ describe('STORE=aws never touches the local data folder', () => {
 		Object.assign(process.env, saved);
 	});
 
-	it('selects a store whose every operation is not a file-store operation', () => {
-		const store = getStore();
+	it('the AWS store has no operation that is a file-store operation', () => {
+		// The build picks the store (vite.config.ts); tests run as a file build, so the AWS store is built here directly.
+		const store = awsStore();
 		expect(store).not.toBe(fileStore);
 		for (const key of Object.keys(fileStore) as (keyof typeof fileStore)[]) {
 			expect(store[key], key).not.toBe(fileStore[key]);
 		}
+	});
+
+	it('this test build uses the file store, as chosen by vite.config.ts', () => {
+		expect(getStore()).toBe(fileStore);
 	});
 
 	it('the AWS store module does not import any local-file code', async () => {

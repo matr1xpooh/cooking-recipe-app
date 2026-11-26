@@ -76,7 +76,7 @@ export const fileStore: RecipeStore = {
 let awsSingleton: RecipeStore | undefined;
 
 /** The deployed store. Its table and bucket names come from the environment set by the SST config. */
-function awsStore(): RecipeStore {
+export function awsStore(): RecipeStore {
 	if (!awsSingleton) {
 		const table = process.env.TABLE_NAME;
 		const bucket = process.env.BUCKET_NAME;
@@ -91,10 +91,13 @@ function awsStore(): RecipeStore {
 	return awsSingleton;
 }
 
-/** The store selected by the STORE environment variable. Defaults to the file store. */
+/**
+ * Set by vite.config.ts when the app is built (STORE=aws or STORE=file). The branch that is not
+ * taken is removed from the build, so a deployed app contains no local-file code path.
+ */
+declare const __RECIPE_STORE__: 'file' | 'aws';
+
+/** The store this build uses. Routes call this; they do not choose a backend themselves. */
 export function getStore(): RecipeStore {
-	const kind = process.env.STORE ?? 'file';
-	if (kind === 'file') return fileStore;
-	if (kind === 'aws') return awsStore();
-	throw new Error(`Unknown STORE "${kind}"`);
+	return __RECIPE_STORE__ === 'aws' ? awsStore() : fileStore;
 }

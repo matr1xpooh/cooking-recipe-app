@@ -52,16 +52,16 @@ Service workers only register on `localhost` or HTTPS. Use `localhost` to test t
 
 Set these in `.env` (git-ignored):
 
-| Variable            | Purpose                                                                          |
-| ------------------- | -------------------------------------------------------------------------------- |
-| `STORE`             | `file` (default) stores data in `./data`. `aws` uses DynamoDB and S3 (deployed). |
-| `RECIPE_DATA_DIR`   | Optional. Moves the file store, for example in tests.                            |
-| `COGNITO_ISSUER`    | The user pool's issuer URL.                                                      |
-| `COGNITO_DOMAIN`    | The hosted sign-in domain, with `https://`.                                      |
-| `COGNITO_CLIENT_ID` | The app client's id. The client needs the authorization code flow with PKCE.     |
-| `SESSION_SECRET`    | At least 32 random characters. Signs the session cookies.                        |
-| `AWS_REGION`        | Region for Textract and Translate.                                               |
-| `AUTH`              | Leave unset. `off` disables sign-in (local development only).                    |
+| Variable            | Purpose                                                                                                                                                                                               |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `STORE`             | Chosen when the app is built, not at run time: `file` stores data in `./data` (local), `aws` uses DynamoDB and S3 (the deploy). A build needs one of them; `npm run dev` and tests default to `file`. |
+| `RECIPE_DATA_DIR`   | Optional. Moves the file store, for example in tests.                                                                                                                                                 |
+| `COGNITO_ISSUER`    | The user pool's issuer URL.                                                                                                                                                                           |
+| `COGNITO_DOMAIN`    | The hosted sign-in domain, with `https://`.                                                                                                                                                           |
+| `COGNITO_CLIENT_ID` | The app client's id. The client needs the authorization code flow with PKCE.                                                                                                                          |
+| `SESSION_SECRET`    | At least 32 random characters. Signs the session cookies.                                                                                                                                             |
+| `AWS_REGION`        | Region for Textract and Translate.                                                                                                                                                                    |
+| `AUTH`              | Leave unset. `off` disables sign-in (local development only).                                                                                                                                         |
 
 AWS credentials for Textract and Translate come from the standard AWS credential chain on your machine. Do not put keys in `.env`.
 
