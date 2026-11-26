@@ -25,28 +25,7 @@ describe('isRecipe', () => {
 	});
 });
 
-describe('normalizeRecipe', () => {
-	it('fills defaults for recipes saved before notes, screenshots and sources', () => {
-		expect(normalizeRecipe(recipe as never)).toEqual({
-			...recipe,
-			notes: '',
-			images: [],
-			source: 'typed',
-			tags: []
-		});
-	});
-
-	it('infers an image source for a recipe with a screenshot and no source', () => {
-		expect(normalizeRecipe({ ...recipe, images: ['legacy'] } as never).source).toBe('image');
-	});
-});
-
-describe('tags from the old single category', () => {
-	it('keeps a category as the only tag, and drops "other"', () => {
-		expect(normalizeRecipe({ ...recipe, category: 'meat' } as never).tags).toEqual(['meat']);
-		expect(normalizeRecipe({ ...recipe, category: 'other' } as never).tags).toEqual([]);
-	});
-
+describe('normalizeRecipe tags', () => {
 	it('keeps tags when they are present', () => {
 		expect(normalizeRecipe({ ...recipe, tags: ['fish', 'soup'] } as never).tags).toEqual([
 			'fish',

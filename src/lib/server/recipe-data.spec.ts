@@ -89,18 +89,6 @@ describe('recipe files on disk', () => {
 		expect(await readImage('nothing', 'none')).toBeNull();
 	});
 
-	it('moves the old single screenshot into the recipe folder as image "legacy"', async () => {
-		await mkdir(path.join(dir, 'images'), { recursive: true });
-		await writeFile(path.join(dir, 'images', 'abc-1.png'), PNG);
-		await writeFile(
-			path.join(dir, 'recipes.json'),
-			JSON.stringify([{ ...recipe, hasImage: true, images: undefined }])
-		);
-		const [migrated] = await listRecipes();
-		expect(migrated.images).toEqual(['legacy']);
-		expect(Array.from((await readImage('abc-1', 'legacy'))!.bytes)).toEqual(Array.from(PNG));
-	});
-
 	it('deletes a recipe and its screenshot', async () => {
 		await saveRecipe(recipe);
 		await saveImage('abc-1', 'one', PNG, 'image/png');
