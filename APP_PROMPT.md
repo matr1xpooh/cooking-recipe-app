@@ -4,7 +4,7 @@ Use this document as the standing brief for any work on this repository.
 
 ## 1. Purpose
 
-A personal recipe book for a small group of known users (household, family, friends). Users save recipes they find in videos and on web pages, keep their own notes and photos with them, and read every recipe in their preferred language. The app is used mostly on phones, in the kitchen.
+A personal recipe book for a small group of known users (household, family, friends). Users save recipes they find in videos and on web pages, keep their own notes and photos with them, cook through them step by step, build a shopping list from them, share one as text with its photos, and read every recipe in their preferred language. The app is used mostly on phones, in the kitchen.
 
 ## 2. Users and access
 
@@ -19,7 +19,7 @@ A personal recipe book for a small group of known users (household, family, frie
 ### 3.1 Recipes
 
 - A recipe has: title, optional source URL (video or web page), optional video start time in seconds, ingredient list, ordered steps, notes, tags, and zero or more images.
-- Create recipes, then edit them in place on the recipe page: the text, lines, notes, photos, and source link. Archive, restore, and delete. Delete asks for confirmation.
+- Create recipes, then edit them in place on the recipe page: the text, lines, notes, photos, and source link. Archive, restore, and delete, one recipe or several at once: press and hold a recipe in the list (or press Space on it) to select it. Delete asks for confirmation.
 - A link with a start time opens the video at that time.
 - Duplicate rule: two recipes are duplicates when source URL, start time, and title all match. Saving a duplicate is rejected and the existing recipe is shown. Several dishes from one video are allowed.
 
@@ -32,13 +32,17 @@ A personal recipe book for a small group of known users (household, family, frie
 
 ### 3.3 Notes
 
-- Free-form notes per recipe, plus notes attached to an individual ingredient or step.
-- Basic rich text (bold, italic, lists, links).
+- Free-form notes per recipe, plus notes attached to each ingredient or step.
+- A line starting with `> ` is a note on the line above it; `> - ` makes it a bullet.
+- Notes take bold, italic, colours and links. Links accept only http and https addresses.
+- Ingredient lines starting with `# ` are headings.
 
 ### 3.4 Photos
 
 - Several images per recipe, shown as a gallery on the recipe page and in the form.
-- On a phone, "Add photo" opens the camera or the photo library.
+- On a phone, "Take photo" opens the camera and "Choose photo" opens the photo library.
+- The first picture is the thumbnail on the recipe's card in the list.
+- Each picture has an "Edit image" menu: read text from it (OCR), add more pictures, or remove it.
 - Images up to 5 MB, PNG or JPEG; originals are kept.
 
 ### 3.5 Tags and search
@@ -51,7 +55,7 @@ A personal recipe book for a small group of known users (household, family, frie
 
 ### 3.6 Languages
 
-- Interface languages: Catalan, Spanish, English, Russian. Switching language takes under 100 ms and is remembered per user.
+- Interface languages: Catalan, Spanish, English, Russian. Switching language takes under 100 ms, updates the page in place without a reload, and is saved to the user's account. A new browser or phone signed in to the same account opens in the same language.
 - Recipe content is machine-translated (AWS Translate) into the selected language on demand and cached; the cache entry is keyed by a hash of the original text.
 - A user can edit a translation by hand. When the original recipe later changes, the edited translation is flagged as out of date. A user can reset it to the machine translation.
 - Tags display in the selected language.
@@ -62,6 +66,18 @@ A personal recipe book for a small group of known users (household, family, frie
 - Installable to the home screen from a link (Progressive Web App): app icon, full-screen launch, splash screen.
 - The screen stays awake while a recipe is open (Screen Wake Lock API).
 - Recipes already viewed open without a network connection (read-only offline).
+
+### 3.8 Shopping list
+
+- A recipe screen has a "+ Shopping list" button.
+- Several recipes can be added at once: select them in the recipe list and choose Shopping list.
+- The shopping list shows which recipes it covers, with a remove button for each.
+
+### 3.9 Sharing
+
+- "Share" on a recipe offers Send and Copy.
+- Send opens the phone's share sheet with the text the page is showing (the translation, the user's edited translation, or the original while "Read original" is on), and the recipe's photos when there are any.
+- Copy copies the text only.
 
 ## 4. Architecture (decided)
 
@@ -94,31 +110,33 @@ A personal recipe book for a small group of known users (household, family, frie
 
 ## 5. Quality bar
 
+- Development needs Node.js 22.17 or newer; `.npmrc` sets `engine-strict`, so older versions refuse to install.
 - TypeScript strict; `npm run check`, `npm run lint`, and `npm test` pass before each commit.
 - Unit tests for parsing, validation, duplicate detection, tag logic, and translation caching; browser tests for the main flows.
 - No secrets in the repository.
 
 ## 6. Screens
 
-1. **Recipe list** — title, with sign-out (or the sign-in icon for visitors) at the top right; language switch and text size; text links to add a recipe and manage tags; Active and Archived tabs; search; tag filters folded behind a Filters button, with Select beside it; cards with photo, title, tags.
-2. **Recipe page** — gallery, title, source link (with start time), ingredients, steps, inline notes, tags, language switch. Signed in: edit in place, add ingredients and steps, manage photos.
+1. **Recipe list** — title, with sign-out (or the sign-in icon for visitors) at the top right; language switch and text size; text links to add a recipe and manage tags; Active and Archived tabs; search; tag filters folded behind a Filters button, with Select beside it; press and hold a recipe (or press Space on it) to select several, then the bar offers Shopping list, Archive or Delete; cards with photo, title, tags.
+2. **Recipe page** — gallery, title, source link (with start time), ingredients, steps, inline notes, tags, language switch. Signed in: edit in place, add ingredients and steps, manage photos. A "+ Shopping list" button and a Share action.
 3. **New recipe** — import from URL, import from photo, then the editable form. There is no separate edit page.
 4. **Translation** — “View in original language” edits the original text; a hand-edited translation is flagged when the original changes, and “Reset my edits” discards it.
 5. **Tag manager** — list with counts, merge, remove.
 6. **Sign in** and **Install** pages.
+7. **Shopping list** — the recipes it covers, with a remove button for each.
 
-## 7. Status and decisions (2026-11-13)
+## 7. Status and decisions (as of 2026-11-26)
 
 See [README.md](README.md) for how to run the app and the current phase table.
 
-| Phase | Scope                                                                                                                                              | State                                                                                                |
-| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 1     | Storage interface (`RecipeStore`)                                                                                                                  | Done                                                                                                 |
-| 2     | Cognito sign-in, per-user rate limits                                                                                                              | Done. Sign-in works on the deployed site                                                             |
-| 3     | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out                                                                   | Done. Icons are placeholders                                                                         |
-| 4     | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; translated text still loads from the service on first view  |
-| 5     | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting, server-side translation cache                   | Deployed to production (eu-west-1) and migrated on 2026-11-13. Per-user language saved on the server |
-| 6     | Browser tests for the main flows                                                                                                                   | Not started                                                                                          |
+| Phase | Scope                                                                                                                                              | State                                                                                                                                          |
+| ----- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1     | Storage interface (`RecipeStore`)                                                                                                                  | Done                                                                                                                                           |
+| 2     | Cognito sign-in, per-user rate limits                                                                                                              | Done. Sign-in works on the deployed site                                                                                                       |
+| 3     | PWA: manifest, icons, install page with QR, wake lock, offline reading, sign-out                                                                   | Done. Icons are placeholders                                                                                                                   |
+| 4     | UI gaps: photo capture, list thumbnails, per-item notes, rich text, side-by-side translation edit, language switch speed, tap targets and contrast | Done. Language switch takes about 10 ms; the translated recipe body still waits for the translation service the first time a language is shown |
+| 5     | AWS: SST v3, DynamoDB and S3 storage, migration, budget alarm and stop, per-user language setting, server-side translation cache                   | Deployed to production (eu-west-1) and migrated on 2026-11-13. Per-user language saved on the server                                           |
+| 6     | Browser tests for the main flows                                                                                                                   | Not started                                                                                                                                    |
 
 Decisions made along the way:
 
@@ -136,3 +154,4 @@ Decisions made along the way:
 - Short Cyrillic text that Translate cannot detect is retried with Russian as the source language.
 - Deploys need `APP_ORIGIN` (the site address) and `BUDGET_EMAIL` set; see the README.
 - Repository hygiene: the README is kept current with each phase. Untracked folders such as `Claude outputs/` are not committed.
+- Known issues are listed in [README.md](README.md#known-issues). Safari does not load the recipe list, and offline reading must keep working. An installed app keeps its old version until the browser swaps it.
