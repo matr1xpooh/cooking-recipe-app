@@ -111,7 +111,7 @@ A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs 
 
 ## Deploying
 
-The deployment uses SST v3 in `eu-west-1` (Ireland). It creates the table, the photo bucket, a Cognito user pool with no self sign-up, a sign-in domain, the SvelteKit site on CloudFront and a monthly cost alarm. Nothing deploys unless you run it.
+The deployment uses SST v3 in `eu-west-1` (Ireland). The server runs on AWS Lambda on Node.js 22 (`nodejs22.x` in `sst.config.ts`). It creates the table, the photo bucket, a Cognito user pool with no self sign-up, a sign-in domain, the SvelteKit site on CloudFront and a monthly cost alarm. Nothing deploys unless you run it.
 
 1. Sign in to AWS on your machine (`aws login` or your usual profile). Set `BUDGET_EMAIL` to the address the cost alarm should email.
 2. Set the session secret once per stage: `npx sst secret set SessionSecret <at least 32 random characters>`.
@@ -153,4 +153,3 @@ The domain is not chosen yet. The site runs on the default CloudFront address.
 - **Safari:** the recipe list does not load in Safari ("Service Worker context closed" on reload). Firefox and Chrome work. Not fixed yet; offline reading must keep working.
 - **Passkeys and authenticator codes:** not set up. Cognito will not require an authenticator code while the passkey setting is "single factor", and a passkey on the app's `*.cloudfront.net` address cannot be used on the Cognito sign-in domain. A custom domain shared by the app and the sign-in page is needed first.
 - **Service worker updates:** an installed app keeps the old version until its browser swaps it. On iPhone, close the app fully and reopen it, or remove and re-add it; on Android, clear the app's storage.
-- **Lambda runtime:** the server runs on Node 20. The AWS SDK warns that it will need Node 22 from January 2027.
