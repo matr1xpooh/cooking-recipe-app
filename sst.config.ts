@@ -1,8 +1,6 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference -- SST generates this file; its template uses this form.
 /// <reference path="./.sst/platform/config.d.ts" />
 
-import { tableLayout } from './infra/table';
-
 /**
  * The AWS deployment for 1-10 known users. Nothing here is deployed by the assistant:
  * the owner runs `sst deploy --stage production` (see README "Deploying").
@@ -27,6 +25,8 @@ export default $config({
 		};
 	},
 	async run() {
+		// Imported here: sst.config.ts may not have top-level imports.
+		const { tableLayout } = await import('./infra/table');
 		const region = 'eu-west-1';
 		const production = $app.stage === 'production';
 
