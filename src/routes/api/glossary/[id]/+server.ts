@@ -1,6 +1,6 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { isSafeId } from '#lib/server/recipe-data.js';
+import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
 
 /** DELETE /api/glossary/<id> -> removes a translation fix */

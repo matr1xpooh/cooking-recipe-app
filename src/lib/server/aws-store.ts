@@ -20,7 +20,7 @@ import { isLanguage, type Language } from '#lib/recipes/languages.js';
 import { isRecipe, normalizeRecipe } from '#lib/recipes/validate.js';
 import { sniffImageType, type ImageType } from '#lib/recipes/screenshot.js';
 import type { RecipeStore } from './store';
-import type { TranslationOverride } from './translation-overrides';
+import type { TranslationOverride } from './translation-override';
 import { matchByUrl, matchSame } from './recipe-match';
 
 /**

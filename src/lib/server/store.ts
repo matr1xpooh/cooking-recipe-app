@@ -5,18 +5,14 @@ import type { ImageType } from '#lib/recipes/screenshot.js';
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 import { S3Client } from '@aws-sdk/client-s3';
-import * as files from './recipe-data';
-import * as overrides from './translation-overrides';
-import * as glossary from './glossary-file';
-import type { TranslationOverride } from './translation-overrides';
-import * as state from './state-file';
+import type { TranslationOverride } from './translation-override';
 import type { TranslationCacheStore } from './translate';
 import { createAwsStore } from './aws-store';
 
 /**
  * Everything the server persists: recipes, their original images, hand-edited
  * translations, machine translations (cached) and each user's language. Routes depend
- * on this interface only; `getStore()` picks the backend.
+ * on this interface only.
  */
 export interface RecipeStore extends TranslationCacheStore {
 	listRecipes(): Promise<Recipe[]>;
@@ -49,55 +45,33 @@ export interface RecipeStore extends TranslationCacheStore {
 	setUserLanguage(userSub: string, language: Language): Promise<void>;
 }
 
-/** The local-disk backend, used in development. Data lives under RECIPE_DATA_DIR or ./data. */
-export const fileStore: RecipeStore = {
-	listRecipes: files.listRecipes,
-	saveRecipe: files.saveRecipe,
-	deleteRecipe: files.deleteRecipe,
-	newImageId: files.newImageId,
-	saveImage: files.saveImage,
-	readImage: files.readImage,
-	deleteImage: files.deleteImage,
-	findRecipeByUrl: files.findRecipeByUrl,
-	findSameRecipe: files.findSameRecipe,
-	getOverride: overrides.getOverride,
-	setOverride: overrides.setOverride,
-	deleteOverride: overrides.deleteOverride,
-	removeOverridesFor: overrides.removeOverridesFor,
-	listGlossary: glossary.listGlossary,
-	saveGlossaryRule: glossary.saveGlossaryRule,
-	deleteGlossaryRule: glossary.deleteGlossaryRule,
-	getCachedTranslation: state.getCachedTranslation,
-	setCachedTranslation: state.setCachedTranslation,
-	getUserLanguage: state.getUserLanguage,
-	setUserLanguage: state.setUserLanguage
-};
+let storeSingleton: RecipeStore | undefined;
 
-let awsSingleton: RecipeStore | undefined;
-
-/** The deployed store. Its table and bucket names come from the environment set by the SST config. */
+/**
+ * The app's store: recipes and edited translations in one DynamoDB table, original images in
+ * a private S3 bucket. The table and bucket names come from the environment. Local runs and
+ * tests point the AWS clients at emulators with AWS_ENDPOINT_URL_DYNAMODB and AWS_ENDPOINT_URL_S3.
+ */
 export function awsStore(): RecipeStore {
-	if (!awsSingleton) {
+	if (!storeSingleton) {
 		const table = process.env.TABLE_NAME;
 		const bucket = process.env.BUCKET_NAME;
-		if (!table || !bucket) throw new Error('TABLE_NAME and BUCKET_NAME must be set for STORE=aws');
-		awsSingleton = createAwsStore({
+		if (!table || !bucket) throw new Error('TABLE_NAME and BUCKET_NAME must be set');
+		// S3 emulators need path-style URLs, and they reject the newer checksum headers.
+		const emulated = Boolean(process.env.AWS_ENDPOINT_URL_S3);
+		storeSingleton = createAwsStore({
 			table,
 			bucket,
 			dynamo: DynamoDBDocumentClient.from(new DynamoDBClient({})),
-			s3: new S3Client({})
+			s3: new S3Client(
+				emulated ? { forcePathStyle: true, requestChecksumCalculation: 'WHEN_REQUIRED' } : {}
+			)
 		});
 	}
-	return awsSingleton;
+	return storeSingleton;
 }
 
-/**
- * Set by vite.config.ts when the app is built (STORE=aws or STORE=file). The branch that is not
- * taken is removed from the build, so a deployed app contains no local-file code path.
- */
-declare const __RECIPE_STORE__: 'file' | 'aws';
-
-/** The store this build uses. Routes call this; they do not choose a backend themselves. */
+/** The store the routes use. */
 export function getStore(): RecipeStore {
-	return __RECIPE_STORE__ === 'aws' ? awsStore() : fileStore;
+	return awsStore();
 }

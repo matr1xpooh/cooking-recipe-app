@@ -2,7 +2,7 @@ import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { isLanguage } from '#lib/recipes/languages.js';
 import { decodeFieldsText, isTranslatedFields } from '#lib/recipes/translation-fields.js';
-import { isSafeId } from '#lib/server/recipe-data.js';
+import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
 
 function check(id: string, lang: string) {

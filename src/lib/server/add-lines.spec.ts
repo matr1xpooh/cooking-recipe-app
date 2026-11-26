@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { addLines } from './add-lines';
 import type { RecipeStore } from './store';
 import type { Recipe } from '#lib/recipes/recipe.js';
-import type { TranslationOverride } from './translation-overrides';
+import type { TranslationOverride } from './translation-override';
 import { sourceHash, MAX_TRANSLATED_LINES } from '#lib/recipes/translation-fields.js';
 import type { Language } from '#lib/recipes/languages.js';
 

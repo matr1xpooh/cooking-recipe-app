@@ -1,6 +1,6 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { isSafeId } from '#lib/server/recipe-data.js';
+import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
 
 /** DELETE /api/recipes/<id> -> removes the recipe and its stored screenshot */

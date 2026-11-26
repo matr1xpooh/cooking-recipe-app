@@ -1,7 +1,7 @@
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { MAX_IMAGE_BYTES, sniffImageType } from '#lib/recipes/screenshot.js';
-import { isSafeId } from '#lib/server/recipe-data.js';
+import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
 
 /** POST /api/recipes/<id>/images  body: a PNG or JPEG file, as sent -> { id } */

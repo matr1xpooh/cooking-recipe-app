@@ -1,7 +1,7 @@
 import { json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { decodeRecipeText, isRecipe } from '#lib/recipes/validate.js';
-import { isSafeId } from '#lib/server/recipe-data.js';
+import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
 
 /** GET /api/recipes -> all recipes, newest first */

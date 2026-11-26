@@ -12,9 +12,6 @@
  *   COGNITO_DOMAIN_PREFIX  optional; the sign-in domain prefix, default recipes-<stage>
  * And one SST secret, set once per stage: `npx sst secret set SessionSecret <32+ chars>`
  */
-// The site is built for AWS: vite.config.ts reads STORE when the app is built, so the deployed
-// bundle contains only the DynamoDB/S3 store. Local runs use STORE=file from .env.
-process.env.STORE = 'aws';
 
 export default $config({
 	app(input) {
@@ -105,7 +102,6 @@ export default $config({
 				{ actions: ['comprehend:DetectDominantLanguage'], resources: ['*'] }
 			],
 			environment: {
-				STORE: 'aws',
 				TABLE_NAME: table.name,
 				BUCKET_NAME: bucket.name,
 				COGNITO_ISSUER: $interpolate`https://cognito-idp.${region}.amazonaws.com/${users.id}`,

@@ -52,32 +52,28 @@ Service workers only register on `localhost` or HTTPS. Use `localhost` to test t
 
 Set these in `.env` (git-ignored):
 
-| Variable            | Purpose                                                                                                                                                                                               |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `STORE`             | Chosen when the app is built, not at run time: `file` stores data in `./data` (local), `aws` uses DynamoDB and S3 (the deploy). A build needs one of them; `npm run dev` and tests default to `file`. |
-| `RECIPE_DATA_DIR`   | Optional. Moves the file store, for example in tests.                                                                                                                                                 |
-| `COGNITO_ISSUER`    | The user pool's issuer URL.                                                                                                                                                                           |
-| `COGNITO_DOMAIN`    | The hosted sign-in domain, with `https://`.                                                                                                                                                           |
-| `COGNITO_CLIENT_ID` | The app client's id. The client needs the authorization code flow with PKCE.                                                                                                                          |
-| `SESSION_SECRET`    | At least 32 random characters. Signs the session cookies.                                                                                                                                             |
-| `AWS_REGION`        | Region for Textract and Translate.                                                                                                                                                                    |
-| `AUTH`              | Leave unset. `off` disables sign-in (local development only).                                                                                                                                         |
-| `TRANSLATE`         | Leave unset. `off` turns machine translation off: no AWS Translate calls, and the original text is shown with a note (local development and tests only).                                              |
+| Variable            | Purpose                                                                                                                                                  |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `COGNITO_ISSUER`    | The user pool's issuer URL.                                                                                                                              |
+| `COGNITO_DOMAIN`    | The hosted sign-in domain, with `https://`.                                                                                                              |
+| `COGNITO_CLIENT_ID` | The app client's id. The client needs the authorization code flow with PKCE.                                                                             |
+| `SESSION_SECRET`    | At least 32 random characters. Signs the session cookies.                                                                                                |
+| `AWS_REGION`        | Region for Textract and Translate.                                                                                                                       |
+| `AUTH`              | Leave unset. `off` disables sign-in (local development only).                                                                                            |
+| `TRANSLATE`         | Leave unset. `off` turns machine translation off: no AWS Translate calls, and the original text is shown with a note (local development and tests only). |
 
 AWS credentials for Textract and Translate come from the standard AWS credential chain on your machine. Do not put keys in `.env`.
 
 ## Scripts
 
-| Command                            | What it does                                                                         |
-| ---------------------------------- | ------------------------------------------------------------------------------------ |
-| `npm run dev`                      | Development server.                                                                  |
-| `npm run build`                    | Production build.                                                                    |
-| `npm run preview`                  | Serves the production build locally.                                                 |
-| `npm run check`                    | Type check (svelte-check).                                                           |
-| `npm run lint`                     | Prettier and ESLint.                                                                 |
-| `npm test`                         | Unit tests (server and client projects).                                             |
-| `npm run migrate:aws -- --dry-run` | Reads the local data folder and reports what would be copied to AWS. Writes nothing. |
-| `npm run migrate:aws`              | Copies the local data folder into the AWS store. Safe to run again.                  |
+| Command           | What it does                             |
+| ----------------- | ---------------------------------------- |
+| `npm run dev`     | Development server.                      |
+| `npm run build`   | Production build.                        |
+| `npm run preview` | Serves the production build locally.     |
+| `npm run check`   | Type check (svelte-check).               |
+| `npm run lint`    | Prettier and ESLint.                     |
+| `npm test`        | Unit tests (server and client projects). |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 
@@ -98,17 +94,15 @@ src/
     server/              storage, sessions, Cognito, rate limits, import, OCR, Translate
 messages/                interface strings in four languages
 static/                  manifest, icons
-data/                    local recipe data (git-ignored)
 ```
 
 ### Storage
 
 All persistence goes through the `RecipeStore` interface in `src/lib/server/store.ts`. Routes never touch the files directly. Two backends:
 
-- **File store** (`STORE=file`, the default, local development): `recipes.json`, `translations.json`, `state.json` and `images/` under `./data`. Back this folder up; it is not in git.
-- **AWS store** (`STORE=aws`, deployed): one DynamoDB table for recipes, edited translations, cached machine translations and each user's language, and a private S3 bucket for the original photos. Key layout is in `src/lib/server/aws-store.ts`.
+The one store is AWS: one DynamoDB table for recipes, edited translations, cached machine translations and each user's language, and a private S3 bucket for the original photos. Key layout is in `src/lib/server/aws-store.ts`. Local runs and tests use DynamoDB Local and an S3 emulator instead of AWS.
 
-A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs a signed-in user and that the AWS store never reads the local folder.
+A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs a signed-in user and that the store modules read no local files.
 
 ## Deploying
 
@@ -119,7 +113,6 @@ The deployment uses SST v3 in `eu-west-1` (Ireland). The server runs on AWS Lamb
 3. First deploy: `npx sst deploy --stage production`. It prints the site URL.
 4. Second deploy, so the sign-in client accepts the site's address: `APP_ORIGIN=<that URL> npx sst deploy --stage production`. (The first deploy cannot know the address, so the sign-in callback is a placeholder until this step.) Production has been deployed with `APP_ORIGIN=https://dox9mfbva3xj.cloudfront.net` and `BUDGET_EMAIL` set. Repeat both variables on every production deploy, or the sign-in callback and the cost alarm email change.
 5. Create each user in the Cognito console (User pools → Users → Create user), or with `aws cognito-idp admin-create-user --user-pool-id <pool id> --username <email> --user-attributes Name=email,Value=<email> Name=email_verified,Value=true`. Users cannot sign themselves up. Users are asked to choose their own password at the first sign-in.
-6. Copy the local data into AWS (done for production on 2026-11-13), first as a dry run: `TABLE_NAME=<table> BUCKET_NAME=<bucket> npm run migrate:aws -- --dry-run`, then without `--dry-run`. The table and bucket names are printed by the deploy as outputs. Once it reports success, run it again to confirm nothing changes.
 
 The Cognito hosted sign-in domain defaults to `recipes-<stage>`. Set `COGNITO_DOMAIN_PREFIX` before the first deploy if that name is taken.
 
