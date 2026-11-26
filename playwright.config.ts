@@ -13,7 +13,7 @@ const port = 5174;
 /**
  * End-to-end tests: a real browser, sized and touch-enabled like a phone, driving the app
  * as a person would. Sign-in is off and the store is the local file store, both only for
- * this run. The server gets no AWS credentials, so it cannot call AWS. Run with `npm run test:e2e`.
+ * this run. The tests run against a file-store build of the app. The server gets no AWS credentials, so it cannot call AWS. Run with `npm run test:e2e`.
  */
 export default defineConfig({
 	testDir: 'e2e',
@@ -28,11 +28,13 @@ export default defineConfig({
 	},
 	projects: [{ name: 'phone', use: { ...devices['Pixel 7'] } }],
 	webServer: {
-		command: `npm run dev -- --host 127.0.0.1 --port ${port} --strictPort`,
+		// Serves the built app (see test:e2e in package.json), not the dev server.
+		command: `npx vite preview --host 127.0.0.1 --port ${port} --strictPort`,
 		url: `http://127.0.0.1:${port}/recipes`,
 		reuseExistingServer: false,
 		env: {
 			AUTH: 'off',
+			SESSION_SECRET: 'e2e-only-secret-that-is-at-least-32-chars',
 			TRANSLATE: 'off',
 			STORE: 'file',
 			RECIPE_DATA_DIR: dataDir,

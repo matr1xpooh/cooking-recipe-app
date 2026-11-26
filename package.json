@@ -20,7 +20,7 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"postinstall": "patch-package",
-		"test:e2e": "playwright test"
+		"test:e2e": "STORE=file vite build && playwright test"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
