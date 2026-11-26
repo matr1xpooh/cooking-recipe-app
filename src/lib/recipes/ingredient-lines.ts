@@ -163,13 +163,6 @@ export function placeIngredients(lines: string[]): PlacedGroup[] {
 	return groups;
 }
 
-/** Like attachNotes, keeping each line's index. */
-export function placeItems(lines: string[]): PlacedItem[] {
-	const items: PlacedItem[] = [];
-	lines.forEach((line, index) => placeItem(items, line, index));
-	return items;
-}
-
 function placeItem(items: PlacedItem[], line: string, index: number): void {
 	const note = splitNote(line);
 	if (note) {
