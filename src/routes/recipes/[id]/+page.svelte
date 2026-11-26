@@ -9,6 +9,7 @@
 	import RichText from '#lib/recipes/RichText.svelte';
 	import ShareRecipe from '#lib/recipes/ShareRecipe.svelte';
 	import { addToShoppingList } from '#lib/recipes/shopping-store.js';
+	import { factorFor, firstAmount, hasAmount, scaleLine } from '#lib/recipes/scale.js';
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import {
 		decodeFieldsText,
@@ -113,6 +114,19 @@
 	let showAddPhotos = $state(false);
 	let sharing = $state(false);
 	let editStart = '';
+	/**
+	 * The scale of the ingredient lines: a view only, never saved to the recipe. ×1 is the recipe
+	 * as written. The panel shows the steps; while it is open, tapping a line sets its quantity.
+	 */
+	let scale = $state(1);
+	let scaleOpen = $state(false);
+	/** The ingredient whose quantity is being typed, and what is typed so far. */
+	let quantityDraft = $state<{ index: number; text: string } | null>(null);
+	const scaleSteps = [
+		{ factor: 0.5, label: '×½' },
+		{ factor: 1, label: '×1' },
+		{ factor: 2, label: '×2' }
+	];
 
 	onMount(() => {
 		recipeStore.load();
@@ -439,8 +453,32 @@
 	/** Adds this recipe to the list being built, and opens the list. */
 	function addToShopping() {
 		if (!recipe) return;
-		addToShoppingList([recipe.id]);
+		addToShoppingList([recipe.id], undefined, scale);
 		goto(resolve('/shopping'));
+	}
+
+	/** Starts typing a quantity: the ingredient's amount as it shows now. */
+	function startQuantity(index: number) {
+		const line = shown?.ingredients[index];
+		if (line === undefined) return;
+		const current = firstAmount(scaleLine(line, scale));
+		quantityDraft = {
+			index,
+			text: current === null ? '' : String(Math.round(current * 100) / 100)
+		};
+	}
+
+	/** Applies the typed quantity: the scale becomes the one that turns the line's amount into it. */
+	function applyQuantity() {
+		if (!quantityDraft || !shown) return;
+		const line = shown.ingredients[quantityDraft.index] ?? '';
+		const factor = factorFor(line, Number(quantityDraft.text.replace(',', '.')));
+		if (factor !== null) scale = factor;
+		quantityDraft = null;
+	}
+
+	function setQuantityText(value: string) {
+		if (quantityDraft) quantityDraft.text = value;
 	}
 
 	/** Opens the source link and start time for changing, filled with the current values. */
@@ -688,7 +726,15 @@
 	{/if}
 {/snippet}
 
-{#snippet lineEdit(part: EditPart, index: number, text: string, rich: boolean, note = false)}
+{#snippet lineEdit(
+	part: EditPart,
+	index: number,
+	text: string,
+	rich: boolean,
+	note = false,
+	display = text,
+	scalable = false
+)}
 	{#if editing?.part === part && editing.index === index}
 		<textarea
 			class="inline-edit"
@@ -704,14 +750,37 @@
 				onclick={toggleNote}>{noteLabel(part, index)}</button
 			>
 		{/if}
+	{:else if scalable && quantityDraft?.index === index}
+		<form
+			class="quantity-form"
+			onsubmit={(event) => {
+				event.preventDefault();
+				applyQuantity();
+			}}
+		>
+			<input
+				class="quantity-input"
+				type="text"
+				inputmode="decimal"
+				aria-label={m.scale_quantity_label()}
+				value={quantityDraft.text}
+				oninput={(event) => setQuantityText(event.currentTarget.value)}
+			/>
+			<button type="submit" class="link-button">{m.scale_apply()}</button>
+			<button type="button" class="link-button" onclick={() => (quantityDraft = null)}
+				>{m.scale_cancel()}</button
+			>
+		</form>
+	{:else if scalable && scaleOpen && hasAmount(text)}
+		<button type="button" class="editable" onclick={() => startQuantity(index)}>{display}</button>
 	{:else if canEdit}
 		<button type="button" class="editable" onclick={() => startInline(part, index, text, note)}>
-			{#if rich}<RichText source={text} />{:else}{text}{/if}
+			{#if rich}<RichText source={display} />{:else}{display}{/if}
 		</button>
 	{:else if rich}
-		<RichText source={text} />
+		<RichText source={display} />
 	{:else}
-		{text}
+		{display}
 	{/if}
 {/snippet}
 
@@ -932,6 +1001,37 @@
 				<p class="meta">
 					{m.ingredients_source()}: {sourceLabels[recipe.source]()}
 				</p>
+				<p class="tools-links scale-tools">
+					<button
+						type="button"
+						class="link-button"
+						aria-expanded={scaleOpen}
+						onclick={() => {
+							scaleOpen = !scaleOpen;
+							quantityDraft = null;
+						}}>{m.scale_open()}</button
+					>
+					{#if scale !== 1}
+						<button
+							type="button"
+							class="link-button"
+							onclick={() => {
+								scale = 1;
+								quantityDraft = null;
+							}}>{m.scale_reset()}</button
+						>
+					{/if}
+					{#if scaleOpen}
+						{#each scaleSteps as step (step.factor)}
+							<button
+								type="button"
+								class="link-button"
+								aria-pressed={scale === step.factor}
+								onclick={() => (scale = step.factor)}>{step.label}</button
+							>
+						{/each}
+					{/if}
+				</p>
 				{#each placeIngredients(shown.ingredients) as group, g (g)}
 					{#if group.heading !== null}
 						<h3 class="ingredient-heading">
@@ -950,7 +1050,10 @@
 											'ingredients',
 											entry.item.index,
 											entry.item.text,
-											false
+											false,
+											false,
+											scaleLine(entry.item.text, scale),
+											true
 										)}{/if}{#if entry.notes.length > 0}<NoteBlock
 											notes={entry.notes.map((n) => n.note)}
 											indexes={entry.notes.map((n) => n.index)}

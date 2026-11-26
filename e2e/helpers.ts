@@ -1,13 +1,17 @@
 import { expect, type Page } from '@playwright/test';
 
 /** Adds a recipe the way a person does: from the list, through the form, then opens it. */
-export async function addRecipe(page: Page, title: string): Promise<void> {
+export async function addRecipe(
+	page: Page,
+	title: string,
+	ingredients = 'water\nsalt'
+): Promise<void> {
 	await page.goto('/recipes');
 	await page.waitForLoadState('networkidle');
 
 	await page.getByRole('link', { name: 'Add recipe' }).tap();
 	await page.getByLabel('Title', { exact: true }).fill(title);
-	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill('water\nsalt');
+	await page.getByRole('textbox', { name: 'Ingredients', exact: true }).fill(ingredients);
 	await page
 		.getByRole('textbox', { name: 'Steps (one per line)', exact: true })
 		.fill('Boil the water\nAdd salt');

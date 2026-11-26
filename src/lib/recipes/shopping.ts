@@ -114,7 +114,7 @@ const UNITS: Record<string, { family: Family; factor: number }> = {
 /** Words that say the amount is "as needed". */
 const TO_TASTE = /по вкусу|to taste|al gusto|al gust|на вкус|щепот\S*|pinch\S*/i;
 
-const FRACTIONS: Record<string, number> = {
+export const FRACTIONS: Record<string, number> = {
 	'½': 0.5,
 	'¼': 0.25,
 	'¾': 0.75,

@@ -6,6 +6,7 @@
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
 	import { loadDisplay, shownFields } from '#lib/recipes/display.js';
 	import { isLanguage } from '#lib/recipes/languages.js';
+	import { scaleLine } from '#lib/recipes/scale.js';
 	import {
 		buildShoppingList,
 		formatAmounts,
@@ -22,6 +23,8 @@
 
 	let ids = $state<string[]>([]);
 	let have = $state<string[]>([]);
+	/** The scale each recipe was added at. Missing means ×1. */
+	let scales = $state<Record<string, number>>({});
 	let items = $state<ShoppingItem[]>([]);
 	let notTranslated = $state<string[]>([]);
 	/** Each recipe's title in the site language, for the chips. */
@@ -51,7 +54,12 @@
 			} else {
 				fields = shownFields(recipe, null, null);
 			}
-			lists.push({ id, title: fields.title, lines: fields.ingredients });
+			const factor = scales[id] ?? 1;
+			lists.push({
+				id,
+				title: fields.title,
+				lines: fields.ingredients.map((line) => scaleLine(line, factor))
+			});
 			titles[id] = fields.title;
 		}
 		items = buildShoppingList(lists);
@@ -63,12 +71,18 @@
 		const saved = readShoppingList();
 		ids = saved.ids;
 		have = saved.have;
+		scales = saved.scales ?? {};
 		void build();
 	});
 
+	/** "×½" for a half, "×2" for double, and the factor itself for anything else. */
+	function scaleLabel(factor: number): string {
+		return factor === 0.5 ? '×½' : `×${Math.round(factor * 100) / 100}`;
+	}
+
 	function toggle(key: string): void {
 		have = have.includes(key) ? have.filter((k) => k !== key) : [...have, key];
-		writeShoppingList({ ids, have });
+		writeShoppingList({ ids, have, scales });
 	}
 
 	function clearTicks(): void {
@@ -78,7 +92,9 @@
 
 	/** Takes one recipe off the list and rebuilds the totals from the rest. */
 	function removeRecipe(id: string): void {
-		ids = removeFromShoppingList(id).ids;
+		const saved = removeFromShoppingList(id);
+		ids = saved.ids;
+		scales = saved.scales ?? {};
 		void build();
 	}
 
@@ -86,6 +102,7 @@
 		const saved = clearShoppingList();
 		ids = saved.ids;
 		have = saved.have;
+		scales = {};
 		items = [];
 		notTranslated = [];
 	}
@@ -157,6 +174,9 @@
 				{#each listed as recipe (recipe.id)}
 					<li>
 						<span>{titles[recipe.id] ?? recipe.title}</span>
+						{#if (scales[recipe.id] ?? 1) !== 1}<span class="scale-note"
+								>{scaleLabel(scales[recipe.id] ?? 1)}</span
+							>{/if}
 						<button
 							type="button"
 							class="link-button"

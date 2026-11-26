@@ -1256,3 +1256,33 @@ article li > .add-slot {
 	font: inherit;
 	font-size: 0.9rem;
 }
+
+/* Scaling the ingredients: the Scale row, the chosen factor, and the typed quantity */
+.scale-tools {
+	margin: 0.25rem 0 0.5rem;
+}
+
+.scale-tools .link-button[aria-pressed='true'] {
+	font-weight: 700;
+	text-decoration: underline;
+}
+
+.quantity-form {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 0.75rem;
+}
+
+.quantity-input {
+	width: 6.5rem;
+	min-height: 44px;
+	font: inherit;
+	padding: 0.25rem 0.5rem;
+}
+
+/* The factor a recipe was added at, shown after its name on the shopping list */
+.scale-note {
+	font-weight: 700;
+	margin-left: 0.25rem;
+}

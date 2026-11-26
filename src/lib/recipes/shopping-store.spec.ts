@@ -61,6 +61,48 @@ describe('shopping list storage', () => {
 		expect(readShoppingList(storage)).toEqual({ ids: [], have: [] });
 	});
 
+	it('keeps the scale each recipe was added at', () => {
+		const storage = memory();
+		addToShoppingList(['a'], storage, 2);
+		addToShoppingList(['b'], storage);
+		expect(readShoppingList(storage)).toEqual({ ids: ['a', 'b'], have: [], scales: { a: 2 } });
+	});
+
+	it('replaces the scale when a recipe on the list is added again', () => {
+		const storage = memory();
+		addToShoppingList(['a'], storage, 2);
+		addToShoppingList(['a'], storage, 0.5);
+		expect(readShoppingList(storage).scales).toEqual({ a: 0.5 });
+		addToShoppingList(['a'], storage);
+		expect(readShoppingList(storage)).toEqual({ ids: ['a'], have: [] });
+	});
+
+	it('reads a list saved before scales existed as all ×1', () => {
+		const storage = memory({ [SHOPPING_STORAGE_KEY]: JSON.stringify({ ids: ['a'], have: [] }) });
+		expect(readShoppingList(storage)).toEqual({ ids: ['a'], have: [] });
+	});
+
+	it('drops scales that are not positive numbers, and scales of removed recipes', () => {
+		const storage = memory({
+			[SHOPPING_STORAGE_KEY]: JSON.stringify({
+				ids: ['a', 'b'],
+				have: [],
+				scales: { a: -1, b: 'two', c: 3 }
+			})
+		});
+		expect(readShoppingList(storage)).toEqual({ ids: ['a', 'b'], have: [] });
+	});
+
+	it('keeps a removed recipe from leaving its scale behind', () => {
+		const storage = memory();
+		addToShoppingList(['a', 'b'], storage, 2);
+		expect(removeFromShoppingList('a', storage)).toEqual({
+			ids: ['b'],
+			have: [],
+			scales: { b: 2 }
+		});
+	});
+
 	it('still works when storage cannot be written', () => {
 		const broken: ShoppingStorage = {
 			getItem: () => null,
