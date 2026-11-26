@@ -31,3 +31,10 @@ project.inlang/cache/
 # SST local state and platform components
 /.sst
 /sst-env.d.ts
+
+# Playwright output
+/test-results/
+/playwright-report/
+
+# Git worktrees
+/.worktrees/
