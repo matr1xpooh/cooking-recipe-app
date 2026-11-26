@@ -66,14 +66,15 @@ AWS credentials for Textract and Translate come from the standard AWS credential
 
 ## Scripts
 
-| Command           | What it does                             |
-| ----------------- | ---------------------------------------- |
-| `npm run dev`     | Development server.                      |
-| `npm run build`   | Production build.                        |
-| `npm run preview` | Serves the production build locally.     |
-| `npm run check`   | Type check (svelte-check).               |
-| `npm run lint`    | Prettier and ESLint.                     |
-| `npm test`        | Unit tests (server and client projects). |
+| Command             | What it does                                                                                                                               |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev:stack` | Development server with the local AWS stack (DynamoDB Local and an S3 emulator), data kept in `.local-data/`. Use this, not `npm run dev`. |
+| `npm run build`     | Lint, type check, unit tests, build, then the end-to-end tests against the built app.                                                      |
+| `npm run preview`   | Serves the production build locally.                                                                                                       |
+| `npm run check`     | Type check (svelte-check).                                                                                                                 |
+| `npm run lint`      | Prettier and ESLint.                                                                                                                       |
+| `npm test`          | Unit tests (server and client projects).                                                                                                   |
+| `npm run test:e2e`  | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 
@@ -100,7 +101,9 @@ static/                  manifest, icons
 
 All persistence goes through the `RecipeStore` interface in `src/lib/server/store.ts`. Routes never touch the files directly. Two backends:
 
-The one store is AWS: one DynamoDB table for recipes, edited translations, cached machine translations and each user's language, and a private S3 bucket for the original photos. Key layout is in `src/lib/server/aws-store.ts`. Local runs and tests use DynamoDB Local and an S3 emulator instead of AWS.
+The one store is AWS: one DynamoDB table for recipes, edited translations, cached machine translations and each user's language, and a private S3 bucket for the original photos. Key layout is in `src/lib/server/aws-store.ts`.
+
+Local runs and the end-to-end tests use the same code against **DynamoDB Local** (AWS's own emulator, a Java program, downloaded once into `.emulators/`) and **s3rver** (an S3 emulator). `scripts/local-stack.ts` starts them and sets the endpoint variables, and points every other AWS service at a closed port, so nothing reaches AWS. The table layout is shared with the deploy (`infra/table.ts`). Java must be installed for the local stack.
 
 A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs a signed-in user and that the store modules read no local files.
 

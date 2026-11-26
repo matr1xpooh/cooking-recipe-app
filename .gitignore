@@ -38,3 +38,7 @@ project.inlang/cache/
 
 # Git worktrees
 /.worktrees/
+
+# Local emulators: DynamoDB Local (downloaded once) and dev data kept by npm run dev:stack
+/.emulators/
+/.local-data/

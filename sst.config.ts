@@ -1,6 +1,8 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference -- SST generates this file; its template uses this form.
 /// <reference path="./.sst/platform/config.d.ts" />
 
+import { tableLayout } from './infra/table';
+
 /**
  * The AWS deployment for 1-10 known users. Nothing here is deployed by the assistant:
  * the owner runs `sst deploy --stage production` (see README "Deploying").
@@ -37,13 +39,7 @@ export default $config({
 		// Storage: one table for recipes, translations, cached machine translations and user
 		// settings (see src/lib/server/aws-store.ts for the key layout), and a private bucket
 		// for the original photos.
-		const table = new sst.aws.Dynamo('Table', {
-			fields: { pk: 'string', sk: 'string', gsi1pk: 'string', gsi1sk: 'string' },
-			primaryIndex: { hashKey: 'pk', rangeKey: 'sk' },
-			globalIndexes: {
-				gsi1: { hashKey: 'gsi1pk', rangeKey: 'gsi1sk', projection: ['data'] }
-			}
-		});
+		const table = new sst.aws.Dynamo('Table', tableLayout);
 		const bucket = new sst.aws.Bucket('Images');
 
 		// Sign-in. Accounts are created by the owner in the console; nobody can sign up.

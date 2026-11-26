@@ -9,7 +9,7 @@
 	},
 	"scripts": {
 		"dev": "vite dev",
-		"build": "npm run lint && npm run check && npm test && npm run test:e2e && vite build",
+		"build": "npm run lint && npm run check && npm test && vite build && playwright test",
 		"preview": "vite preview",
 		"prepare": "svelte-kit sync || echo ''",
 		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
@@ -19,7 +19,8 @@
 		"test:unit": "vitest",
 		"test": "npm run test:unit -- --run",
 		"postinstall": "patch-package",
-		"test:e2e": "vite build && playwright test"
+		"test:e2e": "vite build && playwright test",
+		"dev:stack": "tsx scripts/local-stack.ts --persist -- vite dev"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -40,6 +41,7 @@
 		"playwright": "^1.60.0",
 		"prettier": "^3.8.3",
 		"prettier-plugin-svelte": "^4.1.0",
+		"s3rver": "^3.7.1",
 		"sst": "^4.17.2",
 		"svelte": "^5.57.2",
 		"svelte-check": "^4.6.0",
