@@ -66,15 +66,16 @@ AWS credentials for Textract and Translate come from the standard AWS credential
 
 ## Scripts
 
-| Command             | What it does                                                                                                                               |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run dev:stack` | Development server with the local AWS stack (DynamoDB Local and an S3 emulator), data kept in `.local-data/`. Use this, not `npm run dev`. |
-| `npm run build`     | Lint, type check, unit tests, build, then the end-to-end tests against the built app.                                                      |
-| `npm run preview`   | Serves the production build locally.                                                                                                       |
-| `npm run check`     | Type check (svelte-check).                                                                                                                 |
-| `npm run lint`      | Prettier and ESLint.                                                                                                                       |
-| `npm test`          | Unit tests (server and client projects).                                                                                                   |
-| `npm run test:e2e`  | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
+| Command                     | What it does                                                                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev:stack`         | Development server with the local AWS stack (DynamoDB Local and an S3 emulator), data kept in `.local-data/`. Use this, not `npm run dev`. |
+| `npm run build`             | Lint, type check, unit tests, build, then the end-to-end tests against the built app.                                                      |
+| `npm run preview`           | Serves the production build locally.                                                                                                       |
+| `npm run check`             | Type check (svelte-check).                                                                                                                 |
+| `npm run lint`              | Prettier and ESLint.                                                                                                                       |
+| `npm test`                  | Unit tests (server and client projects).                                                                                                   |
+| `npm run test:e2e:deployed` | Deploys a throwaway `e2e` stage, runs the same end-to-end tests against it, then removes it. Never touches production.                     |
+| `npm run test:e2e`          | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 
@@ -116,6 +117,8 @@ The deployment uses SST v3 in `eu-west-1` (Ireland). The server runs on AWS Lamb
 3. First deploy: `npx sst deploy --stage production`. It prints the site URL.
 4. Second deploy, so the sign-in client accepts the site's address: `APP_ORIGIN=<that URL> npx sst deploy --stage production`. (The first deploy cannot know the address, so the sign-in callback is a placeholder until this step.) Production has been deployed with `APP_ORIGIN=https://dox9mfbva3xj.cloudfront.net` and `BUDGET_EMAIL` set. Repeat both variables on every production deploy, or the sign-in callback and the cost alarm email change.
 5. Create each user in the Cognito console (User pools → Users → Create user), or with `aws cognito-idp admin-create-user --user-pool-id <pool id> --username <email> --user-attributes Name=email,Value=<email> Name=email_verified,Value=true`. Users cannot sign themselves up. Users are asked to choose their own password at the first sign-in.
+
+**Testing the deployed app.** `npm run test:e2e:deployed` deploys the `e2e` stage (its own table, bucket, user pool and site), creates a test user with a random password, runs the same end-to-end tests against the site, then deletes the test user and removes the stage. It sets that stage's `SessionSecret` and a placeholder `YouTubeApiKey`, and turns translation off on it. It needs AWS credentials and creates real resources for the few minutes it runs.
 
 The Cognito hosted sign-in domain defaults to `recipes-<stage>`. Set `COGNITO_DOMAIN_PREFIX` before the first deploy if that name is taken.
 

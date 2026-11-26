@@ -20,9 +20,11 @@
 		"test": "npm run test:unit -- --run",
 		"postinstall": "patch-package",
 		"test:e2e": "vite build && playwright test",
-		"dev:stack": "tsx scripts/local-stack.ts --persist -- vite dev"
+		"dev:stack": "tsx scripts/local-stack.ts --persist -- vite dev",
+		"test:e2e:deployed": "tsx scripts/e2e-deployed.ts"
 	},
 	"devDependencies": {
+		"@aws-sdk/client-cognito-identity-provider": "^3.1178.0",
 		"@eslint/js": "^10.0.1",
 		"@inlang/paraglide-js": "^2.18.2",
 		"@playwright/test": "^1.65.0",

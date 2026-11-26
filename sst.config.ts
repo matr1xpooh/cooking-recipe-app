@@ -86,7 +86,7 @@ export default $config({
 		const youtubeApiKey = new sst.Secret('YouTubeApiKey');
 
 		const site = new sst.aws.SvelteKit('Site', {
-			link: [table, bucket],
+			link: [table, bucket, users],
 			// AWS retires nodejs20.x; the README asks for Node 22.17 or newer.
 			server: { runtime: 'nodejs22.x' },
 			// Textract reads recipe photos; Translate translates recipe text. Both only take
@@ -104,7 +104,9 @@ export default $config({
 				COGNITO_DOMAIN: `https://${prefix}.auth.${region}.amazoncognito.com`,
 				COGNITO_CLIENT_ID: client.id,
 				SESSION_SECRET: sessionSecret.value,
-				YOUTUBE_API_KEY: youtubeApiKey.value
+				YOUTUBE_API_KEY: youtubeApiKey.value,
+				// Throwaway stages (the e2e run) do not translate: no AWS Translate spend, as on local runs.
+				...(production ? {} : { TRANSLATE: 'off' })
 			}
 			// To serve the site from your own domain later, add:
 			// domain: { name: 'recipes.example.com', dns: sst.aws.dns() }
