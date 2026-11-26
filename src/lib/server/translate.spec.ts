@@ -120,3 +120,20 @@ describe('translatedOrOriginal', () => {
 		expect(translatedOrOriginal(input, {})).toBe('');
 	});
 });
+
+describe('TRANSLATE=off', () => {
+	it('makes no call and shows every item in its original text', async () => {
+		const saved = process.env.TRANSLATE;
+		process.env.TRANSLATE = 'off';
+		try {
+			const call = async () => {
+				throw new Error('AWS must not be called');
+			};
+			const out = await translateItems([{ text: 'Boil', styled: false }], 'es', call);
+			expect(out).toEqual([{ text: 'Boil', failed: true }]);
+		} finally {
+			if (saved === undefined) delete process.env.TRANSLATE;
+			else process.env.TRANSLATE = saved;
+		}
+	});
+});

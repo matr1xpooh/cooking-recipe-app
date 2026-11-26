@@ -62,6 +62,7 @@ Set these in `.env` (git-ignored):
 | `SESSION_SECRET`    | At least 32 random characters. Signs the session cookies.                                                                                                                                             |
 | `AWS_REGION`        | Region for Textract and Translate.                                                                                                                                                                    |
 | `AUTH`              | Leave unset. `off` disables sign-in (local development only).                                                                                                                                         |
+| `TRANSLATE`         | Leave unset. `off` turns machine translation off: no AWS Translate calls, and the original text is shown with a note (local development and tests only).                                              |
 
 AWS credentials for Textract and Translate come from the standard AWS credential chain on your machine. Do not put keys in `.env`.
 

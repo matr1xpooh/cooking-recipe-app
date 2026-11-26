@@ -140,12 +140,20 @@ export async function translateCached(
  * limit. Source language is detected per item by Translate. An item that fails is
  * returned unchanged with `failed: true`; the rest still translate.
  */
+/** True when machine translation is switched off with TRANSLATE=off. */
+export function translationOff(): boolean {
+	return process.env.TRANSLATE === 'off';
+}
+
 export async function translateItems(
 	items: TranslateItem[],
 	target: Language,
 	call: TranslateCall = awsCall
 ): Promise<TranslatedItem[]> {
 	checkLimits(items);
+
+	// TRANSLATE=off (local development and tests): no AWS call; every item is shown in its original text.
+	if (translationOff()) return items.map((item) => ({ text: item.text, failed: true }));
 
 	const results: TranslatedItem[] = new Array(items.length);
 	let next = 0;

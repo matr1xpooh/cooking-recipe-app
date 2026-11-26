@@ -33,10 +33,11 @@ export default defineConfig({
 		reuseExistingServer: false,
 		env: {
 			AUTH: 'off',
+			TRANSLATE: 'off',
 			STORE: 'file',
 			RECIPE_DATA_DIR: dataDir,
 			E2E_DATA_DIR: dataDir,
-			// No credentials and no config files, so the AWS SDK cannot reach AWS from this run.
+			// Machine translation is off, and no credentials or config files are given, so nothing reaches AWS.
 			AWS_ACCESS_KEY_ID: '',
 			AWS_SECRET_ACCESS_KEY: '',
 			AWS_SESSION_TOKEN: '',
