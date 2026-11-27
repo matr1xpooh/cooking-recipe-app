@@ -1,3 +1,4 @@
+import { withoutIcon } from './ingredient-icons';
 import { isHeading, isNote } from './ingredient-lines';
 import { foldText } from './recipe';
 
@@ -154,7 +155,8 @@ function unitOf(token: string | undefined): string {
  * site language and is written in many ways ("Творог 12 % 750 г", "1 1/2 cups flour", "Соль - по
  * вкусу"). Remarks in brackets are ignored. Text it cannot read is kept as the name, with no amount.
  */
-export function parseIngredient(line: string): ParsedIngredient {
+export function parseIngredient(typed: string): ParsedIngredient {
+	const line = withoutIcon(typed);
 	const toTaste = TO_TASTE.test(line);
 	const cleaned = line
 		.replace(/\([^)]*\)/g, ' ')

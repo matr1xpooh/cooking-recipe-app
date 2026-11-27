@@ -170,3 +170,10 @@ describe('shoppingToText', () => {
 		expect(text).toBe('- Sugar: 150 g\n\nAs needed\n- Salt');
 	});
 });
+
+describe('parseIngredient with an icon', () => {
+	it('reads the same ingredient with or without a leading icon', () => {
+		expect(parseIngredient('🦐 Gambas 300 g').key).toBe(parseIngredient('Gambas 300 g').key);
+		expect(parseIngredient('🦐 Gambas 300 g')).toMatchObject({ name: 'Gambas' });
+	});
+});

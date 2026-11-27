@@ -10,6 +10,7 @@
 	import ShareRecipe from '#lib/recipes/ShareRecipe.svelte';
 	import { addToShoppingList } from '#lib/recipes/shopping-store.js';
 	import { factorFor, firstAmount, hasAmount, scaleLine } from '#lib/recipes/scale.js';
+	import { iconFor } from '#lib/recipes/ingredient-icons.js';
 	import { isLanguage } from '#lib/recipes/languages.js';
 	import {
 		decodeFieldsText,
@@ -1061,7 +1062,10 @@
 						<ul class="plain">
 							{#each group.items as entry, i (i)}
 								<li class:note-only={entry.item === null}>
-									{#if entry.item !== null}{@render lineEdit(
+									{#if entry.item !== null}{#if iconFor(entry.item.text)}<span
+												class="item-icon"
+												aria-hidden="true">{iconFor(entry.item.text)}</span
+											>{/if}{@render lineEdit(
 											'ingredients',
 											entry.item.index,
 											entry.item.text,

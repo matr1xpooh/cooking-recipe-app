@@ -1294,3 +1294,8 @@ article li > .add-slot {
 	align-items: center;
 	gap: 0.25rem 1rem;
 }
+
+/* An icon picked for an ingredient: shown before its text, not part of the recipe */
+.item-icon {
+	margin-right: 0.35em;
+}
