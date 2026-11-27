@@ -19,12 +19,6 @@ export const USAGE_EVENTS = [
 
 export type UsageEvent = (typeof USAGE_EVENTS)[number];
 
-/** Who did it. The email is what the owner sees in the summary. */
-export interface Actor {
-	sub: string;
-	email?: string;
-}
-
 export interface UsageDetails {
 	recipeId?: string;
 	language?: string;
@@ -36,8 +30,6 @@ export interface ActivityRecord extends UsageDetails {
 	sk: string;
 	event: UsageEvent;
 	at: string;
-	sub?: string;
-	email?: string;
 	expireAt: number;
 }
 
@@ -49,7 +41,7 @@ export function usageDay(now: Date): string {
 }
 
 export interface UsageSink {
-	record(event: UsageEvent, actor?: Actor, details?: UsageDetails, now?: Date): Promise<void>;
+	record(event: UsageEvent, details?: UsageDetails, now?: Date): Promise<void>;
 }
 
 export function createUsageSink(config: {
@@ -58,14 +50,13 @@ export function createUsageSink(config: {
 }): UsageSink {
 	const { table, dynamo } = config;
 	return {
-		async record(event, actor, details = {}, now = new Date()) {
+		async record(event, details = {}, now = new Date()) {
 			const item: ActivityRecord = {
 				pk: `ACTIVITY#${usageDay(now)}`,
 				// Sorts by time; the random part keeps two actions in the same instant apart.
 				sk: `${now.toISOString()}#${crypto.randomUUID()}`,
 				event,
 				at: now.toISOString(),
-				...(actor ? { sub: actor.sub, ...(actor.email ? { email: actor.email } : {}) } : {}),
 				...details,
 				expireAt: Math.floor(now.getTime() / 1000) + RETENTION_SECONDS
 			};
@@ -80,14 +71,10 @@ let sinkSingleton: UsageSink | undefined;
  * Records one action. Errors are swallowed: a missing record must never break the request that
  * caused it. Tests pass a fake sink through setUsageSink.
  */
-export async function recordUsage(
-	event: UsageEvent,
-	actor?: Actor,
-	details?: UsageDetails
-): Promise<void> {
+export async function recordUsage(event: UsageEvent, details?: UsageDetails): Promise<void> {
 	try {
 		sinkSingleton ??= defaultSink();
-		await sinkSingleton.record(event, actor, details);
+		await sinkSingleton.record(event, details);
 	} catch {
 		// Deliberately silent.
 	}

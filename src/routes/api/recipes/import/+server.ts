@@ -104,7 +104,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		});
 	} catch (error) {
 		if (error instanceof ImportError) {
-			await recordUsage('import.failed', locals.user ?? undefined, { reason: error.key });
+			await recordUsage('import.failed', { reason: error.key });
 			return json({ error: error.key }, { status: error.status });
 		}
 		throw error;

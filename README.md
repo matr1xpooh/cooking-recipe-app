@@ -123,7 +123,7 @@ AWS credentials for Textract and Translate come from the standard AWS credential
 | `npm test`                                                                                | Unit tests (server and client projects).                                                                                                   |
 | `npm run test:e2e:deployed`                                                               | Deploys a throwaway `e2e` stage, runs the same end-to-end tests against it, then removes it. Never touches production.                     |
 | `npx sst shell --stage production -- tsx scripts/invite-user.ts <email> [en\|es\|ca\|ru]` | Invites a user in the chosen language (see Deploying).                                                                                     |
-| `npx sst shell --stage production -- tsx scripts/usage-summary.ts [days]`                 | Prints who did what, per member and per recipe (see Usage). Owner only.                                                                    |
+| `npx sst shell --stage production -- tsx scripts/usage-summary.ts [days]`                 | Prints counts per action and per recipe (see Usage).                                                                                       |
 | `npm run test:e2e`                                                                        | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
@@ -159,11 +159,9 @@ A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs 
 
 ## Usage
 
-The app records what each member does: recipes saved and deleted, photos added, translations shown or failed, imports that failed, and sign-ins. Each record has the member's account email, the recipe it was for, and the time. Records expire after about 13 months. Recipe content is not stored with them.
+The app counts what happens, per recipe: recipes saved and deleted, photos added, translations shown or failed, imports that failed, and sign-ins. No person is recorded with them, and no recipe content is stored. Records expire after about 13 months.
 
-Only the owner should read this. Members should know their activity is recorded.
-
-Print the last week (or any number of days). It shows counts per member and per recipe:
+Print the last week (or any number of days). It shows totals, and counts per recipe:
 
 ```
 npx sst shell --stage production -- tsx scripts/usage-summary.ts 7

@@ -1,6 +1,6 @@
 /**
- * Who did what, over the last few days: counts per member and per recipe. Visible to the owner
- * only; it prints email addresses.
+ * What happened over the last few days: counts per action, and per recipe. No person is
+ * recorded, so none is shown.
  *
  *   npx sst shell --stage production -- tsx scripts/usage-summary.ts [days]
  *
@@ -22,7 +22,7 @@ const table = Resource.Table.name;
 const dynamo = DynamoDBDocumentClient.from(new DynamoDBClient({ region: 'eu-west-1' }));
 const records = await readActivity({ table, dynamo }, days);
 
-/** Each recipe's current title, read from the recipe itself. */
+/** A recipe's current title, read from the recipe itself. */
 async function titleOf(recipeId: string): Promise<string> {
 	const item = await dynamo.send(
 		new GetCommand({ TableName: table, Key: { pk: `RECIPE#${recipeId}`, sk: 'META' } })
@@ -32,43 +32,28 @@ async function titleOf(recipeId: string): Promise<string> {
 	return String(data?.title ?? '(untitled)');
 }
 
-function countBy(list: ActivityRecord[], key: (r: ActivityRecord) => string | undefined) {
-	const out = new Map<string, Map<string, number>>();
-	for (const r of list) {
-		const k = key(r);
-		if (k === undefined) continue;
-		const row = out.get(k) ?? new Map<string, number>();
-		row.set(r.event, (row.get(r.event) ?? 0) + 1);
-		out.set(k, row);
-	}
-	return out;
+function countEvents(list: ActivityRecord[]): string {
+	const counts = new Map<string, number>();
+	for (const r of list) counts.set(r.event, (counts.get(r.event) ?? 0) + 1);
+	return USAGE_EVENTS.filter((e) => counts.has(e))
+		.map((e) => `${e} ${counts.get(e)}`)
+		.join(', ');
 }
-
-const who = (r: ActivityRecord) => r.email ?? (r.sub ? `(${r.sub.slice(0, 8)})` : undefined);
 
 console.log(`Last ${days} day(s), UTC.\n`);
+console.log(`Totals: ${countEvents(records) || 'nothing recorded'}`);
 
-console.log('By member:');
-for (const [member, row] of countBy(records, who)) {
-	const parts = USAGE_EVENTS.filter((e) => row.has(e)).map((e) => `${e} ${row.get(e)}`);
-	console.log(`  ${member}: ${parts.join(', ')}`);
-}
-
-console.log('\nBy recipe (who did what):');
 const byRecipe = new Map<string, ActivityRecord[]>();
 for (const r of records) {
 	if (!r.recipeId) continue;
 	byRecipe.set(r.recipeId, [...(byRecipe.get(r.recipeId) ?? []), r]);
 }
+console.log('\nBy recipe:');
 for (const [recipeId, list] of byRecipe) {
-	console.log(`  ${await titleOf(recipeId)}`);
-	for (const [member, row] of countBy(list, who)) {
-		const parts = USAGE_EVENTS.filter((e) => row.has(e)).map((e) => `${e} ${row.get(e)}`);
-		console.log(`    ${member}: ${parts.join(', ')}`);
-	}
+	console.log(`  ${await titleOf(recipeId)}: ${countEvents(list)}`);
 }
 
 const other = records.filter((r) => !r.recipeId);
 if (other.length > 0) {
-	console.log(`\nNot about one recipe: ${other.length} (sign-ins, translations, failed imports).`);
+	console.log(`\nNot about one recipe: ${countEvents(other)}.`);
 }

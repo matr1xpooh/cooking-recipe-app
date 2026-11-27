@@ -9,7 +9,7 @@ import { recordUsage } from '#lib/server/usage.js';
 export const GET: RequestHandler = async () => json(await getStore().listRecipes());
 
 /** POST /api/recipes  body: a recipe -> adds it, or replaces the one with the same id */
-export const POST: RequestHandler = async ({ request, locals }) => {
+export const POST: RequestHandler = async ({ request }) => {
 	const body = await request.json().catch(() => null);
 	if (!isRecipe(body) || !isSafeId(body.id)) {
 		return json({ error: 'recipe_invalid' }, { status: 400 });
@@ -25,6 +25,6 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		}
 	}
 	await getStore().saveRecipe(recipe);
-	await recordUsage('recipe.saved', locals.user ?? undefined, { recipeId: recipe.id });
+	await recordUsage('recipe.saved', { recipeId: recipe.id });
 	return json({ ok: true });
 };

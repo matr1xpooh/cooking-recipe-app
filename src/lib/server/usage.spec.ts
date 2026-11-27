@@ -35,44 +35,26 @@ const NOON = new Date('2026-11-27T12:00:00Z');
 afterEach(() => setUsageSink(undefined));
 
 describe('recording', () => {
-	it('writes one record for the action, with who, which recipe and when', async () => {
+	it('writes one record for the action, with the recipe and the time, and no person', async () => {
 		const fake = fakeDynamo();
 		const sink = createUsageSink({ table: 'T', dynamo: fake.dynamo });
-		await sink.record(
-			'recipe.saved',
-			{ sub: 'u1', email: 'ana@example.test' },
-			{ recipeId: 'r1' },
-			NOON
-		);
+		await sink.record('recipe.saved', { recipeId: 'r1' }, NOON);
 		const item = fake.sent[0].input.Item!;
 		expect(fake.sent[0].input.TableName).toBe('T');
 		expect(item.pk).toBe('ACTIVITY#2026-11-27');
 		expect(item.sk.startsWith('2026-11-27T12:00:00.000Z#')).toBe(true);
-		expect(item).toMatchObject({
-			event: 'recipe.saved',
-			sub: 'u1',
-			email: 'ana@example.test',
-			recipeId: 'r1'
-		});
+		expect(item).toMatchObject({ event: 'recipe.saved', recipeId: 'r1' });
+		expect(item).not.toHaveProperty('sub');
+		expect(item).not.toHaveProperty('email');
 	});
 
 	it('sets the expiry about 13 months out', async () => {
 		const fake = fakeDynamo();
 		const sink = createUsageSink({ table: 'T', dynamo: fake.dynamo });
-		await sink.record('signin', { sub: 'u1' }, {}, NOON);
+		await sink.record('signin', {}, NOON);
 		const days = (fake.sent[0].input.Item!.expireAt - NOON.getTime() / 1000) / 86400;
 		expect(days).toBeGreaterThan(390);
 		expect(days).toBeLessThan(410);
-	});
-
-	it('leaves the person out when there is no signed-in user', async () => {
-		const fake = fakeDynamo();
-		const sink = createUsageSink({ table: 'T', dynamo: fake.dynamo });
-		await sink.record('import.failed', undefined, { reason: 'no_recipe_found' }, NOON);
-		const item = fake.sent[0].input.Item!;
-		expect(item).not.toHaveProperty('sub');
-		expect(item).not.toHaveProperty('email');
-		expect(item.reason).toBe('no_recipe_found');
 	});
 
 	it('uses the UTC day', () => {
@@ -85,17 +67,15 @@ describe('recording', () => {
 				throw new Error('table is down');
 			}
 		});
-		await expect(
-			recordUsage('photo.added', { sub: 'u1' }, { recipeId: 'r1' })
-		).resolves.toBeUndefined();
+		await expect(recordUsage('photo.added', { recipeId: 'r1' })).resolves.toBeUndefined();
 	});
 });
 
 describe('reading', () => {
 	it('returns the records of each day in the range', async () => {
 		const fake = fakeDynamo({
-			'2026-11-27': [{ event: 'recipe.saved', sub: 'u1', recipeId: 'r1' }],
-			'2026-11-25': [{ event: 'signin', sub: 'u2' }]
+			'2026-11-27': [{ event: 'recipe.saved', recipeId: 'r1' }],
+			'2026-11-25': [{ event: 'signin' }]
 		});
 		const records = await readActivity({ table: 'T', dynamo: fake.dynamo }, 3, NOON);
 		expect(records.map((r) => r.event)).toEqual(['recipe.saved', 'signin']);
@@ -103,7 +83,7 @@ describe('reading', () => {
 	});
 
 	it('ignores records with an event it does not know', async () => {
-		const fake = fakeDynamo({ '2026-11-27': [{ event: 'made.up' as never, sub: 'u1' }] });
+		const fake = fakeDynamo({ '2026-11-27': [{ event: 'made.up' as never }] });
 		expect(await readActivity({ table: 'T', dynamo: fake.dynamo }, 1, NOON)).toEqual([]);
 	});
 
@@ -113,11 +93,11 @@ describe('reading', () => {
 			send: async () => {
 				calls++;
 				return calls === 1
-					? { Items: [{ event: 'signin', sub: 'a' }], LastEvaluatedKey: { k: 1 } }
-					: { Items: [{ event: 'signin', sub: 'b' }] };
+					? { Items: [{ event: 'signin', recipeId: 'a' }], LastEvaluatedKey: { k: 1 } }
+					: { Items: [{ event: 'signin', recipeId: 'b' }] };
 			}
 		} as unknown as DynamoDBDocumentClient;
 		const records = await readActivity({ table: 'T', dynamo }, 1, NOON);
-		expect(records.map((r) => r.sub)).toEqual(['a', 'b']);
+		expect(records.map((r) => r.recipeId)).toEqual(['a', 'b']);
 	});
 });
