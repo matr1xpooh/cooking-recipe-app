@@ -1286,3 +1286,11 @@ article li > .add-slot {
 	font-weight: 700;
 	margin-left: 0.25rem;
 }
+
+/* The buttons under an open line: make it a tip or section, and delete */
+.line-actions {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.25rem 1rem;
+}

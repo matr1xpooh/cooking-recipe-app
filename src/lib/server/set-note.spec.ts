@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { setLineNote } from './set-note';
+import { setLineKind, setLineNote } from './set-note';
 import type { RecipeStore } from './store';
 import type { Recipe } from '#lib/recipes/recipe.js';
 import type { TranslationOverride } from './translation-override';
@@ -82,7 +82,47 @@ describe('making a line a note or a step again', () => {
 		expect(await setLineNote(store, 'r1', 'steps', 0, true)).toBe('heading');
 		expect(await setLineNote(store, 'r1', 'steps', 1, true)).toBe('changed');
 		expect(await setLineNote(store, 'r1', 'steps', 9, true)).toBe('bad_index');
-		const first = fakeStore(recipe());
-		expect(await setLineNote(first.store, 'r1', 'steps', 0, true)).toBe('bad_index');
+	});
+
+	it('makes the first step a tip, and a tip at the top a step again', async () => {
+		const { store } = fakeStore(recipe({ steps: ['Mix', 'Bake'] }));
+		expect(await setLineNote(store, 'r1', 'steps', 0, true)).toBe('changed');
+		expect((await store.listRecipes())[0]?.steps).toEqual(['> Mix', 'Bake']);
+		expect(await setLineNote(store, 'r1', 'steps', 0, false)).toBe('changed');
+		expect((await store.listRecipes())[0]?.steps).toEqual(['Mix', 'Bake']);
+	});
+	it('makes a line a section, and a section a step again', async () => {
+		const { store } = fakeStore(recipe({ steps: ['Mix', 'Bake'] }));
+		expect(await setLineKind(store, 'r1', 'steps', 1, 'section')).toBe('changed');
+		expect((await store.listRecipes())[0]?.steps).toEqual(['Mix', '# Bake']);
+		expect(await setLineKind(store, 'r1', 'steps', 1, 'step')).toBe('changed');
+		expect((await store.listRecipes())[0]?.steps).toEqual(['Mix', 'Bake']);
+	});
+
+	it('refuses a section for a line with tips under it', async () => {
+		const { store } = fakeStore(recipe({ steps: ['Mix', '> Sift first', 'Bake'] }));
+		expect(await setLineKind(store, 'r1', 'steps', 0, 'section')).toBe('has_tips');
+		expect((await store.listRecipes())[0]?.steps).toEqual(['Mix', '> Sift first', 'Bake']);
+	});
+
+	it('refuses a tip or section for a heading', async () => {
+		const { store } = fakeStore(recipe({ steps: ['# Dough', 'Mix'] }));
+		expect(await setLineKind(store, 'r1', 'steps', 0, 'tip')).toBe('heading');
+		expect(await setLineKind(store, 'r1', 'steps', 0, 'section')).toBe('heading');
+	});
+
+	it('keeps a translation aligned when a line becomes a section', async () => {
+		const start = recipe({ steps: ['Mix', 'Bake'] });
+		const translation = {
+			title: 'Pastel',
+			ingredients: [],
+			steps: ['Mezclar', 'Hornear'],
+			notes: ''
+		};
+		const { store, edits } = fakeStore(start, {
+			es: { hash: sourceHash(start), fields: translation }
+		});
+		await setLineKind(store, 'r1', 'steps', 0, 'section');
+		expect(edits.es?.fields.steps).toEqual(['# Mezclar', 'Hornear']);
 	});
 });

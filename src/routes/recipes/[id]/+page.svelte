@@ -20,7 +20,7 @@
 	} from '#lib/recipes/translation-fields.js';
 	import {
 		addLines,
-		setLineNote,
+		setLineKind,
 		DuplicateRecipeError,
 		deleteImage,
 		uploadImage,
@@ -71,6 +71,8 @@
 
 	/** The parts of a recipe that can be changed in place. */
 	type EditPart = 'title' | 'ingredients' | 'steps';
+	/** What a line can be changed to: a step, a tip under the line above, or a section heading. */
+	type LineKind = 'step' | 'tip' | 'section';
 
 	let loaded = $state(false);
 	let actionError = $state<string | null>(null);
@@ -304,37 +306,48 @@
 	 * Saves one changed line. The whole translation is sent, built from the stored list with
 	 * only this line changed, so its headings and notes stay where they are.
 	 */
-	/** Whether a line can become a note of the line above, or a step again. Headings cannot; a step needs a line above it. */
-	function canToggleNote(part: EditPart, index: number): boolean {
-		if (!recipe || part === 'title') return false;
-		const line = recipe[part][index];
-		if (line === undefined || isHeading(line)) return false;
-		return index > 0 || splitNote(line) !== null;
+	/**
+	 * What the editor offers for a line, as buttons: a plain line can become a tip or a section (not
+	 * a section when tips sit under it), a tip can become a step, and a section a step again.
+	 */
+	function kindOptions(part: EditPart, index: number): { kind: LineKind; label: string }[] {
+		if (!recipe || part === 'title') return [];
+		const lines = recipe[part];
+		const line = lines[index];
+		if (line === undefined) return [];
+		const stepLabel = part === 'steps' ? m.line_make_step() : m.line_make_ingredient();
+		if (isHeading(line) || splitNote(line) !== null) return [{ kind: 'step', label: stepLabel }];
+		const options: { kind: LineKind; label: string }[] = [
+			{ kind: 'tip', label: m.line_make_tip() }
+		];
+		const next = lines[index + 1];
+		const hasTips = next !== undefined && splitNote(next) !== null;
+		if (!hasTips) options.push({ kind: 'section', label: m.line_make_section() });
+		return options;
 	}
 
-	/** The button label: a step becomes a tip, a note becomes a step (or an ingredient again). */
-	function noteLabel(part: EditPart, index: number): string {
-		const line = recipe && part !== 'title' ? recipe[part][index] : '';
-		if (line === undefined || splitNote(line) === null) return m.line_make_tip();
-		return part === 'steps' ? m.line_make_step() : m.line_make_ingredient();
-	}
-
-	/** Saves any typed text, then makes the line a note of the line above, or a step again. */
-	async function toggleNote() {
+	/** Saves any typed text, then changes the line's kind: a step, a tip, or a section. */
+	async function changeKind(kind: LineKind) {
 		const current = editing;
 		if (!current || !recipe || current.part === 'title') return;
-		const line = recipe[current.part][current.index];
-		if (line === undefined || isHeading(line)) return;
-		const asNote = splitNote(line) === null;
 		await commitInline();
 		try {
-			await setLineNote(recipe.id, current.part, current.index, asNote);
+			await setLineKind(recipe.id, current.part, current.index, kind);
 			translationError = null;
 			await recipeStore.load();
 			if (recipeStore.loadError) translationError = m.error_load_failed();
 		} catch {
 			translationError = m.error_save_failed();
 		}
+	}
+
+	/** Deletes the line being edited, after the user confirms. Its tips go with it. */
+	async function deleteFromEditor() {
+		const current = editing;
+		editing = null;
+		if (!current || current.part === 'title') return;
+		if (!window.confirm(m.line_delete_confirm())) return;
+		await removeLine(current.part, current.index);
 	}
 
 	async function commitInline() {
@@ -344,15 +357,7 @@
 		const text = editDraft.trim();
 		if (text === editStart) return;
 		if (text.length === 0) {
-			// A note is not deleted by emptying it: its delete would take the notes below it too.
-			if (current.note) {
-				translationError = m.note_empty();
-				return;
-			}
-			// Emptying an ingredient or step deletes it, in every language, once the user confirms.
-			if (current.part !== 'title' && window.confirm(m.line_delete_confirm())) {
-				await removeLine(current.part, current.index);
-			}
+			// Emptying a line keeps its text. Deleting is its own button.
 			return;
 		}
 		if (showOriginal) {
@@ -742,13 +747,23 @@
 			bind:value={editDraft}
 			onblur={commitInline}
 			onkeydown={inlineKey}></textarea>
-		{#if canToggleNote(part, index)}
-			<button
-				type="button"
-				class="link-button tip-toggle"
-				onmousedown={(event) => event.preventDefault()}
-				onclick={toggleNote}>{noteLabel(part, index)}</button
-			>
+		{#if part !== 'title'}
+			<div class="line-actions">
+				{#each kindOptions(part, index) as option (option.kind)}
+					<button
+						type="button"
+						class="link-button"
+						onmousedown={(event) => event.preventDefault()}
+						onclick={() => changeKind(option.kind)}>{option.label}</button
+					>
+				{/each}
+				<button
+					type="button"
+					class="link-button danger"
+					onmousedown={(event) => event.preventDefault()}
+					onclick={deleteFromEditor}>{m.line_delete()}</button
+				>
+			</div>
 		{/if}
 	{:else if scalable && quantityDraft?.index === index}
 		<form

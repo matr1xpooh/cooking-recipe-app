@@ -185,6 +185,8 @@
 	"line_make_tip": "Make it a tip",
 	"line_make_step": "Make it a step",
 	"line_make_ingredient": "Make it an ingredient",
+	"line_make_section": "Make it a section",
+	"line_delete": "Delete",
 	"share_open": "Share",
 	"share_title": "Send this recipe",
 	"share_send": "Send",

@@ -185,6 +185,8 @@
 	"line_make_tip": "Hacer un consejo",
 	"line_make_step": "Hacer un paso",
 	"line_make_ingredient": "Hacer un ingrediente",
+	"line_make_section": "Hacer una sección",
+	"line_delete": "Eliminar",
 	"share_open": "Compartir",
 	"share_title": "Enviar esta receta",
 	"share_send": "Enviar",

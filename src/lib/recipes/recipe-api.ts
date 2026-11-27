@@ -147,18 +147,18 @@ export async function addLines(
 }
 
 /** Makes one ingredient or step a note under the line above (asNote), or a plain line again. */
-export async function setLineNote(
+export async function setLineKind(
 	recipeId: string,
 	part: 'ingredients' | 'steps',
 	index: number,
-	asNote: boolean
+	kind: 'step' | 'tip' | 'section'
 ): Promise<void> {
 	const res = await fetch(`/api/recipes/${encodeURIComponent(recipeId)}/lines`, {
 		method: 'PATCH',
 		headers: { 'content-type': 'application/json' },
-		body: JSON.stringify({ part, index, note: asNote })
+		body: JSON.stringify({ part, index, kind })
 	});
-	if (!res.ok) throw new Error(`line note change failed: ${res.status}`);
+	if (!res.ok) throw new Error(`line change failed: ${res.status}`);
 }
 
 /** Translation fixes, from the server. */

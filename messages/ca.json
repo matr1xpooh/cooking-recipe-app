@@ -185,6 +185,8 @@
 	"line_make_tip": "Fer-ne un consell",
 	"line_make_step": "Fer-ne un pas",
 	"line_make_ingredient": "Fer-ne un ingredient",
+	"line_make_section": "Fer-ne una secció",
+	"line_delete": "Elimina",
 	"share_open": "Comparteix",
 	"share_title": "Envia aquesta recepta",
 	"share_send": "Envia",

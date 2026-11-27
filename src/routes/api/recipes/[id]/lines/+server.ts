@@ -4,7 +4,7 @@ import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
 import { removeLine, type LinePart } from '#lib/server/remove-line.js';
 import { addLines, type AddPart } from '#lib/server/add-lines.js';
-import { setLineNote, type NotePart } from '#lib/server/set-note.js';
+import { setLineKind, type LineKind, type NotePart } from '#lib/server/set-note.js';
 import { decodeEntities } from '#lib/recipes/import.js';
 import { MAX_TRANSLATED_TEXT } from '#lib/recipes/translation-fields.js';
 
@@ -57,20 +57,32 @@ export const PUT: RequestHandler = async ({ params, request }) => {
 	return new Response(null, { status: 204 });
 };
 
-/** PATCH /api/recipes/<id>/lines  body: { part, index, note } -> makes that line a note of the line above, or a step again */
+/**
+ * PATCH /api/recipes/<id>/lines  body: { part, index, kind } where kind is "step", "tip" or "section".
+ * The older body { part, index, note: boolean } still works: true is a tip, false a step.
+ */
 export const PATCH: RequestHandler = async ({ params, request }) => {
 	if (!isSafeId(params.id)) error(404, 'not found');
 	const body = await request.json().catch(() => null);
 	const part = body?.part;
+	const kind =
+		body?.kind ?? (typeof body?.note === 'boolean' ? (body.note ? 'tip' : 'step') : undefined);
 	if (
 		(part !== 'ingredients' && part !== 'steps') ||
 		typeof body?.index !== 'number' ||
-		typeof body?.note !== 'boolean'
+		(kind !== 'step' && kind !== 'tip' && kind !== 'section')
 	) {
 		return json({ error: 'line_invalid' }, { status: 400 });
 	}
-	const result = await setLineNote(getStore(), params.id, part as NotePart, body.index, body.note);
+	const result = await setLineKind(
+		getStore(),
+		params.id,
+		part as NotePart,
+		body.index,
+		kind as LineKind
+	);
 	if (result === 'not_found') return json({ error: 'not_found' }, { status: 404 });
+	if (result === 'has_tips') return json({ error: 'line_has_tips' }, { status: 400 });
 	if (result !== 'changed') return json({ error: 'line_invalid' }, { status: 400 });
 	return new Response(null, { status: 204 });
 };
