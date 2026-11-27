@@ -45,18 +45,16 @@ export default $config({
 		// Sign-in. Accounts are created by the owner in the console; nobody can sign up.
 		const users = new sst.aws.CognitoUserPool('Users', {
 			usernames: ['email'],
+			// The invitation email is written in the language the admin picks (the user's locale).
+			triggers: {
+				customMessage: {
+					handler: 'src/lib/server/invite-message.handler',
+					environment: { APP_ORIGIN: origin }
+				}
+			},
 			transform: {
 				userPool: (args) => {
-					args.adminCreateUserConfig = {
-						allowAdminCreateUserOnly: true,
-						inviteMessageTemplate: {
-							emailSubject: 'Your table is set: welcome to the recipe book 🥄',
-							smsMessage:
-								'Welcome to the recipe book! Username: {username}, temporary password: {####}. Sign in at https://dox9mfbva3xj.cloudfront.net/signin',
-							emailMessage:
-								'Hi there, and welcome to the recipe book!\n\nSomeone who loves you (and your appetite) has added you to our family recipe book. Time to get your apron on.\n\n1. Go to https://dox9mfbva3xj.cloudfront.net/signin\n2. Sign in with:\n     username: {username}\n     temporary password: {####}\n3. You will be asked to pick your own password. Choose something you will remember, not something the cat could guess.\n4. Install the app on your phone from https://dox9mfbva3xj.cloudfront.net/install\n\nRecipes you can cook, shop from and share. No ads, no spam, no sneaky soup.\n\nHappy cooking!'
-						}
-					};
+					args.adminCreateUserConfig = { allowAdminCreateUserOnly: true };
 				}
 			}
 		});

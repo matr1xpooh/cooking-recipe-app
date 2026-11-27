@@ -29,6 +29,53 @@ Not yet done, see [Status](#status): passkey and authenticator sign-in (blocked 
 - Vitest for unit tests, Playwright (Chromium) for the browser test project.
 - Node.js 22.17 or newer. `.npmrc` sets `engine-strict`, so older Node versions refuse to install.
 
+## Architecture
+
+```mermaid
+flowchart LR
+  phone["Phone browser or home-screen app"]
+  subgraph aws["AWS, eu-west-1"]
+    cf["CloudFront"]
+    sitefiles[("S3: app files")]
+    server["Lambda: SvelteKit server<br/>pages and /api"]
+    ddb[("DynamoDB: recipes, edited translations,<br/>cached translations, user language")]
+    photos[("S3: private photo bucket")]
+    pool["Cognito user pool<br/>sign-in, no self sign-up"]
+    invite["Lambda: invite message<br/>writes the invitation in the user's language"]
+    textract["Textract: reads photos"]
+    translate["Translate"]
+    comprehend["Comprehend: detects language"]
+    budget["Budgets: monthly cost alarm"]
+  end
+  phone -->|HTTPS| cf
+  cf -->|static files| sitefiles
+  cf -->|pages and API| server
+  server --> ddb
+  server --> photos
+  server -->|sign-in| pool
+  pool -->|invitation email| invite
+  server --> textract
+  server --> translate
+  server --> comprehend
+  budget -->|email| owner["Owner's inbox"]
+```
+
+| Piece                           | What it is for                                                                                           |
+| ------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| CloudFront                      | The one address the app is served from. Static files come from S3, everything else from the Lambda.      |
+| Lambda (server)                 | Runs the SvelteKit server: pages, the JSON API, sign-in checks, translation and OCR calls.               |
+| DynamoDB                        | One table: recipes, edited translations, cached machine translations, and each user's language.          |
+| S3 (photos)                     | The original photos, in a private bucket. The app reads them through the server.                         |
+| S3 (app files)                  | The built client files, served through CloudFront.                                                       |
+| Cognito                         | Sign-in for the household. Accounts are created by the owner; nobody can sign up.                        |
+| Lambda (invite message)         | Cognito calls it when it invites a user. It writes the email in the language the owner chose (`locale`). |
+| Textract, Translate, Comprehend | Read recipe photos, translate recipe text, and detect the language of text.                              |
+| Budgets                         | Emails the owner at 80% of $10 a month spent, and when the forecast passes 100%.                         |
+
+There is no SES. Cognito sends the invitation emails itself, from its default sender.
+
+Locally, the same code talks to DynamoDB Local and an S3 emulator instead of AWS. See [Storage](#storage).
+
 ## Getting started
 
 ```sh
@@ -66,16 +113,17 @@ AWS credentials for Textract and Translate come from the standard AWS credential
 
 ## Scripts
 
-| Command                     | What it does                                                                                                                               |
-| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `npm run dev:stack`         | Development server with the local AWS stack (DynamoDB Local and an S3 emulator), data kept in `.local-data/`. Use this, not `npm run dev`. |
-| `npm run build`             | Lint, type check, unit tests, build, then the end-to-end tests against the built app.                                                      |
-| `npm run preview`           | Serves the production build locally.                                                                                                       |
-| `npm run check`             | Type check (svelte-check).                                                                                                                 |
-| `npm run lint`              | Prettier and ESLint.                                                                                                                       |
-| `npm test`                  | Unit tests (server and client projects).                                                                                                   |
-| `npm run test:e2e:deployed` | Deploys a throwaway `e2e` stage, runs the same end-to-end tests against it, then removes it. Never touches production.                     |
-| `npm run test:e2e`          | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
+| Command                                                                                   | What it does                                                                                                                               |
+| ----------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `npm run dev:stack`                                                                       | Development server with the local AWS stack (DynamoDB Local and an S3 emulator), data kept in `.local-data/`. Use this, not `npm run dev`. |
+| `npm run build`                                                                           | Lint, type check, unit tests, build, then the end-to-end tests against the built app.                                                      |
+| `npm run preview`                                                                         | Serves the production build locally.                                                                                                       |
+| `npm run check`                                                                           | Type check (svelte-check).                                                                                                                 |
+| `npm run lint`                                                                            | Prettier and ESLint.                                                                                                                       |
+| `npm test`                                                                                | Unit tests (server and client projects).                                                                                                   |
+| `npm run test:e2e:deployed`                                                               | Deploys a throwaway `e2e` stage, runs the same end-to-end tests against it, then removes it. Never touches production.                     |
+| `npx sst shell --stage production -- tsx scripts/invite-user.ts <email> [en\|es\|ca\|ru]` | Invites a user in the chosen language (see Deploying).                                                                                     |
+| `npm run test:e2e`                                                                        | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
 
@@ -116,7 +164,7 @@ The deployment uses SST v3 in `eu-west-1` (Ireland). The server runs on AWS Lamb
 2. Set the session secret once per stage: `npx sst secret set SessionSecret <at least 32 random characters>`.
 3. First deploy: `npx sst deploy --stage production`. It prints the site URL.
 4. Second deploy, so the sign-in client accepts the site's address: `APP_ORIGIN=<that URL> npx sst deploy --stage production`. (The first deploy cannot know the address, so the sign-in callback is a placeholder until this step.) Production has been deployed with `APP_ORIGIN=https://dox9mfbva3xj.cloudfront.net` and `BUDGET_EMAIL` set. Repeat both variables on every production deploy, or the sign-in callback and the cost alarm email change.
-5. Create each user in the Cognito console (User pools → Users → Create user), or with `aws cognito-idp admin-create-user --user-pool-id <pool id> --username <email> --user-attributes Name=email,Value=<email> Name=email_verified,Value=true`. Users cannot sign themselves up. Users are asked to choose their own password at the first sign-in.
+5. Invite each user in the language they should get: `npx sst shell --stage production -- tsx scripts/invite-user.ts <email> [en|es|ca|ru]`. Cognito emails them a temporary password and the sign-in and install links, written in that language. They are asked to choose their own password at the first sign-in. Users cannot sign themselves up.
 
 **Testing the deployed app.** `npm run test:e2e:deployed` deploys the `e2e` stage (its own table, bucket, user pool and site), creates a test user with a random password, runs the same end-to-end tests against the site, then deletes the test user and removes the stage. It sets that stage's `SessionSecret` and a placeholder `YouTubeApiKey`, and turns translation off on it. It needs AWS credentials and creates real resources for the few minutes it runs.
 
