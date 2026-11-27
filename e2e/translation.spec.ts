@@ -1,11 +1,12 @@
 import { test, expect } from '@playwright/test';
-import { addRecipe } from './helpers';
+import { addRecipe, openMenu } from './helpers';
 
 test('switching to Spanish shows the Spanish page; translation is off in tests', async ({
 	page
 }) => {
 	await addRecipe(page, 'Sopa test');
 
+	await openMenu(page);
 	await page.getByRole('link', { name: 'ES', exact: true }).tap();
 	await expect(page.getByRole('heading', { name: 'Ingredientes' })).toBeVisible();
 	// TRANSLATE=off (set in playwright.config.ts): the page says so and shows the original text.

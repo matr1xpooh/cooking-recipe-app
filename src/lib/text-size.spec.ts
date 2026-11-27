@@ -37,9 +37,9 @@ describe('readTextSizeIndex', () => {
 });
 
 describe('textSizePercent', () => {
-	it('formats the step as a percentage, with the default at 100%', () => {
-		expect(textSizePercent(DEFAULT_TEXT_SIZE_INDEX)).toBe('100%');
-		expect(textSizePercent(0)).toBe('50%');
-		expect(textSizePercent(TEXT_SIZE_STEPS.length - 1)).toBe('150%');
+	it('formats the step as a percentage, with the default at 112%', () => {
+		expect(textSizePercent(DEFAULT_TEXT_SIZE_INDEX)).toBe('112%');
+		expect(textSizePercent(0)).toBe('56%');
+		expect(textSizePercent(TEXT_SIZE_STEPS.length - 1)).toBe('168%');
 	});
 });

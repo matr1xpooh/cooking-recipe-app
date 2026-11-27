@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { moreItem } from './helpers';
 
 test('a phone user adds a recipe, cooks it and shares it', async ({ page }) => {
 	await page.goto('/recipes');
@@ -21,7 +22,7 @@ test('a phone user adds a recipe, cooks it and shares it', async ({ page }) => {
 	await expect(page.getByText('Boil the water')).toBeVisible();
 	await page.getByRole('link', { name: 'Close' }).tap();
 
-	await page.getByRole('button', { name: 'Share' }).tap();
+	await moreItem(page, 'Share');
 	await expect(page.getByRole('button', { name: 'Send' })).toBeVisible();
 	await expect(page.getByRole('button', { name: 'Copy' })).toBeVisible();
 });

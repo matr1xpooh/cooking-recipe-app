@@ -18,6 +18,11 @@
 	--note-blue: #1d4ed8;
 	--note-purple: #7e22ce;
 	--control-border: #8a7d74;
+	/* Type scale: nothing is smaller than --text-s, and hierarchy comes from weight and colour */
+	--text-s: 1rem;
+	--text-m: 1.125rem;
+	--text-l: 1.25rem;
+	--text-xl: 1.75rem;
 	color-scheme: light dark;
 }
 
@@ -130,60 +135,46 @@ main > p {
 	color: var(--muted);
 }
 
-/* The recipe list's own header: title and languages on one line, links and sign-out on the next */
-.list-header h1 {
-	font-size: 1.25rem;
-	margin: 0;
-}
-
-.list-tools {
+/* The recipe list header: title, the add button and the menu on one row */
+.list-header {
 	display: flex;
-	flex-basis: 100%;
-	flex-wrap: wrap;
 	align-items: center;
+	flex-wrap: wrap;
 	gap: 0.5rem;
-	min-width: 0;
-	max-width: 100%;
 }
 
-.list-tools .language-links {
-	gap: 0.25rem;
+.list-header h1 {
+	font-size: var(--text-l);
+	margin: 0 auto 0 0;
 }
 
-.list-tools .language-links .lang {
-	min-width: 44px;
-	padding: 0 0.25rem;
-}
-
-.list-links {
-	display: flex;
-	align-items: center;
-	flex-wrap: wrap;
-	flex-basis: 100%;
-	gap: 1rem;
-}
-
-.list-header > .sign-out-slot,
-.list-header > .icon-link {
-	margin-left: auto;
-}
-
-main > header > a.icon-link {
+.add-button {
 	display: inline-flex;
 	align-items: center;
-	justify-content: center;
-	width: 44px;
 	min-height: 44px;
-	padding: 0;
-	background: none;
-	color: var(--accent);
-	border-radius: 0;
+	padding: 0 1rem;
+	border-radius: var(--radius);
+	background: var(--accent);
+	color: var(--accent-text);
+	font-size: var(--text-s);
+	font-weight: 600;
 	text-decoration: none;
 }
 
-main > header > a.icon-link:hover {
-	background: none;
-	color: var(--accent-hover);
+.add-button:hover {
+	background: var(--accent-hover);
+	color: var(--accent-text);
+}
+
+/* A link inside the menu */
+.menu-link {
+	display: inline-flex;
+	align-items: center;
+	min-height: 44px;
+	color: var(--text);
+	font-size: var(--text-s);
+	font-weight: 600;
+	text-decoration: none;
 }
 
 /* Folded filters, with Select on the same row in its own colour */
@@ -202,26 +193,10 @@ main > header > a.icon-link:hover {
 /* Small note beside a heading, such as "Edited translation" */
 .edited-tag {
 	margin-left: 0.5rem;
-	font-size: 0.8rem;
+	font-size: var(--text-s);
 	font-weight: 400;
 	opacity: 0.75;
 	white-space: nowrap;
-}
-
-/* Less-used actions on the recipe list: plain text links, so the list comes first */
-main > header a.header-link {
-	min-height: 44px;
-	padding: 0 0.25rem;
-	background: none;
-	color: var(--accent);
-	font-weight: 500;
-	border-radius: 0;
-	text-decoration: underline;
-}
-
-main > header a.header-link:hover {
-	background: none;
-	color: var(--accent-hover);
 }
 
 main ul {
@@ -243,11 +218,11 @@ main li {
 }
 
 main li strong {
-	font-size: 1.05rem;
+	font-size: var(--text-m);
 }
 
 main li a {
-	font-size: 0.9rem;
+	font-size: var(--text-m);
 }
 
 /* Forms */
@@ -305,7 +280,7 @@ small {
 	margin: -0.5rem 0 0;
 	color: var(--danger);
 	font-weight: 600;
-	font-size: 0.95rem;
+	font-size: var(--text-s);
 }
 
 button {
@@ -434,7 +409,7 @@ main li:hover {
 }
 
 article h2 {
-	font-size: 1.2rem;
+	font-size: var(--text-l);
 	margin: 1.5rem 0 0.5rem;
 }
 
@@ -558,7 +533,7 @@ form > .styled-field {
 	background: var(--bg);
 	color: var(--text);
 	border: 1px solid var(--control-border);
-	font-size: 0.9rem;
+	font-size: var(--text-s);
 }
 
 .toolbar button:hover {
@@ -571,7 +546,7 @@ form > .styled-field {
 
 .meta {
 	color: var(--muted);
-	font-size: 0.9rem;
+	font-size: var(--text-s);
 	margin: 0 0 0.5rem;
 }
 
@@ -791,7 +766,7 @@ button.chip {
 	min-height: 44px;
 	padding: 0 0.85rem;
 	font: inherit;
-	font-size: 0.95rem;
+	font-size: var(--text-s);
 	color: var(--text);
 	background: var(--surface);
 	border: 1px solid var(--control-border);
@@ -845,7 +820,7 @@ button.chip.danger {
 	margin: 0.5rem 0;
 	background: var(--bg);
 	border-top: 1px solid var(--control-border);
-	font-size: 0.95rem;
+	font-size: var(--text-s);
 }
 
 /* Holding a recipe must not open the phone menu or select the title text */
@@ -882,7 +857,7 @@ input.select {
 
 .recipe-row .meta {
 	margin-left: auto;
-	font-size: 0.85rem;
+	font-size: var(--text-s);
 }
 
 /* Actions on a recipe are text links, like Edit and Open source: one size, weight and underline */
@@ -954,7 +929,7 @@ button.tag {
 	min-height: 44px;
 	padding: 0 0.9rem;
 	font: inherit;
-	font-size: 0.95rem;
+	font-size: var(--text-s);
 	color: var(--text);
 	background: var(--surface);
 	border: 1px solid var(--control-border);
@@ -980,7 +955,7 @@ button.tag.on,
 	align-items: center;
 	min-height: 28px;
 	padding: 0 0.7rem;
-	font-size: 0.85rem;
+	font-size: var(--text-s);
 	border-radius: 999px;
 }
 
@@ -1000,7 +975,7 @@ button.tag.on,
 	padding: 0 0.5rem;
 	border-radius: 999px;
 	font-weight: 600;
-	font-size: 0.9rem;
+	font-size: var(--text-s);
 }
 
 .language-links a.lang {
@@ -1095,7 +1070,7 @@ button.tag.on,
 }
 
 .meta-inline {
-	font-size: 0.8rem;
+	font-size: var(--text-s);
 	opacity: 0.8;
 }
 
@@ -1166,7 +1141,7 @@ button.tag.on,
 	margin: 0.25rem 0 0;
 	padding-left: 0.75rem;
 	border-left: 3px solid var(--accent);
-	font-size: 0.95rem;
+	font-size: var(--text-m);
 }
 
 .item-notes p,
@@ -1254,7 +1229,7 @@ article li > .add-slot {
 	border-radius: 999px;
 	background: none;
 	font: inherit;
-	font-size: 0.9rem;
+	font-size: var(--text-s);
 }
 
 /* Scaling the ingredients: the Scale row, the chosen factor, and the typed quantity */
@@ -1298,4 +1273,111 @@ article li > .add-slot {
 /* An icon picked for an ingredient: shown before its text, not part of the recipe */
 .item-icon {
 	margin-right: 0.35em;
+}
+
+/* Secondary text is never smaller than the normal size */
+small {
+	font-size: var(--text-s);
+}
+
+/* Ingredients and steps: the main reading text */
+article ul.plain > li,
+article ol > li {
+	font-size: var(--text-m);
+}
+
+/* The recipe's main actions: large buttons, and one More menu for everything else */
+.action-row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: stretch;
+	gap: 0.5rem;
+	margin: 0.75rem 0 1rem;
+}
+
+.action-button {
+	display: inline-flex;
+	flex: 1 1 8rem;
+	align-items: center;
+	justify-content: center;
+	min-height: 56px;
+	padding: 0 1rem;
+	border: 1px solid var(--accent);
+	border-radius: var(--radius);
+	background: var(--accent);
+	color: var(--accent-text);
+	font: inherit;
+	font-size: var(--text-l);
+	font-weight: 700;
+	text-align: center;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.action-button:hover {
+	background: var(--accent-hover);
+	color: var(--accent-text);
+}
+
+.action-button.secondary {
+	background: var(--surface);
+	color: var(--text);
+	border-color: var(--control-border);
+}
+
+.more-menu {
+	position: relative;
+	flex: 1 1 8rem;
+}
+
+.more-menu > summary {
+	list-style: none;
+	height: 100%;
+}
+
+.more-menu > summary::-webkit-details-marker {
+	display: none;
+}
+
+.more-panel {
+	position: absolute;
+	right: 0;
+	z-index: 10;
+	display: flex;
+	flex-direction: column;
+	min-width: 16rem;
+	margin-top: 0.25rem;
+	padding: 0.25rem;
+	border: 1px solid var(--control-border);
+	border-radius: var(--radius);
+	background: var(--surface);
+}
+
+.menu-item {
+	display: flex;
+	align-items: center;
+	min-height: 48px;
+	padding: 0 0.75rem;
+	border: 0;
+	background: none;
+	color: var(--text);
+	font: inherit;
+	font-size: var(--text-s);
+	font-weight: 600;
+	text-align: left;
+	cursor: pointer;
+}
+
+.menu-item:hover {
+	background: var(--bg);
+}
+
+.menu-item.danger {
+	color: var(--danger);
+}
+
+/* The source link and start time: one quiet line under the title */
+.source-line {
+	margin: 0 0 0.75rem;
+	font-size: var(--text-s);
 }

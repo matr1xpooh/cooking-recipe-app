@@ -8,13 +8,11 @@
 	import { onMount } from 'svelte';
 	import { dev } from '$app/env';
 	import favicon from '#lib/assets/favicon.svg';
-	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
-	import TextSizeControl from '#lib/TextSizeControl.svelte';
+	import AppMenu from '#lib/AppMenu.svelte';
 	import { page } from '$app/state';
 	import { invalidate } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { m } from '#lib/paraglide/messages.js';
-	import SignOutButton from '#lib/SignOutButton.svelte';
 	import { localeChange } from '#lib/locale-change.svelte.js';
 	import type { LayoutProps } from './$types';
 	import '../app.css';
@@ -46,20 +44,15 @@
 <!-- Keyed on the language version: a language change re-renders the page in place. -->
 {#key localeChange.version}
 	{#if !ownHeader}
-		<header class="site-header">
-			<LanguageSwitcher />
-			<TextSizeControl />
-			{#if data.showSignOut && !recipeView}
-				<SignOutButton />
-			{/if}
-		</header>
 		{#if recipeView}
 			<nav class="page-top" aria-label={m.recipes_title()}>
 				<a href={resolve('/recipes')}>← {m.recipes_title()}</a>
-				{#if data.showSignOut}
-					<SignOutButton />
-				{/if}
+				<AppMenu showSignOut={data.showSignOut} />
 			</nav>
+		{:else}
+			<header class="site-header">
+				<AppMenu showSignOut={data.showSignOut} />
+			</header>
 		{/if}
 	{/if}
 

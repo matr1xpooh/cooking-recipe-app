@@ -28,3 +28,14 @@ export const PNG = Buffer.from(
 	'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
 	'base64'
 );
+
+/** Opens the page's Menu: the language, the text size, and sign-in or sign-out. */
+export async function openMenu(page: Page): Promise<void> {
+	await page.getByText('Menu', { exact: true }).tap();
+}
+
+/** Opens a recipe's More menu and taps one of its items. */
+export async function moreItem(page: Page, label: string): Promise<void> {
+	await page.getByText('More', { exact: true }).tap();
+	await page.getByRole('button', { name: label, exact: true }).tap();
+}

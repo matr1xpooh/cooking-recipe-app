@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { moreItem } from './helpers';
 
 test('a recipe saved without ingredients gets an ingredient slot to add them later', async ({
 	page
@@ -17,6 +18,7 @@ test('a recipe saved without ingredients gets an ingredient slot to add them lat
 	await page.getByRole('link', { name: 'Plain rice' }).tap();
 	await expect(page.getByRole('heading', { level: 1, name: 'Plain rice' })).toBeVisible();
 
+	await moreItem(page, 'Edit recipe');
 	// The ingredients section has no lines yet, so its add slot comes first on the page.
 	await page.getByRole('button', { name: 'Add…' }).first().tap();
 	await page.getByRole('button', { name: 'Ingredient', exact: true }).tap();

@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test';
-import { addRecipe, PNG } from './helpers';
+import { addRecipe, moreItem, PNG } from './helpers';
 
 test('a phone user adds a photo, then adds more from its edit menu', async ({ page }) => {
 	await addRecipe(page, 'Photo soup');
+	await moreItem(page, 'Edit recipe');
 
 	await page.getByRole('button', { name: 'Add a picture' }).tap();
 	await page

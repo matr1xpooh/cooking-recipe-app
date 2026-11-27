@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { addRecipe } from './helpers';
+import { addRecipe, moreItem } from './helpers';
 
 /** An ingredient line: its list item, which also holds the "+" that adds a line after it. */
 function line(page: Page, text: string) {
@@ -12,7 +12,7 @@ test('a phone user scales the ingredients, sets one quantity and resets', async 
 	// Closed by default: the recipe reads as it was written.
 	await expect(line(page, '200 g harina')).toBeVisible();
 
-	await page.getByRole('button', { name: 'Scale', exact: true }).tap();
+	await moreItem(page, 'Scale');
 	await page.getByRole('button', { name: '×2', exact: true }).tap();
 	await expect(line(page, '400 g harina')).toBeVisible();
 	await expect(line(page, '6 huevos')).toBeVisible();
@@ -34,7 +34,7 @@ test('a phone user scales the ingredients, sets one quantity and resets', async 
 test('a scaled recipe goes on the shopping list at that scale', async ({ page }) => {
 	await addRecipe(page, 'Scale soup', '200 g harina');
 
-	await page.getByRole('button', { name: 'Scale', exact: true }).tap();
+	await moreItem(page, 'Scale');
 	await page.getByRole('button', { name: '×2', exact: true }).tap();
 	await page.getByRole('button', { name: '+ Shopping list' }).tap();
 

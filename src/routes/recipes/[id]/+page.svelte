@@ -123,6 +123,8 @@
 	 */
 	let scale = $state(1);
 	let scaleOpen = $state(false);
+	/** Edit mode: the "+" buttons and tap-to-edit show only while it is on. */
+	let editMode = $state(false);
 	/** The ingredient whose quantity is being typed, and what is typed so far. */
 	let quantityDraft = $state<{ index: number; text: string } | null>(null);
 	const scaleSteps = [
@@ -269,7 +271,7 @@
 
 	/** Signed in: a tap changes the original (while showing it) or this language's translation. */
 	const canEdit = $derived(
-		page.data.signedIn && isLanguage(locale) && (showOriginal || baseFields !== null)
+		editMode && page.data.signedIn && isLanguage(locale) && (showOriginal || baseFields !== null)
 	);
 
 	/** The original text changed after the edited translation was saved. */
@@ -442,19 +444,18 @@
 	}
 
 	/** The actions under the Ingredients heading, shown only when they apply. */
-	const toolLinks = $derived([
-		...(translated && !translated.failed
-			? [
-					{
-						label: showOriginal ? m.show_translation() : m.show_original(),
-						run: () => (showOriginal = !showOriginal)
-					}
-				]
-			: []),
-		...(override && page.data.signedIn ? [{ label: m.translation_reset(), run: resetEdits }] : []),
-		{ label: m.share_open(), run: () => (sharing = !sharing) },
-		...(page.data.signedIn ? [{ label: m.shopping_add(), run: addToShopping }] : [])
-	]);
+
+	/** Closes the More menu after one of its items is used. */
+	function closeMore(event: MouseEvent) {
+		(event.currentTarget as HTMLElement).closest('details')?.removeAttribute('open');
+	}
+
+	/** Leaves edit mode and drops any line being changed. */
+	function leaveEdit() {
+		editMode = false;
+		editing = null;
+		quantityDraft = null;
+	}
 
 	/** Adds this recipe to the list being built, and opens the list. */
 	function addToShopping() {
@@ -691,7 +692,7 @@
 </script>
 
 {#snippet addSlot(part: 'ingredients' | 'steps', at: number)}
-	{#if page.data.signedIn}
+	{#if editMode && page.data.signedIn}
 		{#if adding?.part === part && adding.at === at}
 			{#if adding.kind === 'choose'}
 				<div class="add-kinds" role="group" aria-label={m.add_slot_label()}>
@@ -827,15 +828,105 @@
 					{shown.title}
 				{/if}
 			</h1>
-			{#if shown.steps.length > 0}
-				<p class="cook-row">
-					<a class="cook-button" href={resolve('/recipes/[id]/cook', { id: recipe.id })}
-						>{m.cook_open()}</a
-					>
+			{#if editMode}
+				<p class="action-row">
+					<button type="button" class="action-button" onclick={leaveEdit}>{m.edit_done()}</button>
 				</p>
+			{:else}
+				<div class="action-row">
+					{#if shown.steps.length > 0}
+						<a class="action-button" href={resolve('/recipes/[id]/cook', { id: recipe.id })}
+							>{m.cook_open()}</a
+						>
+					{/if}
+					{#if page.data.signedIn}
+						<button type="button" class="action-button" onclick={addToShopping}
+							>{m.shopping_add()}</button
+						>
+					{/if}
+					<details class="more-menu">
+						<summary class="action-button secondary">{m.more_open()}</summary>
+						<div class="more-panel">
+							{#if page.data.signedIn}
+								<button
+									type="button"
+									class="menu-item"
+									onclick={(event) => {
+										closeMore(event);
+										editMode = true;
+									}}>{m.edit_recipe()}</button
+								>
+							{/if}
+							{#if translated && !translated.failed}
+								<button
+									type="button"
+									class="menu-item"
+									onclick={(event) => {
+										closeMore(event);
+										showOriginal = !showOriginal;
+									}}>{showOriginal ? m.show_translation() : m.show_original()}</button
+								>
+							{/if}
+							{#if override && page.data.signedIn}
+								<button
+									type="button"
+									class="menu-item"
+									onclick={(event) => {
+										closeMore(event);
+										resetEdits();
+									}}>{m.translation_reset()}</button
+								>
+							{/if}
+							<button
+								type="button"
+								class="menu-item"
+								onclick={(event) => {
+									closeMore(event);
+									sharing = !sharing;
+								}}>{m.share_open()}</button
+							>
+							<button
+								type="button"
+								class="menu-item"
+								onclick={(event) => {
+									closeMore(event);
+									scaleOpen = !scaleOpen;
+								}}>{m.scale_open()}</button
+							>
+							{#if page.data.signedIn}
+								<button
+									type="button"
+									class="menu-item"
+									onclick={(event) => {
+										closeMore(event);
+										startSourceEdit();
+									}}>{recipe.sourceUrl ? m.source_change() : m.source_add()}</button
+								>
+								<button
+									type="button"
+									class="menu-item"
+									onclick={(event) => {
+										closeMore(event);
+										toggleArchive();
+									}}>{recipe.archived ? m.restore_action() : m.archive_action()}</button
+								>
+							{/if}
+							{#if recipe.archived && page.data.signedIn}
+								<button
+									type="button"
+									class="menu-item danger"
+									onclick={(event) => {
+										closeMore(event);
+										deleteThis();
+									}}>{m.delete_action()}</button
+								>
+							{/if}
+						</div>
+					</details>
+				</div>
 			{/if}
-			<p class="recipe-actions">
-				{#if recipe.sourceUrl}
+			{#if recipe.sourceUrl}
+				<p class="source-line">
 					<!-- External user-supplied URL: resolve() only applies to app routes. -->
 					<!-- eslint-disable svelte/no-navigation-without-resolve -->
 					<a
@@ -847,21 +938,8 @@
 					{#if recipe.sourceStart !== null}
 						<small>{m.recipe_starts_at({ time: formatStart(recipe.sourceStart) })}</small>
 					{/if}
-				{/if}
-				{#if page.data.signedIn}
-					<button type="button" class="link-button" onclick={startSourceEdit}>
-						{recipe.sourceUrl ? m.source_change() : m.source_add()}
-					</button>
-					<button type="button" class="link-button" onclick={toggleArchive}>
-						{recipe.archived ? m.restore_action() : m.archive_action()}
-					</button>
-				{/if}
-				{#if recipe.archived && page.data.signedIn}
-					<button type="button" class="link-button danger" onclick={deleteThis}>
-						{m.delete_action()}
-					</button>
-				{/if}
-			</p>
+				</p>
+			{/if}
 			{#if sourceEditing && page.data.signedIn}
 				<form
 					class="source-edit"
@@ -933,11 +1011,6 @@
 						{#if translationError}
 							<p role="alert">{translationError}</p>
 						{/if}
-						<p class="tools-links">
-							{#each toolLinks as link, i (i)}
-								<button type="button" class="link-button" onclick={link.run}>{link.label}</button>
-							{/each}
-						</p>
 					</div>
 				{/if}
 				{#if sharing && recipe && shown}
@@ -949,12 +1022,12 @@
 						locale={isLanguage(locale) ? locale : 'en'}
 					/>
 				{/if}
-				{#if recipe.images.length > 0 || page.data.signedIn}
+				{#if recipe.images.length > 0 || (editMode && page.data.signedIn)}
 					<div class="gallery stacked">
 						{#each photos as photo (photo.id)}
 							<figure class="gallery-item">
 								<img class="preview" src={photo.url} alt={m.recipe_screenshot_alt()} />
-								{#if page.data.signedIn}
+								{#if editMode && page.data.signedIn}
 									<figcaption class="image-actions">
 										<button
 											type="button"
@@ -994,7 +1067,7 @@
 							</figure>
 						{/each}
 					</div>
-					{#if page.data.signedIn}
+					{#if editMode && page.data.signedIn}
 						{#if showAddPhotos}
 							<PhotoButtons
 								disabled={photoBusy}
@@ -1014,40 +1087,44 @@
 						<p role="alert">{photoErrorMessages[photoError]()}</p>
 					{/if}
 				{/if}
-				<p class="meta">
-					{m.ingredients_source()}: {sourceLabels[recipe.source]()}
-				</p>
-				<p class="tools-links scale-tools">
-					<button
-						type="button"
-						class="link-button"
-						aria-expanded={scaleOpen}
-						onclick={() => {
-							scaleOpen = !scaleOpen;
-							quantityDraft = null;
-						}}>{m.scale_open()}</button
-					>
-					{#if scale !== 1}
+				{#if editMode}
+					<p class="meta">
+						{m.ingredients_source()}: {sourceLabels[recipe.source]()}
+					</p>
+				{/if}
+				{#if scaleOpen || scale !== 1}
+					<p class="tools-links scale-tools">
 						<button
 							type="button"
 							class="link-button"
+							aria-expanded={scaleOpen}
 							onclick={() => {
-								scale = 1;
+								scaleOpen = !scaleOpen;
 								quantityDraft = null;
-							}}>{m.scale_reset()}</button
+							}}>{m.scale_open()}</button
 						>
-					{/if}
-					{#if scaleOpen}
-						{#each scaleSteps as step (step.factor)}
+						{#if scale !== 1}
 							<button
 								type="button"
 								class="link-button"
-								aria-pressed={scale === step.factor}
-								onclick={() => (scale = step.factor)}>{step.label}</button
+								onclick={() => {
+									scale = 1;
+									quantityDraft = null;
+								}}>{m.scale_reset()}</button
 							>
-						{/each}
-					{/if}
-				</p>
+						{/if}
+						{#if scaleOpen}
+							{#each scaleSteps as step (step.factor)}
+								<button
+									type="button"
+									class="link-button"
+									aria-pressed={scale === step.factor}
+									onclick={() => (scale = step.factor)}>{step.label}</button
+								>
+							{/each}
+						{/if}
+					</p>
+				{/if}
 				{#if shown.ingredients.length === 0}{@render addSlot('ingredients', 0)}{/if}
 				{#each placeIngredients(shown.ingredients) as group, g (g)}
 					{#if group.heading !== null}
@@ -1090,7 +1167,7 @@
 				{/each}
 			</section>
 
-			{#if shown.steps.length > 0 || page.data.signedIn}
+			{#if shown.steps.length > 0 || (editMode && page.data.signedIn)}
 				<section>
 					<h2>{m.recipe_steps_heading()}</h2>
 					{#if stepGroups.length === 0}{@render addSlot('steps', 0)}{/if}
@@ -1143,14 +1220,14 @@
 							<button
 								type="button"
 								class="tag-remove"
-								hidden={!page.data.signedIn}
+								hidden={!(editMode && page.data.signedIn)}
 								aria-label={m.tag_remove({ tag: tagNames.label(tag) })}
 								onclick={() => removeTag(tag)}>×</button
 							>
 						</span>
 					{/each}
 				</div>
-				{#if page.data.signedIn}
+				{#if editMode && page.data.signedIn}
 					<div class="tag-add">
 						<input
 							type="text"

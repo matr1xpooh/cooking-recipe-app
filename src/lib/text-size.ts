@@ -3,7 +3,9 @@
  * app.css is in rem, so changing the root font size scales the whole app. The smaller steps
  * go below the OS baseline, which pinch zoom cannot reach on Android.
  */
-export const TEXT_SIZE_STEPS = [50, 62.5, 75, 87.5, 100, 115, 130, 150] as const;
+// The default (index 4) is 112%: about 18px, larger than the browser's 16px for everyone who never
+// changed the size.
+export const TEXT_SIZE_STEPS = [56, 70, 84, 98, 112, 128, 144, 168] as const;
 
 export const DEFAULT_TEXT_SIZE_INDEX = 4;
 
