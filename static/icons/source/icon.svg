@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#f6f0e2"/><g>
+  <!-- leaf tuft -->
+  <path d="M256 150 C236 118 206 118 196 132 C214 150 236 156 256 150 Z" fill="#5fa872" stroke="#2f5a40" stroke-width="8" stroke-linejoin="round"/>
+  <path d="M256 150 C276 118 306 118 316 132 C298 150 276 156 256 150 Z" fill="#7cc08a" stroke="#2f5a40" stroke-width="8" stroke-linejoin="round"/>
+  <!-- body -->
+  <ellipse cx="256" cy="292" rx="122" ry="132" fill="#b5dfb0" stroke="#2f5a40" stroke-width="10"/>
+  <!-- cheeks -->
+  <circle cx="196" cy="306" r="16" fill="#f2a6a0" opacity="0.7"/>
+  <circle cx="316" cy="306" r="16" fill="#f2a6a0" opacity="0.7"/>
+  <!-- eyes -->
+  <circle cx="218" cy="268" r="15" fill="#22332b"/>
+  <circle cx="294" cy="268" r="15" fill="#22332b"/>
+  <circle cx="223" cy="262" r="5" fill="#ffffff"/>
+  <circle cx="299" cy="262" r="5" fill="#ffffff"/>
+  <!-- smile -->
+  <path d="M228 312 Q256 340 284 312" fill="none" stroke="#2f5a40" stroke-width="9" stroke-linecap="round"/>
+  <!-- wooden spoon held at the side -->
+  <line x1="356" y1="352" x2="414" y2="430" stroke="#9b6b43" stroke-width="18" stroke-linecap="round"/>
+  <ellipse cx="338" cy="326" rx="30" ry="40" transform="rotate(-30 338 326)" fill="#d3a46e" stroke="#7a4f2c" stroke-width="8"/>
+</g>
+</svg>
