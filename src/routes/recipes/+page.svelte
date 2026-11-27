@@ -8,12 +8,14 @@
 	import { m } from '#lib/paraglide/messages.js';
 	import { getLocale } from '#lib/paraglide/runtime.js';
 	import { recipeStore } from '#lib/recipes/store.svelte.js';
-	import { isLanguage } from '#lib/recipes/languages.js';
+	import { isLanguage, type Language } from '#lib/recipes/languages.js';
 	import { translateTitles } from '#lib/recipes/translate-client.js';
+	import { editedFits } from '#lib/recipes/display.js';
+	import { fetchOverride } from '#lib/recipes/recipe-api.js';
 	import { translationCache } from '#lib/recipes/translation-cache.js';
 	import { TagNames } from '#lib/recipes/tag-names.svelte.js';
 	import { matchesName } from '#lib/recipes/recipe.js';
-	import { TAGS, type Tag } from '#lib/recipes/recipe.js';
+	import { TAGS, type Recipe, type Tag } from '#lib/recipes/recipe.js';
 	import { loadImage } from '#lib/recipes/image-store.js';
 	import { SvelteSet } from 'svelte/reactivity';
 	import LanguageSwitcher from '#lib/LanguageSwitcher.svelte';
@@ -59,11 +61,28 @@
 	const locale = getLocale();
 	let titles = $state<Record<string, string>>({});
 
-	// Translate every title in one batch; titles that fail show the original.
+	/**
+	 * The title each recipe shows in the list: the user's corrected translation when it fits the
+	 * recipe (the same one the recipe page shows), else the machine translation in one batch.
+	 * Titles that fail show the original.
+	 */
+	async function listTitles(list: Recipe[], lang: Language): Promise<Record<string, string>> {
+		const [machine, overrides] = await Promise.all([
+			translateTitles(list, lang, translationCache),
+			Promise.all(list.map((r) => fetchOverride(r.id, lang).catch(() => null)))
+		]);
+		const map = { ...machine };
+		list.forEach((recipe, i) => {
+			const override = overrides[i] ?? null;
+			if (override && editedFits(recipe, override)) map[recipe.id] = override.fields.title;
+		});
+		return map;
+	}
+
 	$effect(() => {
 		const list = recipeStore.recipes;
 		if (list.length === 0 || !isLanguage(locale)) return;
-		translateTitles(list, locale, translationCache).then((map) => {
+		listTitles(list, locale).then((map) => {
 			titles = map;
 		});
 	});
