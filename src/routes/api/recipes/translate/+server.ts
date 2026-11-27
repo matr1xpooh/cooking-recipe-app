@@ -4,6 +4,7 @@ import { isLanguage } from '#lib/recipes/languages.js';
 import { translateCached, TranslateError, type TranslateItem } from '#lib/server/translate.js';
 import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 import { getStore } from '#lib/server/store.js';
+import { recordUsage } from '#lib/server/usage.js';
 
 function parseItems(value: unknown): TranslateItem[] | null {
 	if (!Array.isArray(value)) return null;
@@ -28,9 +29,12 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 		return json({ error: 'request_invalid' }, { status: 400 });
 	}
 	try {
-		return json({ items: await translateCached(items, body.target, getStore()) });
+		const translated = await translateCached(items, body.target, getStore());
+		await recordUsage('translation.shown');
+		return json({ items: translated });
 	} catch (error) {
 		if (error instanceof TranslateError) {
+			await recordUsage('translation.failed');
 			return json({ error: error.key }, { status: error.status });
 		}
 		throw error;

@@ -17,6 +17,7 @@ import {
 	YOUTUBE_CONSENT_COOKIE
 } from '#lib/server/recipe-import.js';
 import { getStore } from '#lib/server/store.js';
+import { recordUsage } from '#lib/server/usage.js';
 import { fetchYouTubeVideo, youtubeVideoId } from '#lib/server/youtube-api.js';
 import { LIMITS, takeToken } from '#lib/server/rate-limit.js';
 import { parseStart } from '#lib/recipes/recipe.js';
@@ -103,6 +104,7 @@ export const GET: RequestHandler = async ({ url, locals }) => {
 		});
 	} catch (error) {
 		if (error instanceof ImportError) {
+			await recordUsage('import.failed');
 			return json({ error: error.key }, { status: error.status });
 		}
 		throw error;

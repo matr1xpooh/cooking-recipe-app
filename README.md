@@ -123,6 +123,7 @@ AWS credentials for Textract and Translate come from the standard AWS credential
 | `npm test`                                                                                | Unit tests (server and client projects).                                                                                                   |
 | `npm run test:e2e:deployed`                                                               | Deploys a throwaway `e2e` stage, runs the same end-to-end tests against it, then removes it. Never touches production.                     |
 | `npx sst shell --stage production -- tsx scripts/invite-user.ts <email> [en\|es\|ca\|ru]` | Invites a user in the chosen language (see Deploying).                                                                                     |
+| `npx sst shell --stage production -- tsx scripts/usage-summary.ts [days]`                 | Prints how often each feature was used, per day and in total (see Usage).                                                                  |
 | `npm run test:e2e`                                                                        | Builds the app and runs the end-to-end tests in a phone-sized browser, on the local stack. Nothing is kept afterwards.                     |
 
 Before each commit: `npm run check`, `npm run lint` and `npm test` should pass.
@@ -155,6 +156,18 @@ The one store is AWS: one DynamoDB table for recipes, edited translations, cache
 Local runs and the end-to-end tests use the same code against **DynamoDB Local** (AWS's own emulator, a Java program, downloaded once into `.emulators/`) and **s3rver** (an S3 emulator). `scripts/local-stack.ts` starts them and sets the endpoint variables, and points every other AWS service at a closed port, so nothing reaches AWS. The table layout is shared with the deploy (`infra/table.ts`). Java must be installed for the local stack.
 
 A guard test (`src/lib/server/guard.spec.ts`) checks that every API route needs a signed-in user and that the store modules read no local files.
+
+## Usage
+
+The app counts what people do, one number per day and feature: recipes added and deleted, photos added, translations shown or failed, imports that failed, and sign-ins. No counts are tied to a person, and no recipe content is stored. Counts are kept in the same DynamoDB table and expire after about 13 months.
+
+Print the last week (or any number of days):
+
+```
+npx sst shell --stage production -- tsx scripts/usage-summary.ts 7
+```
+
+Not counted yet: cooking, sharing, and adding to the shopping list. They happen in the browser, so they need their own reporting endpoint.
 
 ## Deploying
 

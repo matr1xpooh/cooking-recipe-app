@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { MAX_IMAGE_BYTES, sniffImageType } from '#lib/recipes/screenshot.js';
 import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
+import { recordUsage } from '#lib/server/usage.js';
 
 /** POST /api/recipes/<id>/images  body: a PNG or JPEG file, as sent -> { id } */
 export const POST: RequestHandler = async ({ params, request }) => {
@@ -14,5 +15,6 @@ export const POST: RequestHandler = async ({ params, request }) => {
 	const store = getStore();
 	const id = store.newImageId();
 	await store.saveImage(params.id, id, bytes, type);
+	await recordUsage('photo.added');
 	return json({ id }, { status: 201 });
 };

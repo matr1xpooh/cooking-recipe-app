@@ -40,7 +40,11 @@ export default $config({
 		// settings (see src/lib/server/aws-store.ts for the key layout), and a private bucket
 		// for the original photos.
 		// Production keeps the table if someone tries to delete it.
-		const table = new sst.aws.Dynamo('Table', { ...tableLayout, deletionProtection: production });
+		const table = new sst.aws.Dynamo('Table', {
+			...tableLayout,
+			deletionProtection: production,
+			ttl: 'expireAt' // usage counts expire after about 13 months (usage.ts)
+		});
 		const bucket = new sst.aws.Bucket('Images');
 
 		// Sign-in. Accounts are created by the owner in the console; nobody can sign up.

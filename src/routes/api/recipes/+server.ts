@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import { decodeRecipeText, isRecipe } from '#lib/recipes/validate.js';
 import { isSafeId } from '#lib/server/ids.js';
 import { getStore } from '#lib/server/store.js';
+import { recordUsage } from '#lib/server/usage.js';
 
 /** GET /api/recipes -> all recipes, newest first */
 export const GET: RequestHandler = async () => json(await getStore().listRecipes());
@@ -24,5 +25,6 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 	}
 	await getStore().saveRecipe(recipe);
+	await recordUsage('recipe.created');
 	return json({ ok: true });
 };

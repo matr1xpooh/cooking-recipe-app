@@ -7,6 +7,7 @@ import {
 	sessionSecret
 } from '#lib/server/auth-config.js';
 import { respondNewPassword, signInWithPassword } from '#lib/server/cognito-password.js';
+import { recordUsage } from '#lib/server/usage.js';
 import { verifyIdToken } from '#lib/server/cognito.js';
 import { signingKeys } from '#lib/server/signing-keys.js';
 import { safeNext } from '#lib/server/next.js';
@@ -34,6 +35,7 @@ async function startSession(cookies: Cookies, url: URL, idToken: string): Promis
 		signValue({ ...user }, sessionSecret(), SESSION_MAX_AGE_MS),
 		cookieOptions(url, SESSION_MAX_AGE_MS)
 	);
+	await recordUsage('signin');
 }
 
 export const load: PageServerLoad = ({ locals, url }) => {
