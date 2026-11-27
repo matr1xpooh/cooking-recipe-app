@@ -4,6 +4,7 @@
  *
  *   tsx scripts/e2e-user.ts create   reads E2E_EMAIL and E2E_PASSWORD, sets a permanent password
  *   tsx scripts/e2e-user.ts delete   reads E2E_EMAIL
+ *   tsx scripts/e2e-user.ts site     prints the deployed site address
  */
 import {
 	AdminCreateUserCommand,
@@ -14,7 +15,11 @@ import {
 import { Resource } from 'sst';
 
 const action = process.argv[2];
-const email = process.env.E2E_EMAIL;
+if (action === 'site') {
+	console.log(Resource.Site.url);
+	process.exit(0);
+}
+const email = process.env.E2E_EMAIL ?? '';
 if (!email) throw new Error('E2E_EMAIL must be set');
 
 const cognito = new CognitoIdentityProviderClient({ region: 'eu-west-1' });

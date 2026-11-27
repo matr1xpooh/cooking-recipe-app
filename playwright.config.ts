@@ -26,7 +26,7 @@ export default defineConfig({
 	},
 	projects: deployedUrl
 		? [
-				{ name: 'setup', testMatch: /auth\.setup\.ts/ },
+				{ name: 'setup', testMatch: /auth\.setup\.ts/, use: { ...devices['Pixel 7'] } },
 				{
 					name: 'phone',
 					dependencies: ['setup'],

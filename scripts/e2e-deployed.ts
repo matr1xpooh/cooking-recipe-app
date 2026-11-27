@@ -44,7 +44,7 @@ try {
 	deployed = true;
 
 	onStage(['tsx', 'scripts/e2e-user.ts', 'create'], { E2E_EMAIL: email, E2E_PASSWORD: password });
-	const siteUrl = onStage(['node', '-p', 'Resource.Site.url']).trim();
+	const siteUrl = onStage(['tsx', 'scripts/e2e-user.ts', 'site']).trim().split('\n').pop()!.trim();
 
 	const tests = spawnSync('npx', ['playwright', 'test'], {
 		env: { ...process.env, E2E_BASE_URL: siteUrl, E2E_EMAIL: email, E2E_PASSWORD: password },
