@@ -87,6 +87,9 @@ export default $config({
 
 		const site = new sst.aws.SvelteKit('Site', {
 			link: [table, bucket, users],
+			// Production builds with npm run build (lint, checks, unit and e2e tests first). The e2e stage
+			// only compiles: its tests run after the deploy, and unit tests are not run post-deploy.
+			buildCommand: production ? undefined : 'npx vite build',
 			// AWS retires nodejs20.x; the README asks for Node 22.17 or newer.
 			server: { runtime: 'nodejs22.x' },
 			// Textract reads recipe photos; Translate translates recipe text. Both only take
