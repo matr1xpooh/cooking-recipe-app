@@ -1048,6 +1048,7 @@
 						{/each}
 					{/if}
 				</p>
+				{#if shown.ingredients.length === 0}{@render addSlot('ingredients', 0)}{/if}
 				{#each placeIngredients(shown.ingredients) as group, g (g)}
 					{#if group.heading !== null}
 						<h3 class="ingredient-heading">
