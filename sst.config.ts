@@ -39,7 +39,8 @@ export default $config({
 		// Storage: one table for recipes, translations, cached machine translations and user
 		// settings (see src/lib/server/aws-store.ts for the key layout), and a private bucket
 		// for the original photos.
-		const table = new sst.aws.Dynamo('Table', tableLayout);
+		// Production keeps the table if someone tries to delete it.
+		const table = new sst.aws.Dynamo('Table', { ...tableLayout, deletionProtection: production });
 		const bucket = new sst.aws.Bucket('Images');
 
 		// Sign-in. Accounts are created by the owner in the console; nobody can sign up.
@@ -93,7 +94,8 @@ export default $config({
 		const youtubeApiKey = new sst.Secret('YouTubeApiKey');
 
 		const site = new sst.aws.SvelteKit('Site', {
-			link: [table, bucket, users],
+			// The table is not linked: linking grants every DynamoDB action. The app is given only the four it uses.
+			link: [bucket, users],
 			// Production builds with npm run build (lint, checks, unit and e2e tests first). The e2e stage
 			// only compiles: its tests run after the deploy, and unit tests are not run post-deploy.
 			buildCommand: production ? undefined : 'npx vite build',
@@ -102,6 +104,15 @@ export default $config({
 			// Textract reads recipe photos; Translate translates recipe text. Both only take
 			// "*" as the resource, so this is the narrowest grant they allow.
 			permissions: [
+				{
+					actions: [
+						'dynamodb:GetItem',
+						'dynamodb:PutItem',
+						'dynamodb:DeleteItem',
+						'dynamodb:Query'
+					],
+					resources: [table.arn, $interpolate`${table.arn}/index/*`]
+				},
 				{ actions: ['textract:DetectDocumentText'], resources: ['*'] },
 				// Translate detects each text's language with Comprehend when the source is "auto".
 				{ actions: ['translate:TranslateText'], resources: ['*'] },
