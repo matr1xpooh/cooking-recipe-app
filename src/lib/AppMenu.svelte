@@ -45,6 +45,7 @@
 <style>
 	.app-menu {
 		position: relative;
+		margin: 0;
 	}
 
 	.menu-button {
