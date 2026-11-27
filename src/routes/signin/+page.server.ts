@@ -35,7 +35,7 @@ async function startSession(cookies: Cookies, url: URL, idToken: string): Promis
 		signValue({ ...user }, sessionSecret(), SESSION_MAX_AGE_MS),
 		cookieOptions(url, SESSION_MAX_AGE_MS)
 	);
-	await recordUsage('signin');
+	await recordUsage('signin', { sub: user.sub, email: user.email });
 }
 
 export const load: PageServerLoad = ({ locals, url }) => {

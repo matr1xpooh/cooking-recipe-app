@@ -6,7 +6,7 @@ import { getStore } from '#lib/server/store.js';
 import { recordUsage } from '#lib/server/usage.js';
 
 /** POST /api/recipes/<id>/images  body: a PNG or JPEG file, as sent -> { id } */
-export const POST: RequestHandler = async ({ params, request }) => {
+export const POST: RequestHandler = async ({ params, request, locals }) => {
 	if (!isSafeId(params.id)) error(404, 'not found');
 	const bytes = new Uint8Array(await request.arrayBuffer());
 	if (bytes.length > MAX_IMAGE_BYTES) return json({ error: 'image_too_large' }, { status: 413 });
@@ -15,6 +15,6 @@ export const POST: RequestHandler = async ({ params, request }) => {
 	const store = getStore();
 	const id = store.newImageId();
 	await store.saveImage(params.id, id, bytes, type);
-	await recordUsage('photo.added');
+	await recordUsage('photo.added', locals.user ?? undefined, { recipeId: params.id });
 	return json({ id }, { status: 201 });
 };

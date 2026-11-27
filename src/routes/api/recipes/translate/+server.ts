@@ -30,11 +30,14 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 	}
 	try {
 		const translated = await translateCached(items, body.target, getStore());
-		await recordUsage('translation.shown');
+		await recordUsage('translation.shown', locals.user ?? undefined, { language: body.target });
 		return json({ items: translated });
 	} catch (error) {
 		if (error instanceof TranslateError) {
-			await recordUsage('translation.failed');
+			await recordUsage('translation.failed', locals.user ?? undefined, {
+				language: body.target,
+				reason: error.key
+			});
 			return json({ error: error.key }, { status: error.status });
 		}
 		throw error;
